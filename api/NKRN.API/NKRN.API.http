@@ -1,0 +1,6 @@
+@NKRN.API_HostAddress = http://localhost:5062
+
+GET {{NKRN.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
