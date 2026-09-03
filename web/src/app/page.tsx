@@ -26,7 +26,7 @@ interface ModuleDefinition {
 const modules: ModuleDefinition[] = [
     {
         key: "it",
-        name: "IT Desk",
+        name: "IT Help (Report)",
         shortName: "IT",
         description:
             "Log support requests, track incidents, manage assignments and administer technical support.",
