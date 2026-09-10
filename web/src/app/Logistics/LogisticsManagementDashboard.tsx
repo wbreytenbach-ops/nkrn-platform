@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import "../nkrn-control.css";
+import LogisticsRequestInbox from "./LogisticsRequestInbox";
 
 // ============================================================
 // TYPES
@@ -1126,6 +1127,13 @@ export default function LogisticsManagementDashboard() {
                     </div>
                 )}
 
+                <LogisticsRequestInbox
+                    departments={departments}
+                    workers={workers}
+                    onTaskConverted={() => {
+                        void loadLogistics();
+                    }}
+                />
                 <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                     <StatCard label="All Tasks" value={statistics.total} note="Imported + new" />
                     <StatCard label="Open" value={statistics.open} note="Needs attention" />
