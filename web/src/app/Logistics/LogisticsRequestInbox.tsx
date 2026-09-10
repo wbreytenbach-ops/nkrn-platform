@@ -87,7 +87,7 @@ function authHeaders(): HeadersInit {
 }
 
 function displayDate(value?: string | null) {
-    if (!value) return "â€”";
+    if (!value) return "—";
 
     const date = new Date(value);
 
@@ -103,7 +103,7 @@ function displayDate(value?: string | null) {
 }
 
 function displayDateTime(value?: string | null) {
-    if (!value) return "â€”";
+    if (!value) return "—";
 
     const date = new Date(value);
 
@@ -121,7 +121,7 @@ function displayDateTime(value?: string | null) {
 }
 
 function shortTime(value?: string | null) {
-    if (!value) return "â€”";
+    if (!value) return "—";
     return value.slice(0, 5);
 }
 
@@ -498,7 +498,7 @@ export default function LogisticsRequestInbox({
 
                 {loading ? (
                     <div className="p-6 text-sm text-zinc-500">
-                        Loading Logistics requestsâ€¦
+                        Loading Logistics requests…
                     </div>
                 ) : visibleRequests.length === 0 ? (
                     <div className="p-5 sm:p-6">
@@ -534,7 +534,7 @@ export default function LogisticsRequestInbox({
                                             <p className="mt-1 font-mono text-xs text-zinc-600">
                                                 Request #{request.requestID}
                                                 {request.convertedTaskID
-                                                    ? ` Â· Task #${request.convertedTaskID}`
+                                                    ? ` · Task #${request.convertedTaskID}`
                                                     : ""}
                                             </p>
                                         </td>
@@ -604,7 +604,7 @@ export default function LogisticsRequestInbox({
                                     {selectedRequest.title}
                                 </h2>
                                 <p className="mt-2 text-sm text-zinc-500">
-                                    Submitted by {selectedRequest.requestedByName} Â·{" "}
+                                    Submitted by {selectedRequest.requestedByName} ·{" "}
                                     {displayDateTime(selectedRequest.createdDate)}
                                 </p>
                             </div>
@@ -633,7 +633,7 @@ export default function LogisticsRequestInbox({
                                         />
                                         <Info
                                             label="Activity Category"
-                                            value={selectedRequest.activityCategory || "â€”"}
+                                            value={selectedRequest.activityCategory || "—"}
                                         />
                                         <Info
                                             label="Activity Date"
@@ -643,10 +643,10 @@ export default function LogisticsRequestInbox({
                                             label="Time"
                                             value={
                                                 selectedRequest.startTime || selectedRequest.endTime
-                                                    ? `${shortTime(selectedRequest.startTime)}â€“${shortTime(
+                                                    ? `${shortTime(selectedRequest.startTime)}–${shortTime(
                                                           selectedRequest.endTime
                                                       )}`
-                                                    : "â€”"
+                                                    : "—"
                                             }
                                         />
                                         <Info
@@ -676,7 +676,7 @@ export default function LogisticsRequestInbox({
                                                     key={item.requestMaintenanceItemID}
                                                     className="rounded-xl border border-white/8 bg-white/2.5 px-4 py-3 text-sm text-zinc-300"
                                                 >
-                                                    {item.maintenanceName} Â· {item.actionType}
+                                                    {item.maintenanceName} · {item.actionType}
                                                 </div>
                                             ))}
                                         </div>
@@ -695,7 +695,7 @@ export default function LogisticsRequestInbox({
                                                     className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300"
                                                 >
                                                     {item.equipmentName}
-                                                    {item.quantity ? ` Ã— ${item.quantity}` : ""}
+                                                    {item.quantity ? ` × ${item.quantity}` : ""}
                                                 </span>
                                             ))}
                                         </div>
@@ -751,7 +751,7 @@ export default function LogisticsRequestInbox({
                                         disabled={savingReview || converting}
                                         className="mt-4 w-full rounded-xl border border-white/10 bg-white/7 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-45"
                                     >
-                                        {savingReview ? "Savingâ€¦" : "Save Review"}
+                                        {savingReview ? "Saving…" : "Save Review"}
                                     </button>
                                 </div>
 
@@ -818,7 +818,7 @@ export default function LogisticsRequestInbox({
                                                             >
                                                                 {workerName(worker)}
                                                                 {worker.workerType
-                                                                    ? ` Â· ${worker.workerType}`
+                                                                    ? ` · ${worker.workerType}`
                                                                     : ""}
                                                             </option>
                                                         ))}
@@ -836,10 +836,10 @@ export default function LogisticsRequestInbox({
                                                     }
                                                     className={selectClass}
                                                 >
-                                                    <option value="P1">P1 Â· Critical</option>
-                                                    <option value="P2">P2 Â· Urgent</option>
-                                                    <option value="P3">P3 Â· Planned</option>
-                                                    <option value="P4">P4 Â· Improvement</option>
+                                                    <option value="P1">P1 · Critical</option>
+                                                    <option value="P2">P2 · Urgent</option>
+                                                    <option value="P3">P3 · Planned</option>
+                                                    <option value="P4">P4 · Improvement</option>
                                                 </select>
                                             </label>
 
@@ -895,7 +895,7 @@ export default function LogisticsRequestInbox({
                                             className="mt-5 w-full rounded-xl border border-yellow-300/20 bg-yellow-400 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             {converting
-                                                ? "Convertingâ€¦"
+                                                ? "Converting…"
                                                 : "Approve & Convert to Task"}
                                         </button>
                                     </div>
