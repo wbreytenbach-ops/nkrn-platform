@@ -1,0 +1,60 @@
+name: Q4 Validation
+
+on:
+  push:
+    branches:
+      - tygerpoort-q4-2026
+  pull_request:
+    branches:
+      - tygerpoort-v1-maintenance
+      - main
+
+jobs:
+  web-build:
+    name: Web - lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000
+
+  api-build:
+    name: API - restore and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api/NKRN.API
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
