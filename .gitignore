@@ -1,0 +1,61 @@
+# ==============================
+# NKRN
+# ==============================
+
+# Frontend / Node
+node_modules/
+.next/
+out/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# .NET
+bin/
+obj/
+publish/
+.vs/
+*.user
+*.suo
+
+# Application configuration / secrets
+**/appsettings.json
+**/appsettings.Development.json
+**/appsettings.Production.json
+
+# Credentials / certificates
+**/*credentials*.json
+**/*credential*.json
+**/*client_secret*.json
+**/*service-account*.json
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Publish configuration
+**/PublishProfiles/
+*.pubxml.user
+
+# Database / backups
+*.bak
+*.mdf
+*.ldf
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

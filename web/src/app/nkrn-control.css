@@ -1,0 +1,368 @@
+/* =========================================================
+   NKRN CONTROL CENTRE
+   Hybrid glass operational design system
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap");
+
+:root {
+  --nkrn-bg: #060708;
+  --nkrn-bg-soft: #0c0d0f;
+  --nkrn-panel: #0d0e10;
+  --nkrn-panel-soft: #111214;
+  --nkrn-border: rgba(255, 255, 255, 0.11);
+  --nkrn-border-strong: rgba(255, 255, 255, 0.20);
+  --nkrn-text: #ffffff;
+  --nkrn-muted: #9f9fa7;
+  --nkrn-muted-dark: #696970;
+  --nkrn-gold: #d7a31f;
+  --nkrn-gold-bright: #e7b42b;
+  --nkrn-gold-soft: rgba(215, 163, 31, 0.12);
+  --nkrn-red: #ef233c;
+  --nkrn-orange: #f59e0b;
+  --nkrn-green: #22c55e;
+}
+
+.nkrn-control {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% -18%, rgba(255,255,255,.045), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,.008), transparent 30%),
+    var(--nkrn-bg) !important;
+  color: var(--nkrn-text);
+  font-family: "DM Sans", Arial, sans-serif;
+}
+
+.nkrn-control::before {
+  content: "/// NKRN";
+  position: fixed;
+  left: clamp(18px, 3vw, 46px);
+  bottom: 18px;
+  z-index: 1;
+  color: rgba(215, 163, 31, .18);
+  font-family: "Outfit", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .28em;
+  pointer-events: none;
+}
+
+.nkrn-control h1,
+.nkrn-control h2,
+.nkrn-control h3 {
+  font-family: "Outfit", Arial, sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.nkrn-control h1 {
+  font-weight: 900 !important;
+}
+
+.nkrn-control h2 {
+  font-weight: 800 !important;
+}
+
+.nkrn-control p[class*="uppercase"],
+.nkrn-control label[class*="uppercase"] {
+  color: var(--nkrn-gold) !important;
+  font-weight: 800 !important;
+  letter-spacing: .18em !important;
+}
+
+/* Hybrid glass panels: operational structure with restrained depth. */
+.nkrn-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .11) !important;
+  border-radius: 26px !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.072), rgba(255,255,255,.024) 48%, rgba(215,163,31,.018)),
+    rgba(10, 11, 13, .70) !important;
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.055) !important;
+  backdrop-filter: blur(24px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(125%) !important;
+}
+
+.nkrn-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: clamp(24px, 4vw, 48px);
+  width: 86px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--nkrn-gold), rgba(215,163,31,0));
+  opacity: .95;
+}
+
+.nkrn-panel:hover {
+  border-color: rgba(255,255,255,.16) !important;
+}
+
+/* Hero/header */
+.nkrn-hero {
+  overflow: hidden;
+  padding-top: clamp(26px, 4vw, 48px) !important;
+  padding-bottom: clamp(26px, 4vw, 48px) !important;
+}
+
+.nkrn-hero::before {
+  content: "IT SUPPORT CENTRE";
+  display: block;
+  margin-bottom: 22px;
+  color: var(--nkrn-gold);
+  font-family: "Outfit", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .24em;
+}
+
+.nkrn-hero h1 {
+  font-size: clamp(2.35rem, 5vw, 4.8rem) !important;
+  line-height: .94 !important;
+  max-width: 780px;
+}
+
+.nkrn-hero img {
+  filter: drop-shadow(0 10px 30px rgba(0,0,0,.35));
+}
+
+/* Inputs */
+.nkrn-input,
+.nkrn-select,
+.nkrn-control textarea {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  border-radius: 14px !important;
+  background: rgba(7, 8, 10, .62) !important;
+  color: white !important;
+  padding: .9rem 1rem !important;
+  outline: none !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  backdrop-filter: blur(14px);
+  transition:
+    border-color .18s ease,
+    background .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease !important;
+}
+
+.nkrn-input::placeholder,
+.nkrn-control textarea::placeholder {
+  color: #62626a !important;
+}
+
+.nkrn-input:focus,
+.nkrn-select:focus,
+.nkrn-control textarea:focus {
+  border-color: rgba(215, 163, 31, .72) !important;
+  background: rgba(15,16,18,.82) !important;
+  box-shadow: 0 0 0 3px rgba(215,163,31,.08) !important;
+}
+
+/* Buttons */
+.nkrn-control button {
+  border-radius: 12px !important;
+  font-family: "DM Sans", Arial, sans-serif;
+  font-weight: 700;
+  transition:
+    transform .16s ease,
+    background .16s ease,
+    border-color .16s ease,
+    color .16s ease !important;
+}
+
+.nkrn-control button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.nkrn-control button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.nkrn-control button[type="submit"] {
+  background: var(--nkrn-gold) !important;
+  border-color: var(--nkrn-gold) !important;
+  color: #080808 !important;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.nkrn-control button[type="submit"]:hover:not(:disabled) {
+  background: var(--nkrn-gold-bright) !important;
+}
+
+/* Keep destructive actions visually distinct. */
+.nkrn-control button[class*="red-"] {
+  border-color: rgba(239,35,60,.28) !important;
+}
+
+/* Main content sections */
+.nkrn-request-form,
+.nkrn-request-history {
+  padding-top: clamp(28px, 4vw, 46px) !important;
+  padding-bottom: clamp(28px, 4vw, 46px) !important;
+}
+
+.nkrn-request-history > div:first-child,
+.nkrn-request-form > div:first-child {
+  max-width: 760px;
+}
+
+/* Stats: large operational numbers presented as compact glass instruments. */
+.nkrn-stats {
+  gap: 14px !important;
+  border: 0 !important;
+}
+
+.nkrn-stats > div {
+  min-height: 150px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  border-radius: 20px !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+    rgba(9,10,12,.66) !important;
+  box-shadow:
+    0 16px 46px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+  backdrop-filter: blur(20px) !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.nkrn-stats > div::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22px;
+  width: 48px;
+  height: 2px;
+  background: var(--nkrn-gold);
+  opacity: .65;
+}
+
+.nkrn-stats p[class*="text-4xl"] {
+  font-family: "Outfit", Arial, sans-serif;
+  font-size: clamp(2.6rem, 5vw, 4.35rem) !important;
+  font-weight: 900 !important;
+  line-height: .95;
+}
+
+/* Request rows/cards */
+.nkrn-control .space-y-4 > div,
+.nkrn-control .space-y-5 > div[class*="border"],
+.nkrn-control .space-y-6 > div[class*="border"] {
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background .18s ease !important;
+}
+
+.nkrn-control .space-y-4 > div:hover,
+.nkrn-control .space-y-6 > div[class*="border"]:hover {
+  border-color: var(--nkrn-border-strong) !important;
+  background: rgba(255,255,255,.035) !important;
+}
+
+/* Give status chips a sharper scoreboard look. */
+.nkrn-control span[class*="rounded-full"] {
+  border-radius: 8px !important;
+  text-transform: uppercase;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .10em;
+}
+
+/* Ambient glass highlights */
+.nkrn-control::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(215,163,31,.055), transparent 28%),
+    radial-gradient(circle at 88% 30%, rgba(255,255,255,.028), transparent 26%);
+}
+
+.nkrn-control > * {
+  position: relative;
+  z-index: 1;
+}
+
+.nkrn-control table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.nkrn-control thead {
+  background: rgba(255,255,255,.018);
+}
+
+/* Scrollbars */
+.nkrn-control * {
+  scrollbar-width: thin;
+  scrollbar-color: #343438 #0b0c0d;
+}
+
+.nkrn-control *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.nkrn-control *::-webkit-scrollbar-track {
+  background: #0b0c0d;
+}
+
+.nkrn-control *::-webkit-scrollbar-thumb {
+  background: #343438;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .nkrn-hero h1 {
+    font-size: clamp(2.2rem, 10vw, 3.6rem) !important;
+  }
+
+  .nkrn-stats > div {
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--nkrn-border) !important;
+  }
+
+  .nkrn-stats > div:last-child {
+    border-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .nkrn-control::before {
+    display: none;
+  }
+
+  .nkrn-panel {
+    border-left: 0 !important;
+    border-right: 0 !important;
+  }
+
+  .nkrn-control main,
+  .nkrn-control > div {
+    max-width: 100%;
+  }
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .nkrn-control *,
+  .nkrn-control *::before,
+  .nkrn-control *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
