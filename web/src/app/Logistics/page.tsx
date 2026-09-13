@@ -54,15 +54,14 @@ export default function LogisticsPage() {
 
                 setUser(loggedInUser);
 
-                // NKRN admins always retain management access.
+                // NKRN-admins behou altyd bestuursregte.
                 if (loggedInUser.roleID === 3) {
                     setManagementAccess(true);
                     return;
                 }
 
-                // This endpoint already respects Logistics ModulePermissions.
-                // 200 = Logistics management/view access.
-                // 403 = normal staff member -> teacher portal.
+                // Hierdie bestaande eindpunt respekteer reeds Logistiek se
+                // ModulePermissions. Ons verander dus nie die toegangslogika nie.
                 const response = await fetch(
                     `${API_URL}/api/LogisticsTasks?includeArchived=false`,
                     {
@@ -93,16 +92,16 @@ export default function LogisticsPage() {
                 }
 
                 throw new Error(
-                    `Unable to determine Logistics access (${response.status}).`
+                    `Kon nie Logistiek-toegang bepaal nie (${response.status}).`
                 );
             } catch (accessError) {
-                console.error("Unable to determine Logistics access:", accessError);
+                console.error("Kon nie Logistiek-toegang bepaal nie:", accessError);
 
                 if (!cancelled) {
                     setError(
                         accessError instanceof Error
                             ? accessError.message
-                            : "Unable to open Logistics."
+                            : "Kon nie Logistiek oopmaak nie."
                     );
                 }
             } finally {
@@ -125,10 +124,10 @@ export default function LogisticsPage() {
                 <div className="nkrn-panel rounded-[28px] border border-white/10 bg-white/4 px-8 py-7 text-center shadow-2xl shadow-black/20 backdrop-blur-2xl">
                     <div className="mx-auto mb-4 h-3 w-3 animate-pulse rounded-full bg-[#e7b42b]" />
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7a31f]">
-                        Logistics
+                        Logistiek
                     </p>
                     <p className="mt-2 text-sm text-zinc-400">
-                        Opening your workspace…
+                        Jou werkruimte word oopgemaak…
                     </p>
                 </div>
             </main>
@@ -145,7 +144,7 @@ export default function LogisticsPage() {
                         onClick={() => router.push("/")}
                         className="mt-5 rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-zinc-200 transition hover:bg-white/10"
                     >
-                        Back to NKRN
+                        Terug na NKRN
                     </button>
                 </div>
             </main>
