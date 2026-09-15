@@ -63,3 +63,7 @@ NKRN is tans onder aktiewe development en word in 'n werklike skoolbedryfsomgewi
 Production credentials en environment-specific configuration word doelbewus van hierdie repository uitgesluit.
 
 Gebruik .env.example en local configuration files wanneer 'n development environment opgestel word.
+
+## Deploy to TYGIES-APP
+
+Follow the [PowerShell session deployment guide](deployment/tygies-app/README.md) to build the pinned Q4 release, copy it to TYGIES-APP, verify the database updates, install it and roll back if needed.
