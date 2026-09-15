@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 using NKRN.API.Data;
 using NKRN.API.Models;
 using NKRN.API.Services;
@@ -45,7 +47,29 @@ namespace NKRN.API.Controllers
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
+            await PopulateRequestPeopleAsync(requests);
             return Ok(requests);
+        }
+
+        [Authorize(Roles = "3")]
+        [HttpGet("requesters")]
+        public async Task<IActionResult> GetRequesters()
+        {
+            var userID = GetLoggedInUserID();
+            if (userID == null) return Unauthorized();
+            if (!await _context.Users.AnyAsync(u =>
+                u.UserID == userID.Value && u.IsActive && u.RoleID == 3))
+                return Forbid();
+
+            var requesters = await _context.Users.AsNoTracking()
+                .Where(u => u.IsActive && u.Email != "")
+                .OrderBy(u => u.LastName)
+                .ThenBy(u => u.FirstName)
+                .ThenBy(u => u.UserID)
+                .Select(u => new { u.UserID, u.FirstName, u.LastName, u.Email })
+                .ToListAsync();
+
+            return Ok(requesters);
         }
 
         // ========================================
@@ -79,6 +103,7 @@ namespace NKRN.API.Controllers
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
+            await PopulateRequestPeopleAsync(requests);
             return Ok(requests);
         }
 
@@ -115,6 +140,7 @@ namespace NKRN.API.Controllers
                 return Forbid();
             }
 
+            await PopulateRequestPeopleAsync(new[] { request });
             return Ok(request);
         }
 
@@ -126,7 +152,7 @@ namespace NKRN.API.Controllers
         [Authorize]
         [HttpPost]
         public async Task<ActionResult<Request>> CreateRequest(
-            Request request)
+            CreateRequestInput input)
         {
             var loggedInUserID = GetLoggedInUserID();
 
@@ -142,7 +168,7 @@ namespace NKRN.API.Controllers
             var loggedInUser =
                 await _context.Users
                     .FirstOrDefaultAsync(
-                        u => u.UserID == loggedInUserID.Value
+                        u => u.UserID == loggedInUserID.Value && u.IsActive
                     );
 
             if (loggedInUser == null)
@@ -151,10 +177,42 @@ namespace NKRN.API.Controllers
             }
 
             // ========================================
-            // ALWAYS USE AUTHENTICATED USER ID
+            // ONLY AN ACTIVE ADMIN MAY SELECT A DIFFERENT REQUESTER
             // ========================================
 
-            request.UserID = loggedInUserID.Value;
+            var requester = loggedInUser;
+            if (input.RequestedForUserID.HasValue)
+            {
+                if (!User.IsInRole("3") || loggedInUser.RoleID != 3)
+                    return Forbid();
+
+                if (input.RequestedForUserID.Value <= 0)
+                    return BadRequest("Please select an active requester.");
+
+                var selectedRequester = await _context.Users.FirstOrDefaultAsync(u =>
+                    u.UserID == input.RequestedForUserID.Value && u.IsActive);
+
+                if (selectedRequester == null ||
+                    string.IsNullOrWhiteSpace(selectedRequester.Email) ||
+                    !new EmailAddressAttribute().IsValid(selectedRequester.Email.Trim()))
+                    return BadRequest("Please select an active requester with a valid email address.");
+
+                requester = selectedRequester;
+            }
+
+            var request = new Request
+            {
+                UserID = requester.UserID,
+                CreatedByUserID = loggedInUser.UserID,
+                Title = input.Title.Trim(),
+                Description = input.Description.Trim(),
+                Priority = input.Priority,
+                CategoryID = input.CategoryID,
+                UserName = $"{requester.FirstName} {requester.LastName}".Trim(),
+                UserEmail = requester.Email,
+                CreatedByName = $"{loggedInUser.FirstName} {loggedInUser.LastName}".Trim(),
+                CreatedByEmail = loggedInUser.Email
+            };
 
             // ========================================
             // SERVER CONTROLS CREATION DATE
@@ -213,7 +271,8 @@ namespace NKRN.API.Controllers
                 // TECHNICIAN / ADMIN
                 // ========================================
 
-                if (request.CategoryID <= 0)
+                if (!request.CategoryID.HasValue || request.CategoryID <= 0 ||
+                    !await _context.Categories.AnyAsync(c => c.CategoryID == request.CategoryID))
                 {
                     return BadRequest(
                         "A valid category is required."
@@ -235,176 +294,68 @@ namespace NKRN.API.Controllers
 
             await _context.SaveChangesAsync();
 
-            // ========================================
-            // SEND EMAIL TO ALL ACTIVE ADMINS
-            // ========================================
-
+            // Notify the actual requester and active admins once per email address.
+            // A delivery failure must not turn a saved request into a failed submission.
             try
             {
-                var administrators =
-                    await _context.Users
-                        .Where(u =>
-                            u.RoleID == 3 &&
-                            u.IsActive &&
-                            !string.IsNullOrWhiteSpace(
-                                u.Email))
-                        .ToListAsync();
+                var administratorEmails = await _context.Users
+                    .Where(u => u.RoleID == 3 && u.IsActive)
+                    .Select(u => u.Email)
+                    .ToListAsync();
 
-                if (administrators.Count == 0)
+                var recipients = administratorEmails.Append(requester.Email)
+                    .Where(email => !string.IsNullOrWhiteSpace(email))
+                    .Select(email => email.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                var categoryName = await _context.Categories
+                    .Where(c => c.CategoryID == request.CategoryID)
+                    .Select(c => c.CategoryName)
+                    .FirstOrDefaultAsync() ?? "Unknown";
+
+                var subject = $"New IT Request #{request.RequestID} - {request.Title}";
+                var body = $"""
+                    <html>
+                    <body style="font-family: Arial, sans-serif; color: #222;">
+                        <h2>IT Support Request Logged</h2>
+                        <p>The following request has been logged with the Tygerpoort IT Desk.</p>
+                        <p><strong>Request ID:</strong> #{request.RequestID}</p>
+                        <p><strong>Requester:</strong> {WebUtility.HtmlEncode(request.UserName)}</p>
+                        <p><strong>Requester email:</strong> {WebUtility.HtmlEncode(request.UserEmail)}</p>
+                        <p><strong>Logged by:</strong> {WebUtility.HtmlEncode(request.CreatedByName)}</p>
+                        <p><strong>Logged by email:</strong> {WebUtility.HtmlEncode(request.CreatedByEmail)}</p>
+                        <hr />
+                        <p><strong>Title:</strong> {WebUtility.HtmlEncode(request.Title)}</p>
+                        <p><strong>Description:</strong><br />{WebUtility.HtmlEncode(request.Description).Replace("\n", "<br />")}</p>
+                        <p><strong>Priority:</strong> {WebUtility.HtmlEncode(request.Priority)}</p>
+                        <p><strong>Category:</strong> {WebUtility.HtmlEncode(categoryName)}</p>
+                        <p><strong>Status:</strong> Logged</p>
+                        <p><strong>Created:</strong> {request.CreatedDate}</p>
+                        <hr />
+                        <p>The requester can sign in to view this request under My Requests.
+                        Status updates will be emailed to the requester.</p>
+                        <p><strong>Tygerpoort IT Desk</strong></p>
+                    </body>
+                    </html>
+                    """;
+
+                foreach (var recipient in recipients)
                 {
-                    Console.WriteLine(
-                        "No active administrators with email addresses were found."
-                    );
-                }
-                else
-                {
-                    var category =
-                        await _context.Categories
-                            .FirstOrDefaultAsync(
-                                c =>
-                                    c.CategoryID ==
-                                    request.CategoryID
-                            );
-
-                    var categoryName =
-                        category?.CategoryName
-                        ?? "Unknown";
-
-                    var subject =
-                        $"New IT Request #{request.RequestID} - {request.Title}";
-
-                    var body = $"""
-                        <html>
-                        <body style="font-family: Arial, sans-serif; color: #222;">
-
-                            <h2>New IT Support Request</h2>
-
-                            <p>
-                                A new IT support request has been submitted
-                                through the Tygerpoort IT Desk.
-                            </p>
-
-                            <hr />
-
-                            <h3>Request Details</h3>
-
-                            <p>
-                                <strong>Request ID:</strong>
-                                #{request.RequestID}
-                            </p>
-
-                            <p>
-                                <strong>Submitted by:</strong>
-                                {loggedInUser.FirstName} {loggedInUser.LastName}
-                            </p>
-
-                            <p>
-                                <strong>Email:</strong>
-                                {loggedInUser.Email}
-                            </p>
-
-                            <p>
-                                <strong>Title:</strong>
-                                {request.Title}
-                            </p>
-
-                            <p>
-                                <strong>Description:</strong><br />
-                                {request.Description}
-                            </p>
-
-                            <p>
-                                <strong>Priority:</strong>
-                                {request.Priority}
-                            </p>
-
-                            <p>
-                                <strong>Category:</strong>
-                                {categoryName}
-                            </p>
-
-                            <p>
-                                <strong>Status:</strong>
-                                Logged
-                            </p>
-
-                            <p>
-                                <strong>Created:</strong>
-                                {request.CreatedDate}
-                            </p>
-
-                            <hr />
-
-                            <p>
-                                <strong>Tygerpoort IT Desk</strong><br />
-                                Technical Support Portal
-                            </p>
-
-                        </body>
-                        </html>
-                        """;
-
-                    foreach (var administrator
-                        in administrators)
+                    try
                     {
-                        try
-                        {
-                            await _emailService.SendEmailAsync(
-                                administrator.Email,
-                                subject,
-                                body
-                            );
-
-                            Console.WriteLine(
-                                $"New request notification sent to Admin {administrator.Email} for Request #{request.RequestID}."
-                            );
-                        }
-                        catch (Exception adminEmailException)
-                        {
-                            Console.WriteLine(
-                                "========================================"
-                            );
-
-                            Console.WriteLine(
-                                $"ADMIN EMAIL ERROR - {administrator.Email}"
-                            );
-
-                            Console.WriteLine(
-                                adminEmailException.Message
-                            );
-
-                            Console.WriteLine(
-                                adminEmailException.InnerException?.Message
-                            );
-
-                            Console.WriteLine(
-                                "========================================"
-                            );
-                        }
+                        await _emailService.SendEmailAsync(recipient, subject, body);
+                    }
+                    catch (Exception emailException)
+                    {
+                        Console.WriteLine(
+                            $"Request #{request.RequestID} notification failed for {recipient}: {emailException.Message}");
                     }
                 }
             }
             catch (Exception emailException)
             {
                 Console.WriteLine(
-                    "========================================"
-                );
-
-                Console.WriteLine(
-                    "NEW REQUEST EMAIL ERROR"
-                );
-
-                Console.WriteLine(
-                    emailException.Message
-                );
-
-                Console.WriteLine(
-                    emailException.InnerException?.Message
-                );
-
-                Console.WriteLine(
-                    "========================================"
-                );
+                    $"Request #{request.RequestID} was saved, but notifications failed: {emailException.Message}");
             }
 
             // ========================================
@@ -1198,6 +1149,37 @@ namespace NKRN.API.Controllers
         // ========================================
         // GET LOGGED-IN USER ID FROM JWT
         // ========================================
+
+        private async Task PopulateRequestPeopleAsync(IReadOnlyCollection<Request> requests)
+        {
+            if (requests.Count == 0) return;
+
+            var userIDs = requests
+                .SelectMany(r => new[] { r.UserID, r.CreatedByUserID ?? r.UserID })
+                .Distinct()
+                .ToArray();
+
+            // Include deactivated accounts so past requests retain their attribution.
+            var people = await _context.Users.AsNoTracking()
+                .Where(u => userIDs.Contains(u.UserID))
+                .Select(u => new { u.UserID, u.FirstName, u.LastName, u.Email })
+                .ToDictionaryAsync(u => u.UserID);
+
+            foreach (var request in requests)
+            {
+                if (people.TryGetValue(request.UserID, out var requester))
+                {
+                    request.UserName = $"{requester.FirstName} {requester.LastName}".Trim();
+                    request.UserEmail = requester.Email;
+                }
+
+                if (people.TryGetValue(request.CreatedByUserID ?? request.UserID, out var submitter))
+                {
+                    request.CreatedByName = $"{submitter.FirstName} {submitter.LastName}".Trim();
+                    request.CreatedByEmail = submitter.Email;
+                }
+            }
+        }
 
         private int? GetLoggedInUserID()
         {

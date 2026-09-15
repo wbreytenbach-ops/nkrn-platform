@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NKRN.API.Models
 {
@@ -8,6 +9,22 @@ namespace NKRN.API.Models
         public int RequestID { get; set; }
 
         public int UserID { get; set; }
+
+        // The requester owns the request; the submitter is retained separately.
+        public int? CreatedByUserID { get; set; }
+
+        // Read-only response details, populated from the linked accounts.
+        [NotMapped]
+        public string? UserName { get; set; }
+
+        [NotMapped]
+        public string? UserEmail { get; set; }
+
+        [NotMapped]
+        public string? CreatedByName { get; set; }
+
+        [NotMapped]
+        public string? CreatedByEmail { get; set; }
 
         [Required]
         [MaxLength(100)]

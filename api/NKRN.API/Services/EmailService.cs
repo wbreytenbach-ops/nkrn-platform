@@ -16,7 +16,7 @@ namespace NKRN.API.Services
             _settings = settings.Value;
         }
 
-        public async Task SendEmailAsync(
+        public virtual async Task SendEmailAsync(
             string recipientEmail,
             string subject,
             string body)
