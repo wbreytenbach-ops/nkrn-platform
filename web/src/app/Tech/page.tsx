@@ -1,5 +1,7 @@
 "use client";
 
+import { itLabel } from "../it-labels";
+
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +22,11 @@ interface RequestModel {
     requestID: number;
     userID: number;
     title: string;
+    userName?: string | null;
+    userEmail?: string | null;
+    createdByUserID?: number | null;
+    createdByName?: string | null;
+    createdByEmail?: string | null;
     description: string;
     priority: string;
     assignedTo: number | null;
@@ -177,7 +184,7 @@ export default function TechPage() {
                     method: "GET",
                     headers: getHeaders(),
                 }),
-                fetch(`${API_URL}/api/Users`, {
+                fetch(`${API_URL}/api/Users/technicians`, {
                     method: "GET",
                     headers: getHeaders(),
                 }),
@@ -251,7 +258,7 @@ export default function TechPage() {
             );
 
             setMessage(
-                "Unable to load the technician dashboard."
+                "Die tegnikusportaal kon nie gelaai word nie."
             );
         } finally {
             setLoading(false);
@@ -358,7 +365,8 @@ export default function TechPage() {
                 {
                     method: "PUT",
                     headers: getHeaders(),
-                    body: JSON.stringify(update),
+                    // The PUT endpoint expects the complete request, including its ID.
+                    body: JSON.stringify({ ...selectedRequest, ...update }),
                 }
             );
 
@@ -379,7 +387,7 @@ export default function TechPage() {
             }
 
             setMessage(
-                `Request #${selectedRequest.requestID} updated successfully.`
+                `Versoek #${selectedRequest.requestID} is opgedateer.`
             );
 
             await loadDashboard();
@@ -418,7 +426,7 @@ export default function TechPage() {
             );
 
             setMessage(
-                "Something went wrong while updating the request."
+                "Die versoek kon nie opgedateer word nie. Probeer asseblief weer."
             );
         } finally {
             setSaving(false);
@@ -473,7 +481,7 @@ export default function TechPage() {
             );
 
             setMessage(
-                "Unable to add the comment."
+                "Die kommentaar kon nie bygevoeg word nie."
             );
         }
     }
@@ -548,13 +556,13 @@ export default function TechPage() {
     function getStatusLabel(statusID: number) {
         switch (statusID) {
             case 1:
-                return "Logged";
+                return itLabel("Logged");
             case 2:
-                return "Busy";
+                return itLabel("Busy");
             case 3:
-                return "Done";
+                return itLabel("Done");
             default:
-                return "Unknown";
+                return "Onbekend";
         }
     }
 
@@ -590,7 +598,7 @@ export default function TechPage() {
         categoryID: number | null
     ) {
         if (categoryID === null) {
-            return "Unknown";
+            return "Onbekend";
         }
 
         const category = categories.find(
@@ -608,7 +616,7 @@ export default function TechPage() {
         technicianID: number | null
     ) {
         if (technicianID === null) {
-            return "Unassigned";
+            return "Nie toegeken nie";
         }
 
         // Use the complete user list here rather than the
@@ -621,7 +629,7 @@ export default function TechPage() {
         );
 
         if (!assignedUser) {
-            return "Unknown technician";
+            return "Onbekende tegnikus";
         }
 
         return `${assignedUser.firstName} ${assignedUser.lastName}`;
@@ -645,7 +653,7 @@ export default function TechPage() {
         }
 
         return parsed.toLocaleString(
-            "en-ZA",
+            "af-ZA",
             {
                 day: "2-digit",
                 month: "short",
@@ -677,23 +685,29 @@ export default function TechPage() {
         }
 
         const headers = [
-            "Request ID",
-            "Title",
-            "Description",
-            "Priority",
+            "Versoeknommer",
+            "Versoeker",
+            "Versoeker se e-posadres",
+            "Aangemeld deur",
+            "Titel",
+            "Beskrywing",
+            "Prioriteit",
             "Status",
-            "Category",
-            "Assigned To",
-            "Created Date",
-            "Completed Date",
+            "Kategorie",
+            "Toegewys aan",
+            "Aanmelddatum",
+            "Afhandelingsdatum",
         ];
 
         const rows = filteredRequests.map(
             (request) => [
                 request.requestID,
+                request.userName || `#${request.userID}`,
+                request.userEmail ?? "",
+                request.createdByName || `#${request.createdByUserID ?? request.userID}`,
                 request.title,
                 request.description,
-                request.priority,
+                itLabel(request.priority),
                 getStatusLabel(
                     request.statusID
                 ),
@@ -773,7 +787,7 @@ export default function TechPage() {
                     </div>
 
                     <p className="text-sm text-zinc-400">
-                        Loading technician dashboard...
+                        Tegnikusportaal laai…
                     </p>
                 </div>
             </main>
@@ -811,7 +825,7 @@ export default function TechPage() {
                             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/4">
                                 <Image
                                     src="/wit-logo-tygies.png"
-                                    alt="Laerskool Tygerpoort Logo"
+                                    alt="Laerskool Tygerpoort-logo"
                                     width={150}
                                     height={60}
                                     className="h-auto w-30 object-contain"
@@ -825,7 +839,7 @@ export default function TechPage() {
                                 </p>
 
                                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                                    IT Technician Dashboard
+                                    IT-tegnikusportaal
                                 </h1>
 
                                 <p className="mt-1 text-sm text-zinc-400">
@@ -847,7 +861,7 @@ export default function TechPage() {
                                 }
                                 className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
                             >
-                                Requests
+                                Versoeke
                             </button>
 
                             {user.roleID === 3 && (
@@ -860,7 +874,7 @@ export default function TechPage() {
                                     }
                                     className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
                                 >
-                                    Admin
+                                    Administrasie
                                 </button>
                             )}
 
@@ -869,7 +883,7 @@ export default function TechPage() {
                                 onClick={() => router.push("/")}
                                 className="rounded-xl border border-[#d7a31f]/25 bg-[#d7a31f]/8 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:border-[#d7a31f]/40 hover:bg-[#d7a31f]/12"
                             >
-                                NKRN Home
+                                Tuis
                             </button>
 
                             <button
@@ -877,7 +891,7 @@ export default function TechPage() {
                                 onClick={logout}
                                 className="rounded-xl border border-red-400/10 bg-red-500/8 px-4 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/14"
                             >
-                                Log Out
+                                Meld af
                             </button>
                         </div>
                     </div>
@@ -898,7 +912,7 @@ export default function TechPage() {
                         className={`${glassCard} p-5`}
                     >
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
-                            Total Requests
+                            Totale versoeke
                         </p>
 
                         <p className="mt-3 text-4xl font-semibold">
@@ -906,7 +920,7 @@ export default function TechPage() {
                         </p>
 
                         <p className="mt-1 text-sm text-zinc-500">
-                            All helpdesk requests
+                            Alle IT-ondersteuningsversoeke
                         </p>
                     </div>
 
@@ -914,7 +928,7 @@ export default function TechPage() {
                         className={`${glassCard} p-5`}
                     >
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
-                            Logged
+                            Aangemeld
                         </p>
 
                         <p className="mt-3 text-4xl font-semibold text-red-300">
@@ -922,7 +936,7 @@ export default function TechPage() {
                         </p>
 
                         <p className="mt-1 text-sm text-zinc-500">
-                            Awaiting attention
+                            Wag op aandag
                         </p>
                     </div>
 
@@ -930,7 +944,7 @@ export default function TechPage() {
                         className={`${glassCard} p-5`}
                     >
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
-                            In Progress
+                            Besig
                         </p>
 
                         <p className="mt-3 text-4xl font-semibold text-orange-300">
@@ -938,7 +952,7 @@ export default function TechPage() {
                         </p>
 
                         <p className="mt-1 text-sm text-zinc-500">
-                            Currently being handled
+                            Word tans hanteer
                         </p>
                     </div>
 
@@ -946,7 +960,7 @@ export default function TechPage() {
                         className={`${glassCard} p-5`}
                     >
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
-                            Completed
+                            Afgehandel
                         </p>
 
                         <p className="mt-3 text-4xl font-semibold text-green-300">
@@ -954,7 +968,7 @@ export default function TechPage() {
                         </p>
 
                         <p className="mt-1 text-sm text-zinc-500">
-                            Resolved requests
+                            Afgehandelde versoeke
                         </p>
                     </div>
                 </section>
@@ -970,16 +984,15 @@ export default function TechPage() {
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                             <div>
                                 <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                                    Helpdesk
+                                    IT-ondersteuning
                                 </p>
 
                                 <h2 className="text-2xl font-semibold">
-                                    Support Requests
+                                    Ondersteuningsversoeke
                                 </h2>
 
                                 <p className="mt-1 text-sm text-zinc-500">
-                                    Select a request to view,
-                                    assign and update it.
+                                    Kies ’n versoek om dit te bekyk, toe te wys of op te dateer.
                                 </p>
                             </div>
 
@@ -991,7 +1004,7 @@ export default function TechPage() {
                                     }
                                     className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
                                 >
-                                    Refresh
+                                    Verfris
                                 </button>
 
                                 <button
@@ -999,7 +1012,7 @@ export default function TechPage() {
                                     onClick={exportCSV}
                                     className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-zinc-200"
                                 >
-                                    Export CSV
+                                    Voer CSV uit
                                 </button>
                             </div>
                         </div>
@@ -1014,7 +1027,7 @@ export default function TechPage() {
                                         e.target.value
                                     )
                                 }
-                                placeholder="Search requests..."
+                                placeholder="Soek versoeke…"
                                 className={inputClass}
                             />
 
@@ -1028,19 +1041,19 @@ export default function TechPage() {
                                 className={selectClass}
                             >
                                 <option value="All">
-                                    All statuses
+                                    Alle statusse
                                 </option>
 
                                 <option value="1">
-                                    Logged
+                                    Aangemeld
                                 </option>
 
                                 <option value="2">
-                                    Busy
+                                    Besig
                                 </option>
 
                                 <option value="3">
-                                    Done
+                                    Afgehandel
                                 </option>
                             </select>
 
@@ -1054,15 +1067,15 @@ export default function TechPage() {
                                 className={selectClass}
                             >
                                 <option value="All">
-                                    All priorities
+                                    Alle prioriteite
                                 </option>
 
                                 <option value="Critical">
-                                    Critical
+                                    Kritiek
                                 </option>
 
                                 <option value="High">
-                                    High
+                                    Hoog
                                 </option>
 
                                 <option value="Medium">
@@ -1070,7 +1083,7 @@ export default function TechPage() {
                                 </option>
 
                                 <option value="Low">
-                                    Low
+                                    Laag
                                 </option>
                             </select>
                         </div>
@@ -1083,15 +1096,15 @@ export default function TechPage() {
                             <thead className="border-b border-white/10 bg-black/20">
                                 <tr>
                                     <th className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                        Request
+                                        Versoek
                                     </th>
 
                                     <th className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                        Category
+                                        Kategorie
                                     </th>
 
                                     <th className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                        Priority
+                                        Prioriteit
                                     </th>
 
                                     <th className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -1099,11 +1112,11 @@ export default function TechPage() {
                                     </th>
 
                                     <th className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                        Assigned To
+                                        Toegewys aan
                                     </th>
 
                                     <th className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                        Created
+                                        Aangemeld op
                                     </th>
                                 </tr>
                             </thead>
@@ -1116,8 +1129,7 @@ export default function TechPage() {
                                             colSpan={6}
                                             className="px-5 py-12 text-center text-sm text-zinc-500"
                                         >
-                                            No requests match
-                                            the current filters.
+                                            Geen versoeke pas by die gekose filters nie.
                                         </td>
                                     </tr>
                                 ) : (
@@ -1177,7 +1189,7 @@ export default function TechPage() {
                                                         )}`}
                                                     >
                                                         {
-                                                            request.priority
+                                                            itLabel(request.priority)
                                                         }
                                                     </span>
                                                 </td>
@@ -1256,13 +1268,13 @@ export default function TechPage() {
                                         }
                                         className="rounded-xl border border-white/10 bg-white/4 px-4 py-2.5 text-sm text-zinc-400 transition hover:bg-white/8 hover:text-white"
                                     >
-                                        Close
+                                        Sluit
                                     </button>
                                 </div>
 
                                 <div className="mb-6 rounded-2xl border border-white/10 bg-black/20 p-5">
                                     <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                        Description
+                                        Beskrywing
                                     </p>
 
                                     <p className="whitespace-pre-wrap text-sm leading-7 text-zinc-300">
@@ -1274,8 +1286,21 @@ export default function TechPage() {
 
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                        <p className="text-xs text-zinc-500">{itLabel("Requester")}</p>
+                                        <p className="mt-1 text-sm text-zinc-200">
+                                            {selectedRequest.userName || `#${selectedRequest.userID}`}
+                                        </p>
+                                        <p className="mt-1 break-all text-xs text-zinc-400">{selectedRequest.userEmail}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                        <p className="text-xs text-zinc-500">{itLabel("Logged by")}</p>
+                                        <p className="mt-1 text-sm text-zinc-200">
+                                            {selectedRequest.createdByName || `#${selectedRequest.createdByUserID ?? selectedRequest.userID}`}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                                         <p className="text-xs text-zinc-500">
-                                            Category
+                                            Kategorie
                                         </p>
 
                                         <p className="mt-1 text-sm font-medium text-white">
@@ -1287,7 +1312,7 @@ export default function TechPage() {
 
                                     <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                                         <p className="text-xs text-zinc-500">
-                                            Currently Assigned To
+                                            Tans toegewys aan
                                         </p>
 
                                         <p className="mt-1 text-sm font-medium text-white">
@@ -1302,18 +1327,18 @@ export default function TechPage() {
 
                                 <div className="mt-6">
                                     <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                                        Internal Comments
+                                        Interne kommentaar
                                     </p>
 
                                     <div className="space-y-3">
                                         {commentsLoading ? (
                                             <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-500">
-                                                Loading comments...
+                                                Kommentaar laai…
                                             </div>
                                         ) : comments.length ===
                                           0 ? (
                                             <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-500">
-                                                No comments yet.
+                                                Nog geen kommentaar nie.
                                             </div>
                                         ) : (
                                             comments.map(
@@ -1330,7 +1355,7 @@ export default function TechPage() {
                                                             <p className="text-sm font-medium text-zinc-200">
                                                                 {comment.user
                                                                     ? `${comment.user.firstName} ${comment.user.lastName}`
-                                                                    : `User #${comment.userID}`}
+                                                                    : `Gebruiker #${comment.userID}`}
                                                             </p>
 
                                                             <p className="text-xs text-zinc-600">
@@ -1371,7 +1396,7 @@ export default function TechPage() {
                                                     void addComment();
                                                 }
                                             }}
-                                            placeholder="Add an internal comment..."
+                                            placeholder="Voeg interne kommentaar by…"
                                             className={inputClass}
                                         />
 
@@ -1382,7 +1407,7 @@ export default function TechPage() {
                                             }
                                             className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
                                         >
-                                            Add Comment
+                                            Voeg kommentaar by
                                         </button>
                                     </div>
                                 </div>
@@ -1393,15 +1418,15 @@ export default function TechPage() {
                             <aside className="w-full xl:w-90">
                                 <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
                                     <p className="mb-5 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                                        Manage Request
+                                        Bestuur versoek
                                     </p>
 
                                     <div className="space-y-5">
                                         <div>
                                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                                                 {user.roleID === 3
-                                                    ? "Assign to"
-                                                    : "Technician"}
+                                                    ? "Ken toe aan"
+                                                    : "Tegnikus"}
                                             </label>
 
                                             <select
@@ -1426,7 +1451,7 @@ export default function TechPage() {
                                                 }
                                             >
                                                 <option value="">
-                                                    Unassigned
+                                                    Nie toegeken nie
                                                 </option>
 
                                                 {technicians.map(
@@ -1451,7 +1476,7 @@ export default function TechPage() {
                                                                 3 &&
                                                             technician.roleID ===
                                                                 3
-                                                                ? "(Admin)"
+                                                                ? "(Administrateur)"
                                                                 : ""}
                                                         </option>
                                                     )
@@ -1481,22 +1506,22 @@ export default function TechPage() {
                                                 }
                                             >
                                                 <option value={1}>
-                                                    Logged
+                                                    Aangemeld
                                                 </option>
 
                                                 <option value={2}>
-                                                    Busy
+                                                    Besig
                                                 </option>
 
                                                 <option value={3}>
-                                                    Done
+                                                    Afgehandel
                                                 </option>
                                             </select>
                                         </div>
 
                                         <div>
                                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                Priority
+                                                Prioriteit
                                             </label>
 
                                             <select
@@ -1514,7 +1539,7 @@ export default function TechPage() {
                                                 }
                                             >
                                                 <option value="Low">
-                                                    Low
+                                                    Laag
                                                 </option>
 
                                                 <option value="Medium">
@@ -1522,11 +1547,11 @@ export default function TechPage() {
                                                 </option>
 
                                                 <option value="High">
-                                                    High
+                                                    Hoog
                                                 </option>
 
                                                 <option value="Critical">
-                                                    Critical
+                                                    Kritiek
                                                 </option>
                                             </select>
                                         </div>
@@ -1540,8 +1565,8 @@ export default function TechPage() {
                                             className="w-full rounded-xl bg-white p-3.5 text-sm font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             {saving
-                                                ? "Saving..."
-                                                : "Save Changes"}
+                                                ? "Besig om te stoor…"
+                                                : "Stoor veranderinge"}
                                         </button>
                                     </div>
                                 </div>
@@ -1550,7 +1575,7 @@ export default function TechPage() {
 
                                 <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-5">
                                     <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                                        Quick Actions
+                                        Vinnige aksies
                                     </p>
 
                                     <div className="grid grid-cols-2 gap-2">
@@ -1563,7 +1588,7 @@ export default function TechPage() {
                                             }
                                             className="rounded-xl border border-red-400/10 bg-red-500/8 px-3 py-2.5 text-xs font-medium text-red-300 transition hover:bg-red-500/14"
                                         >
-                                            Logged
+                                            Aangemeld
                                         </button>
 
                                         <button
@@ -1575,7 +1600,7 @@ export default function TechPage() {
                                             }
                                             className="rounded-xl border border-orange-400/10 bg-orange-500/8 px-3 py-2.5 text-xs font-medium text-orange-300 transition hover:bg-orange-500/14"
                                         >
-                                            Busy
+                                            Besig
                                         </button>
 
                                         <button
@@ -1587,7 +1612,7 @@ export default function TechPage() {
                                             }
                                             className="col-span-2 rounded-xl border border-green-400/10 bg-green-500/8 px-3 py-2.5 text-xs font-medium text-green-300 transition hover:bg-green-500/14"
                                         >
-                                            Mark Done
+                                            Merk as afgehandel
                                         </button>
                                     </div>
                                 </div>
@@ -1600,7 +1625,7 @@ export default function TechPage() {
 
                 <footer className="mt-10 border-t border-white/10 pt-6">
                     <p className="text-center text-sm text-zinc-600">
-                        Laerskool Tygerpoort · IT Desk
+                        Laerskool Tygerpoort · IT Report
                     </p>
                 </footer>
             </div>

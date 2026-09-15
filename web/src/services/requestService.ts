@@ -16,6 +16,28 @@ export interface Status {
     statusName: string;
 }
 
+export interface RequesterOption {
+    userID: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+}
+
+export interface CreateRequestInput {
+    title: string;
+    description: string;
+    priority: string;
+    categoryID: number;
+    requestedForUserID?: number;
+}
+
+export class RequestSubmissionError extends Error {
+    constructor(public readonly status: number) {
+        super(`Failed to create request. Status: ${status}`);
+        this.name = "RequestSubmissionError";
+    }
+}
+
 // ========================================
 // GET JWT TOKEN
 // ========================================
@@ -50,8 +72,8 @@ function getAuthHeaders(): HeadersInit {
 // ========================================
 
 export async function createRequest(
-    request: RequestModel
-) {
+    request: CreateRequestInput
+): Promise<RequestModel> {
     const response = await fetch(
         `${API_URL}/api/Requests`,
         {
@@ -62,11 +84,19 @@ export async function createRequest(
     );
 
     if (!response.ok) {
-        throw new Error(
-            `Failed to create request. Status: ${response.status}`
-        );
+        throw new RequestSubmissionError(response.status);
     }
 
+    return response.json();
+}
+
+// Admin-only endpoint; returns just the staff details needed for this selection.
+export async function getRequesters(): Promise<RequesterOption[]> {
+    const response = await fetch(`${API_URL}/api/Requests/requesters`, {
+        headers: getAuthHeaders(),
+        cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Unable to load requesters.");
     return response.json();
 }
 

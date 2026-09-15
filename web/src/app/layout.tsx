@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import LanguageShell from "./components/LanguageShell";
 import PwaRegister from "./components/PwaRegister";
 import "./globals.css";
 
@@ -72,10 +73,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="af" suppressHydrationWarning>
       <body>
         <PwaRegister />
-        {children}
+        <LanguageShell>{children}</LanguageShell>
       </body>
     </html>
   );

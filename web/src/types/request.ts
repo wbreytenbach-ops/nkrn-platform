@@ -3,13 +3,19 @@ export interface RequestModel {
 
     userID: number;
 
+    createdByUserID?: number | null;
+    userName?: string | null;
+    userEmail?: string | null;
+    createdByName?: string | null;
+    createdByEmail?: string | null;
+
     title: string;
 
     description: string;
 
     priority: string;
 
-    assignedTo?: string | null;
+    assignedTo?: number | null;
 
     createdDate?: string | null;
 

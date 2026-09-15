@@ -1,5 +1,7 @@
 "use client";
 
+import { itLabel, itError } from "../it-labels";
+
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,6 +29,9 @@ interface RequestItem {
     userID: number;
     userName: string;
     userEmail: string;
+    createdByUserID?: number | null;
+    createdByName?: string | null;
+    createdByEmail?: string | null;
     title: string;
     description: string;
     priority: string;
@@ -151,16 +156,16 @@ function formatDateTime(
     value: string | null | undefined
 ): string {
     if (!value) {
-        return "Not scheduled";
+        return "Nog nie beplan nie";
     }
 
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
-        return "Invalid date";
+        return "Ongeldige datum";
     }
 
-    return date.toLocaleString();
+    return date.toLocaleString("af-ZA");
 }
 
 // ========================================
@@ -347,7 +352,7 @@ function AdminDashboard() {
                     }
 
                     throw new Error(
-                        "Failed to load requests."
+                        "Die versoeke kon nie gelaai word nie."
                     );
                 }
 
@@ -420,7 +425,7 @@ function AdminDashboard() {
                                             request.userName ||
                                             (submittedBy
                                                 ? `${submittedBy.firstName} ${submittedBy.lastName}`
-                                                : `User #${request.userID}`),
+                                                : `Gebruiker #${request.userID}`),
                                         userEmail:
                                             request.userEmail ||
                                             submittedBy?.email ||
@@ -587,7 +592,7 @@ function AdminDashboard() {
 
                 if (!cancelled) {
                     setError(
-                        "Unable to load the IT Desk data."
+                        "Die IT-inligting kon nie gelaai word nie."
                     );
                 }
             } finally {
@@ -626,7 +631,7 @@ function AdminDashboard() {
             !email
         ) {
             setError(
-                "First name, last name and email address are required."
+                "Voornaam, van en e-posadres is verpligtend."
             );
 
             return;
@@ -638,7 +643,7 @@ function AdminDashboard() {
             )
         ) {
             setError(
-                "Only @tygies.co.za email addresses are allowed."
+                "Slegs @tygies.co.za-e-posadresse word toegelaat."
             );
 
             return;
@@ -650,7 +655,7 @@ function AdminDashboard() {
             newUserRoleID !== 3
         ) {
             setError(
-                "Invalid user role."
+                "Ongeldige gebruikersrol."
             );
 
             return;
@@ -690,7 +695,7 @@ function AdminDashboard() {
                     response.status === 403
                 ) {
                     throw new Error(
-                        "You are not authorised to add users."
+                        "Jy het nie toestemming om gebruikers by te voeg nie."
                     );
                 }
 
@@ -698,12 +703,12 @@ function AdminDashboard() {
                     response.status === 409
                 ) {
                     throw new Error(
-                        "A user with this email address already exists."
+                        "Daar is reeds ’n gebruiker met hierdie e-posadres."
                     );
                 }
 
                 let message =
-                    "Failed to add user.";
+                    "Die gebruiker kon nie bygevoeg word nie.";
 
                 try {
                     const parsed =
@@ -770,7 +775,7 @@ function AdminDashboard() {
             setShowAddUser(false);
 
             setSuccessMessage(
-                `${createdUser.firstName} ${createdUser.lastName} was added successfully.`
+                `${createdUser.firstName} ${createdUser.lastName} is bygevoeg.`
             );
         } catch (userError) {
             console.error(
@@ -781,7 +786,7 @@ function AdminDashboard() {
             setError(
                 userError instanceof Error
                     ? userError.message
-                    : "Unable to add user."
+                    : "Die gebruiker kon nie bygevoeg word nie."
             );
         } finally {
             setCreatingUser(false);
@@ -840,7 +845,7 @@ function AdminDashboard() {
             !editingUser.email.trim()
         ) {
             setError(
-                "First name, last name and email address are required."
+                "Voornaam, van en e-posadres is verpligtend."
             );
 
             return;
@@ -853,7 +858,7 @@ function AdminDashboard() {
                 .endsWith("@tygies.co.za")
         ) {
             setError(
-                "Only @tygies.co.za email addresses are allowed."
+                "Slegs @tygies.co.za-e-posadresse word toegelaat."
             );
 
             return;
@@ -865,7 +870,7 @@ function AdminDashboard() {
             editingUser.roleID !== 3
         ) {
             setError(
-                "Invalid user role."
+                "Ongeldige gebruikersrol."
             );
 
             return;
@@ -917,7 +922,7 @@ function AdminDashboard() {
                     response.status === 403
                 ) {
                     throw new Error(
-                        "You are not authorised to manage users."
+                        "Jy het nie toestemming om gebruikers te bestuur nie."
                     );
                 }
 
@@ -925,12 +930,12 @@ function AdminDashboard() {
                     response.status === 409
                 ) {
                     throw new Error(
-                        "A user with this email address already exists."
+                        "Daar is reeds ’n gebruiker met hierdie e-posadres."
                     );
                 }
 
                 throw new Error(
-                    "Failed to update user."
+                    "Die gebruiker kon nie opgedateer word nie."
                 );
             }
 
@@ -1018,7 +1023,7 @@ setAdministrators(
             setEditingUser(null);
 
             setSuccessMessage(
-                `${updatedUser.firstName} ${updatedUser.lastName} was updated successfully.`
+                `${updatedUser.firstName} ${updatedUser.lastName} is opgedateer.`
             );
 
             // Rebuild technician/admin lists from the
@@ -1062,7 +1067,7 @@ setAdministrators(
             setError(
                 userError instanceof Error
                     ? userError.message
-                    : "Unable to update user."
+                    : "Die gebruiker kon nie opgedateer word nie."
             );
         } finally {
             setSavingUserID(null);
@@ -1078,7 +1083,7 @@ setAdministrators(
                 user.userID
         ) {
             setError(
-                "You cannot remove your own account."
+                "Jy kan nie jou eie rekening deaktiveer nie."
             );
 
             return;
@@ -1086,7 +1091,7 @@ setAdministrators(
 
         const confirmed =
             window.confirm(
-                `Are you sure you want to remove ${systemUser.firstName} ${systemUser.lastName}?\n\nThis will deactivate the user account.`
+                `Wil jy ${systemUser.firstName} ${systemUser.lastName} se rekening deaktiveer?\n\nDie gebruiker sal nie meer kan aanmeld nie.`
             );
 
         if (!confirmed) {
@@ -1123,12 +1128,12 @@ setAdministrators(
                     response.status === 403
                 ) {
                     throw new Error(
-                        "You are not authorised to remove users."
+                        "Jy het nie toestemming om gebruikers te deaktiveer nie."
                     );
                 }
 
                 throw new Error(
-                    "Failed to remove user."
+                    "Die gebruiker kon nie gedeaktiveer word nie."
                 );
             }
 
@@ -1169,7 +1174,7 @@ setAdministrators(
             }
 
             setSuccessMessage(
-                `${systemUser.firstName} ${systemUser.lastName} was removed successfully.`
+                `${systemUser.firstName} ${systemUser.lastName} is gedeaktiveer.`
             );
         } catch (userError) {
             console.error(
@@ -1180,7 +1185,7 @@ setAdministrators(
             setError(
                 userError instanceof Error
                     ? userError.message
-                    : "Unable to remove user."
+                    : "Die gebruiker kon nie gedeaktiveer word nie."
             );
         } finally {
             setRemovingUserID(null);
@@ -1337,7 +1342,7 @@ setAdministrators(
                     end <= start
                 ) {
                     throw new Error(
-                        "The scheduled end time must be after the scheduled start time."
+                        "Die beplande eindtyd moet ná die begintyd wees."
                     );
                 }
             }
@@ -1404,17 +1409,17 @@ setAdministrators(
                     response.status === 403
                 ) {
                     throw new Error(
-                        "You are not authorised to update this request."
+                        "Jy het nie toestemming om hierdie versoek op te dateer nie."
                     );
                 }
 
                 throw new Error(
-                    "Failed to update request."
+                    "Die versoek kon nie opgedateer word nie."
                 );
             }
 
             setSuccessMessage(
-                `Request #${request.requestID} saved successfully.`
+                `Versoek #${request.requestID} is gestoor.`
             );
         } catch (saveError) {
             console.error(
@@ -1425,7 +1430,7 @@ setAdministrators(
             setError(
                 saveError instanceof Error
                     ? saveError.message
-                    : `Unable to update Request #${request.requestID}.`
+                    : `Versoek #${request.requestID} kon nie opgedateer word nie.`
             );
         } finally {
             setSavingID(null);
@@ -1449,7 +1454,7 @@ setAdministrators(
 
         if (!text) {
             setError(
-                "Please enter a comment before adding it."
+                "Tik eers jou kommentaar in."
             );
 
             return;
@@ -1483,7 +1488,7 @@ setAdministrators(
                 );
 
                 throw new Error(
-                    "Failed to add comment."
+                    "Die kommentaar kon nie bygevoeg word nie."
                 );
             }
 
@@ -1508,7 +1513,7 @@ setAdministrators(
             }));
 
             setSuccessMessage(
-                `Comment added to Request #${requestID}.`
+                `Kommentaar is by versoek #${requestID} gevoeg.`
             );
         } catch (commentError) {
             console.error(
@@ -1519,7 +1524,7 @@ setAdministrators(
             setError(
                 commentError instanceof Error
                     ? commentError.message
-                    : `Unable to add a comment to Request #${requestID}.`
+                    : `Kommentaar kon nie by versoek #${requestID} gevoeg word nie.`
             );
         } finally {
             setCommentSavingID(null);
@@ -1533,28 +1538,31 @@ setAdministrators(
     function exportCSV() {
         if (requests.length === 0) {
             setError(
-                "There are no requests to export."
+                "Daar is geen versoeke om uit te voer nie."
             );
 
             return;
         }
 
         const headers = [
-            "Request ID",
-            "User ID",
-            "User Name",
-            "User Email",
-            "Title",
-            "Description",
-            "Priority",
-            "Assigned To",
-            "Created Date",
-            "Completed Date",
-            "Scheduled Start",
-            "Scheduled End",
-            "Category",
+            "Versoeknommer",
+            "Gebruikersnommer",
+            "Gebruiker se naam",
+            "Gebruiker se e-posadres",
+            "Aangemeld deur: gebruikersnommer",
+            "Aangemeld deur: naam",
+            "Aangemeld deur: e-posadres",
+            "Titel",
+            "Beskrywing",
+            "Prioriteit",
+            "Toegewys aan",
+            "Aanmelddatum",
+            "Afhandelingsdatum",
+            "Beplande begintyd",
+            "Beplande eindtyd",
+            "Kategorie",
             "Status",
-            "Google Calendar Event ID",
+            "Google Calendar-afspraaknommer",
         ];
 
         const rows = requests.map(
@@ -1563,16 +1571,19 @@ setAdministrators(
                 request.userID,
                 request.userName ?? "",
                 request.userEmail ?? "",
+                request.createdByUserID ?? request.userID,
+                request.createdByName ?? request.userName ?? "",
+                request.createdByEmail ?? request.userEmail ?? "",
                 request.title ?? "",
                 request.description ?? "",
-                request.priority ?? "",
+                itLabel(request.priority),
                 request.assignedTo ?? "",
                 request.createdDate ?? "",
                 request.completedDate ?? "",
                 request.scheduledStart ?? "",
                 request.scheduledEnd ?? "",
                 request.categoryName ?? "",
-                request.statusName ?? "",
+                itLabel(request.statusName),
                 request.googleCalendarEventID ??
                     "",
             ]
@@ -1634,7 +1645,7 @@ setAdministrators(
         URL.revokeObjectURL(url);
 
         setSuccessMessage(
-            "All IT requests were exported successfully."
+            "Alle IT-versoeke is uitgevoer."
         );
     }
 
@@ -1712,7 +1723,7 @@ setAdministrators(
                     </div>
 
                     <p className="text-sm text-zinc-400">
-                        Loading Administrator Dashboard...
+                        Administrasieportaal laai…
                     </p>
                 </div>
             </main>
@@ -1800,7 +1811,7 @@ setAdministrators(
                             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/4">
                                 <Image
                                     src="/wit-logo-tygies.png"
-                                    alt="Laerskool Tygerpoort Logo"
+                                    alt="Laerskool Tygerpoort-logo"
                                     width={150}
                                     height={60}
                                     className="h-auto w-30 object-contain"
@@ -1810,11 +1821,11 @@ setAdministrators(
 
                             <div>
                                 <p className="mb-1 text-xs font-medium uppercase tracking-[0.25em] text-red-400">
-                                    Administrator
+                                    Administrateur
                                 </p>
 
                                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                                    IT Desk Control Centre
+                                    IT-beheersentrum
                                 </h1>
 
                                 <p className="mt-1 text-sm text-zinc-400">
@@ -1834,7 +1845,7 @@ setAdministrators(
                                 }
                                 className={buttonClass}
                             >
-                                My Requests
+                                My versoeke
                             </button>
 
                             <button
@@ -1846,7 +1857,7 @@ setAdministrators(
                                 }
                                 className={buttonClass}
                             >
-                                Tech Dashboard
+                                Tegnikusportaal
                             </button>
 
                             <button
@@ -1856,7 +1867,7 @@ setAdministrators(
                                 }
                                 className="rounded-xl border border-green-400/10 bg-green-500/10 px-4 py-2.5 text-sm font-medium text-green-300 transition hover:bg-green-500/15"
                             >
-                                Export CSV
+                                Voer CSV uit
                             </button>
 
                             <button
@@ -1864,7 +1875,7 @@ setAdministrators(
                                 onClick={() => router.push("/")}
                                 className="rounded-xl border border-[#d7a31f]/25 bg-[#d7a31f]/8 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:border-[#d7a31f]/40 hover:bg-[#d7a31f]/12"
                             >
-                                NKRN Home
+                                Tuis
                             </button>
 
                             <button
@@ -1872,7 +1883,7 @@ setAdministrators(
                                 onClick={logout}
                                 className="rounded-xl border border-red-400/10 bg-red-500/8 px-4 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/14"
                             >
-                                Log Out
+                                Meld af
                             </button>
                         </div>
                     </div>
@@ -1890,7 +1901,7 @@ setAdministrators(
 
                 {error && (
                     <div className="mb-6 rounded-2xl border border-red-400/10 bg-red-500/7 p-4 text-sm text-red-300 backdrop-blur-xl">
-                        {error}
+                        {itError(error)}
                     </div>
                 )}
 
@@ -1903,7 +1914,7 @@ setAdministrators(
                         className={`${glassCard} p-6`}
                     >
                         <p className="text-sm text-zinc-500">
-                            Logged
+                            Aangemeld
                         </p>
 
                         <p className="mt-2 text-4xl font-bold text-red-400">
@@ -1911,7 +1922,7 @@ setAdministrators(
                         </p>
 
                         <p className="mt-2 text-xs text-zinc-600">
-                            Awaiting attention
+                            Wag op aandag
                         </p>
                     </div>
 
@@ -1919,7 +1930,7 @@ setAdministrators(
                         className={`${glassCard} p-6`}
                     >
                         <p className="text-sm text-zinc-500">
-                            Busy
+                            Besig
                         </p>
 
                         <p className="mt-2 text-4xl font-bold text-orange-400">
@@ -1927,7 +1938,7 @@ setAdministrators(
                         </p>
 
                         <p className="mt-2 text-xs text-zinc-600">
-                            Currently being handled
+                            Word tans hanteer
                         </p>
                     </div>
 
@@ -1935,7 +1946,7 @@ setAdministrators(
                         className={`${glassCard} p-6`}
                     >
                         <p className="text-sm text-zinc-500">
-                            Done
+                            Afgehandel
                         </p>
 
                         <p className="mt-2 text-4xl font-bold text-green-400">
@@ -1943,7 +1954,7 @@ setAdministrators(
                         </p>
 
                         <p className="mt-2 text-xs text-zinc-600">
-                            Completed requests
+                            Afgehandelde versoeke
                         </p>
                     </div>
 
@@ -1951,7 +1962,7 @@ setAdministrators(
                         className={`${glassCard} p-6`}
                     >
                         <p className="text-sm text-zinc-500">
-                            Critical
+                            Kritiek
                         </p>
 
                         <p className="mt-2 text-4xl font-bold text-red-500">
@@ -1959,7 +1970,7 @@ setAdministrators(
                         </p>
 
                         <p className="mt-2 text-xs text-zinc-600">
-                            High-priority requests
+                            Hoëprioriteitsversoeke
                         </p>
                     </div>
 
@@ -1967,7 +1978,7 @@ setAdministrators(
                         className={`${glassCard} p-6`}
                     >
                         <p className="text-sm text-zinc-500">
-                            Scheduled
+                            Beplan
                         </p>
 
                         <p className="mt-2 text-4xl font-bold text-blue-400">
@@ -1975,7 +1986,7 @@ setAdministrators(
                         </p>
 
                         <p className="mt-2 text-xs text-zinc-600">
-                            Calendar appointments
+                            Kalenderafsprake
                         </p>
                     </div>
                 </section>
@@ -1990,11 +2001,11 @@ setAdministrators(
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                                Administration
+                                Administrasie
                             </p>
 
                             <h2 className="text-2xl font-semibold">
-                                System Overview
+                                Stelseloorsig
                             </h2>
 
                             <p className="mt-1 text-sm text-zinc-500">
@@ -2020,8 +2031,8 @@ setAdministrators(
                                 className="rounded-xl border border-[#d7a31f]/25 bg-[#d7a31f]/10 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:bg-[#d7a31f]/15"
                             >
                                 {showAddUser
-                                    ? "Cancel Add User"
-                                    : "+ Add User"}
+                                    ? "Kanselleer nuwe gebruiker"
+                                    : "+ Voeg gebruiker by"}
                             </button>
 
                             <button
@@ -2035,8 +2046,8 @@ setAdministrators(
                                 className={buttonClass}
                             >
                                 {showUsers
-                                    ? "Hide Users"
-                                    : "Show Users"}
+                                    ? "Versteek gebruikers"
+                                    : "Wys gebruikers"}
                             </button>
                         </div>
                     </div>
@@ -2045,11 +2056,11 @@ setAdministrators(
                         <div className="mt-6 rounded-2xl border border-[#d7a31f]/20 bg-[#d7a31f]/5 p-5">
                             <div className="mb-5">
                                 <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#d7a31f]">
-                                    User Administration
+                                    Gebruikersadministrasie
                                 </p>
 
                                 <h3 className="mt-1 text-lg font-semibold text-white">
-                                    Add NKRN User
+                                    Voeg NKRN-gebruiker by
                                 </h3>
 
                                 <p className="mt-1 text-sm text-zinc-500">
@@ -2060,7 +2071,7 @@ setAdministrators(
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
                                     <label className="mb-2 block text-xs font-medium uppercase tracking-[0.15em] text-zinc-500">
-                                        First Name
+                                        Voornaam
                                     </label>
 
                                     <input
@@ -2076,7 +2087,7 @@ setAdministrators(
                                             )
                                         }
                                         className={inputClass}
-                                        placeholder="First name"
+                                        placeholder="Voornaam"
                                         disabled={
                                             creatingUser
                                         }
@@ -2085,7 +2096,7 @@ setAdministrators(
 
                                 <div>
                                     <label className="mb-2 block text-xs font-medium uppercase tracking-[0.15em] text-zinc-500">
-                                        Last Name
+                                        Van
                                     </label>
 
                                     <input
@@ -2101,7 +2112,7 @@ setAdministrators(
                                             )
                                         }
                                         className={inputClass}
-                                        placeholder="Last name"
+                                        placeholder="Van"
                                         disabled={
                                             creatingUser
                                         }
@@ -2110,7 +2121,7 @@ setAdministrators(
 
                                 <div>
                                     <label className="mb-2 block text-xs font-medium uppercase tracking-[0.15em] text-zinc-500">
-                                        Email
+                                        E-pos
                                     </label>
 
                                     <input
@@ -2135,7 +2146,7 @@ setAdministrators(
 
                                 <div>
                                     <label className="mb-2 block text-xs font-medium uppercase tracking-[0.15em] text-zinc-500">
-                                        Role
+                                        Rol
                                     </label>
 
                                     <select
@@ -2157,15 +2168,15 @@ setAdministrators(
                                         }
                                     >
                                         <option value="1">
-                                            User
+                                            Personeellid
                                         </option>
 
                                         <option value="2">
-                                            Technician
+                                            Tegnikus
                                         </option>
 
                                         <option value="3">
-                                            Administrator
+                                            Administrateur
                                         </option>
                                     </select>
                                 </div>
@@ -2183,8 +2194,8 @@ setAdministrators(
                                     className="rounded-xl border border-green-400/15 bg-green-500/10 px-4 py-2.5 text-sm font-medium text-green-300 transition hover:bg-green-500/15 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {creatingUser
-                                        ? "Creating User..."
-                                        : "Create User"}
+                                        ? "Gebruiker word geskep…"
+                                        : "Skep gebruiker"}
                                 </button>
 
                                 <button
@@ -2211,7 +2222,7 @@ setAdministrators(
                                     }
                                     className={buttonClass}
                                 >
-                                    Cancel
+                                    Kanselleer
                                 </button>
                             </div>
                         </div>
@@ -2228,19 +2239,19 @@ setAdministrators(
                                             </th>
 
                                             <th className="px-5 py-4">
-                                                Name
+                                                Naam
                                             </th>
 
                                             <th className="px-5 py-4">
-                                                Email
+                                                E-pos
                                             </th>
 
                                             <th className="px-5 py-4">
-                                                Role
+                                                Rol
                                             </th>
 
                                             <th className="px-5 py-4">
-                                                Actions
+                                                Aksies
                                             </th>
                                         </tr>
                                     </thead>
@@ -2287,7 +2298,7 @@ setAdministrators(
                                                                             )
                                                                         }
                                                                         className={inputClass}
-                                                                        placeholder="First name"
+                                                                        placeholder="Voornaam"
                                                                     />
 
                                                                     <input
@@ -2306,7 +2317,7 @@ setAdministrators(
                                                                             )
                                                                         }
                                                                         className={inputClass}
-                                                                        placeholder="Last name"
+                                                                        placeholder="Van"
                                                                     />
                                                                 </div>
                                                             ) : (
@@ -2340,7 +2351,7 @@ setAdministrators(
                                                                         )
                                                                     }
                                                                     className={`${inputClass} min-w-65`}
-                                                                    placeholder="Email address"
+                                                                    placeholder="E-posadres"
                                                                 />
                                                             ) : (
                                                                 <span className="text-zinc-500">
@@ -2371,26 +2382,26 @@ setAdministrators(
                                                                     className={`${selectClass} min-w-45`}
                                                                 >
                                                                     <option value="1">
-                                                                        User
+                                                                        Personeellid
                                                                     </option>
 
                                                                     <option value="2">
-                                                                        Technician
+                                                                        Tegnikus
                                                                     </option>
 
                                                                     <option value="3">
-                                                                        Administrator
+                                                                        Administrateur
                                                                     </option>
                                                                 </select>
                                                             ) : (
                                                                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-300">
                                                                     {systemUser.roleID ===
                                                                     3
-                                                                        ? "Administrator"
+                                                                        ? "Administrateur"
                                                                         : systemUser.roleID ===
                                                                           2
-                                                                        ? "Technician"
-                                                                        : "User"}
+                                                                        ? "Tegnikus"
+                                                                        : "Personeellid"}
                                                                 </span>
                                                             )}
                                                         </td>
@@ -2412,8 +2423,8 @@ setAdministrators(
                                                                         >
                                                                             {savingUserID ===
                                                                             systemUser.userID
-                                                                                ? "Saving..."
-                                                                                : "Save"}
+                                                                                ? "Besig om te stoor…"
+                                                                                : "Stoor"}
                                                                         </button>
 
                                                                         <button
@@ -2427,7 +2438,7 @@ setAdministrators(
                                                                             }
                                                                             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                                                                         >
-                                                                            Cancel
+                                                                            Kanselleer
                                                                         </button>
                                                                     </>
                                                                 ) : (
@@ -2440,7 +2451,7 @@ setAdministrators(
                                                                         }
                                                                         className="rounded-xl border border-blue-400/10 bg-blue-500/10 px-3 py-2 text-xs font-medium text-blue-300 transition hover:bg-blue-500/15"
                                                                     >
-                                                                        Edit
+                                                                        Wysig
                                                                     </button>
                                                                 )}
 
@@ -2461,8 +2472,8 @@ setAdministrators(
                                                                 >
                                                                     {removingUserID ===
                                                                     systemUser.userID
-                                                                        ? "Removing..."
-                                                                        : "Remove"}
+                                                                        ? "Besig om te deaktiveer…"
+                                                                        : "Deaktiveer"}
                                                                 </button>
                                                             </div>
                                                         </td>
@@ -2485,11 +2496,11 @@ setAdministrators(
                     <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div>
                             <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                                Helpdesk
+                                IT-ondersteuning
                             </p>
 
                             <h2 className="text-2xl font-semibold">
-                                IT Requests
+                                IT-versoeke
                             </h2>
 
                             <p className="mt-1 text-sm text-zinc-500">
@@ -2516,8 +2527,8 @@ setAdministrators(
                             className={buttonClass}
                         >
                             {showDone
-                                ? "Hide Done Requests"
-                                : "Show Done Requests"}
+                                ? "Versteek afgehandelde versoeke"
+                                : "Wys afgehandelde versoeke"}
                         </button>
                     </div>
 
@@ -2532,7 +2543,7 @@ setAdministrators(
                                 className={`${glassCard} p-10 text-center`}
                             >
                                 <p className="text-sm text-zinc-500">
-                                    No active requests.
+                                    Geen aktiewe versoeke nie.
                                 </p>
                             </div>
                         )}
@@ -2567,7 +2578,7 @@ setAdministrators(
                                     request.userName ||
                                     (submittedByUser
                                         ? `${submittedByUser.firstName} ${submittedByUser.lastName}`
-                                        : `User #${request.userID}`);
+                                        : `Gebruiker #${request.userID}`);
 
                                 const submittedByEmail =
                                     request.userEmail ||
@@ -2604,7 +2615,7 @@ setAdministrators(
                                                             )}`}
                                                         >
                                                             {
-                                                                request.statusName
+                                                                itLabel(request.statusName)
                                                             }
                                                         </span>
 
@@ -2614,7 +2625,7 @@ setAdministrators(
                                                             )}`}
                                                         >
                                                             {
-                                                                request.priority
+                                                                itLabel(request.priority)
                                                             }
                                                         </span>
                                                     </div>
@@ -2634,7 +2645,7 @@ setAdministrators(
                                                     <div className="mt-6 grid gap-3 sm:grid-cols-2">
                                                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                                                             <p className="text-xs uppercase tracking-wide text-zinc-600">
-                                                                Submitted by
+                                                                {itLabel("Requester")}
                                                             </p>
 
                                                             <p className="mt-1 text-sm text-zinc-200">
@@ -2652,7 +2663,21 @@ setAdministrators(
 
                                                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                                                             <p className="text-xs uppercase tracking-wide text-zinc-600">
-                                                                Category
+                                                                {itLabel("Logged by")}
+                                                            </p>
+                                                            <p className="mt-1 text-sm text-zinc-200">
+                                                                {request.createdByName || (request.createdByUserID && request.createdByUserID !== request.userID
+                                                                    ? `#${request.createdByUserID}`
+                                                                    : submittedByName)}
+                                                            </p>
+                                                            <p className="mt-1 break-all text-xs text-zinc-500">
+                                                                {request.createdByEmail || ((request.createdByUserID ?? request.userID) === request.userID ? submittedByEmail : "")}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                                            <p className="text-xs uppercase tracking-wide text-zinc-600">
+                                                                Kategorie
                                                             </p>
 
                                                             <p className="mt-1 text-sm text-zinc-200">
@@ -2665,7 +2690,7 @@ setAdministrators(
 
                                                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                                                             <p className="text-xs uppercase tracking-wide text-zinc-600">
-                                                                Created
+                                                                Aangemeld op
                                                             </p>
 
                                                             <p className="mt-1 text-sm text-zinc-200">
@@ -2677,13 +2702,13 @@ setAdministrators(
 
                                                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                                                             <p className="text-xs uppercase tracking-wide text-zinc-600">
-                                                                Assigned to
+                                                                Toegewys aan
                                                             </p>
 
                                                             <p className="mt-1 text-sm text-zinc-200">
                                                                 {assignedUser
                                                                     ? `${assignedUser.firstName} ${assignedUser.lastName}`
-                                                                    : "Unassigned"}
+                                                                    : "Nie toegeken nie"}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -2704,13 +2729,13 @@ setAdministrators(
                                                                           )} → ${formatDateTime(
                                                                               request.scheduledEnd
                                                                           )}`
-                                                                        : "No appointment scheduled"}
+                                                                        : "Geen afspraak beplan nie"}
                                                                 </p>
                                                             </div>
 
                                                             {request.googleCalendarEventID && (
                                                                 <span className="rounded-lg border border-green-400/10 bg-green-500/10 px-3 py-2 text-xs text-green-300">
-                                                                    Calendar event linked
+                                                                    Kalenderafspraak gekoppel
                                                                 </span>
                                                             )}
                                                         </div>
@@ -2724,11 +2749,11 @@ setAdministrators(
                                                 <div className="w-full shrink-0 rounded-2xl border border-white/10 bg-black/20 p-5 xl:w-90">
                                                     <div className="mb-5">
                                                         <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-600">
-                                                            Administration
+                                                            Administrasie
                                                         </p>
 
                                                         <h4 className="mt-1 text-lg font-semibold">
-                                                            Manage Request
+                                                            Bestuur versoek
                                                         </h4>
                                                     </div>
 
@@ -2774,7 +2799,7 @@ setAdministrators(
                                                                                 }
                                                                             >
                                                                                 {
-                                                                                    status.statusName
+                                                                                    itLabel(status.statusName)
                                                                                 }
                                                                             </option>
                                                                         )
@@ -2782,15 +2807,15 @@ setAdministrators(
                                                                 ) : (
                                                                     <>
                                                                         <option value="1">
-                                                                            Logged
+                                                                            Aangemeld
                                                                         </option>
 
                                                                         <option value="2">
-                                                                            Busy
+                                                                            Besig
                                                                         </option>
 
                                                                         <option value="3">
-                                                                            Done
+                                                                            Afgehandel
                                                                         </option>
                                                                     </>
                                                                 )}
@@ -2801,7 +2826,7 @@ setAdministrators(
 
                                                         <div>
                                                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                                Priority
+                                                                Prioriteit
                                                             </label>
 
                                                             <select
@@ -2824,7 +2849,7 @@ setAdministrators(
                                                                 }
                                                             >
                                                                 <option value="Low">
-                                                                    Low
+                                                                    Laag
                                                                 </option>
 
                                                                 <option value="Medium">
@@ -2832,11 +2857,11 @@ setAdministrators(
                                                                 </option>
 
                                                                 <option value="High">
-                                                                    High
+                                                                    Hoog
                                                                 </option>
 
                                                                 <option value="Critical">
-                                                                    Critical
+                                                                    Kritiek
                                                                 </option>
                                                             </select>
                                                         </div>
@@ -2845,7 +2870,7 @@ setAdministrators(
 
                                                         <div>
                                                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                                Category
+                                                                Kategorie
                                                             </label>
 
                                                             <select
@@ -2869,7 +2894,7 @@ setAdministrators(
                                                                 }
                                                             >
                                                                 <option value="">
-                                                                    Uncategorised
+                                                                    Geen kategorie
                                                                 </option>
 
                                                                 {categories.map(
@@ -2885,7 +2910,7 @@ setAdministrators(
                                                                             }
                                                                         >
                                                                             {
-                                                                                category.categoryName
+                                                                                itLabel(category.categoryName)
                                                                             }
                                                                         </option>
                                                                     )
@@ -2897,7 +2922,7 @@ setAdministrators(
 
                                                         <div>
                                                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                                Assign to
+                                                                Ken toe aan
                                                             </label>
 
                                                             <select
@@ -2921,12 +2946,12 @@ setAdministrators(
                                                                 }
                                                             >
                                                                 <option value="">
-                                                                    Unassigned
+                                                                    Nie toegeken nie
                                                                 </option>
 
                                                                 {technicians.length >
                                                                     0 && (
-                                                                    <optgroup label="Technicians">
+                                                                    <optgroup label="Tegnici">
                                                                         {technicians.map(
                                                                             (
                                                                                 technician
@@ -2951,7 +2976,7 @@ setAdministrators(
 
                                                                 {administrators.length >
                                                                     0 && (
-                                                                    <optgroup label="Administrators">
+                                                                    <optgroup label="Administrateurs">
                                                                         {administrators.map(
                                                                             (
                                                                                 administrator
@@ -2980,7 +3005,7 @@ setAdministrators(
 
                                                         <div>
                                                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                                Scheduled start
+                                                                Beplande begintyd
                                                             </label>
 
                                                             <input
@@ -3009,7 +3034,7 @@ setAdministrators(
 
                                                         <div>
                                                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                                Scheduled end
+                                                                Beplande eindtyd
                                                             </label>
 
                                                             <input
@@ -3039,7 +3064,7 @@ setAdministrators(
                                                         {request.googleCalendarEventID && (
                                                             <div className="rounded-xl border border-green-400/10 bg-green-500/5 p-3">
                                                                 <p className="text-xs text-green-300">
-                                                                    Google Calendar event connected
+                                                                    Google Calendar-afspraak gekoppel
                                                                 </p>
 
                                                                 <p className="mt-1 break-all text-[11px] text-zinc-600">
@@ -3067,8 +3092,8 @@ setAdministrators(
                                                         >
                                                             {savingID ===
                                                             request.requestID
-                                                                ? "Saving..."
-                                                                : "Save Changes"}
+                                                                ? "Besig om te stoor…"
+                                                                : "Stoor veranderinge"}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -3081,11 +3106,11 @@ setAdministrators(
                                             <div className="mt-7 border-t border-white/10 pt-7">
                                                 <div className="mb-5">
                                                     <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-600">
-                                                        Communication
+                                                        Kommunikasie
                                                     </p>
 
                                                     <h4 className="mt-1 text-lg font-semibold">
-                                                        Comments & Progress
+                                                        Kommentaar en vordering
                                                     </h4>
 
                                                     <p className="mt-1 text-sm text-zinc-500">
@@ -3103,7 +3128,7 @@ setAdministrators(
                                                 {requestComments.length ===
                                                 0 ? (
                                                     <div className="mb-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-zinc-600">
-                                                        No comments have been added to this request yet.
+                                                        Daar is nog geen kommentaar op hierdie versoek nie.
                                                     </div>
                                                 ) : (
                                                     <div className="mb-5 space-y-3">
@@ -3121,7 +3146,7 @@ setAdministrators(
                                                                         <p className="text-sm font-medium text-zinc-200">
                                                                             {comment.user
                                                                                 ? `${comment.user.firstName} ${comment.user.lastName}`
-                                                                                : `User #${comment.userID}`}
+                                                                                : `Gebruiker #${comment.userID}`}
                                                                         </p>
 
                                                                         <p className="text-xs text-zinc-600">
@@ -3144,7 +3169,7 @@ setAdministrators(
 
                                                 <div>
                                                     <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                        Add progress comment
+                                                        Voeg ’n vorderingsnota by
                                                     </label>
 
                                                     <textarea
@@ -3170,7 +3195,7 @@ setAdministrators(
                                                                 })
                                                             )
                                                         }
-                                                        placeholder="Enter a progress update..."
+                                                        placeholder="Voeg ’n vorderingsnota by…"
                                                         rows={
                                                             3
                                                         }
@@ -3193,8 +3218,8 @@ setAdministrators(
                                                         >
                                                             {commentSavingID ===
                                                             request.requestID
-                                                                ? "Adding..."
-                                                                : "Add Comment"}
+                                                                ? "Besig om by te voeg…"
+                                                                : "Voeg kommentaar by"}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -3213,7 +3238,7 @@ setAdministrators(
 
                 <footer className="mt-10 border-t border-white/10 pt-6">
                     <p className="text-center text-sm text-zinc-600">
-                        Laerskool Tygerpoort · IT Desk · Administrator
+                        Laerskool Tygerpoort · IT Report · Administrateur
                     </p>
                 </footer>
             </div>

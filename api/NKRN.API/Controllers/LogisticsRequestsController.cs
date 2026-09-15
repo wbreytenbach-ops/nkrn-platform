@@ -1,8 +1,10 @@
 using System.Data;
 using System.Data.Common;
+using System.Net;
 using System.Security.Claims;
 using NKRN.API.Data;
 using NKRN.API.Models;
+using NKRN.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,9 @@ namespace NKRN.API.Controllers
     public class LogisticsRequestsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly EmailService _emailService;
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
 
         private static readonly HashSet<string> AllowedStatuses =
             new(StringComparer.OrdinalIgnoreCase)
@@ -38,9 +43,15 @@ namespace NKRN.API.Controllers
             };
 
         public LogisticsRequestsController(
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            EmailService emailService,
+            IConfiguration configuration,
+            IWebHostEnvironment environment)
         {
             _context = context;
+            _emailService = emailService;
+            _configuration = configuration;
+            _environment = environment;
         }
 
         // ============================================================
@@ -176,6 +187,18 @@ namespace NKRN.API.Controllers
                 return Unauthorized();
             }
 
+            var requester =
+                await _context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(user =>
+                        user.UserID == userID.Value &&
+                        user.IsActive);
+
+            if (requester == null)
+            {
+                return Unauthorized();
+            }
+
             if (request == null)
             {
                 return BadRequest(new
@@ -192,11 +215,11 @@ namespace NKRN.API.Controllers
                 });
             }
 
-            if (string.IsNullOrWhiteSpace(request.Title))
+            if (string.IsNullOrWhiteSpace(request.Description))
             {
                 return BadRequest(new
                 {
-                    message = "A request title is required."
+                    message = "Beskryf kortliks waarmee Logistics kan help."
                 });
             }
 
@@ -229,6 +252,9 @@ namespace NKRN.API.Controllers
                     message = "Maintenance action must be Repair, Replace or Unsure."
                 });
             }
+
+            var internalTitle =
+                BuildRequestTitle(request);
 
             var connection =
                 _context.Database.GetDbConnection();
@@ -307,7 +333,7 @@ namespace NKRN.API.Controllers
                     AddParameter(
                         command,
                         "@Title",
-                        request.Title.Trim());
+                        internalTitle);
 
                     AddParameter(
                         command,
@@ -528,6 +554,12 @@ namespace NKRN.API.Controllers
                         });
                 }
 
+                await TrySendRequestNotificationAsync(
+                    created,
+                    requester.FirstName,
+                    requester.LastName,
+                    requester.Email);
+
                 return CreatedAtAction(
                     nameof(GetRequest),
                     new
@@ -582,6 +614,9 @@ namespace NKRN.API.Controllers
                 });
             }
 
+            if (update.Priority != null && !new[] { "P1", "P2", "P3", "P4" }.Contains(update.Priority))
+                return BadRequest(new { message = "Priority must be P1, P2, P3 or P4." });
+
             var userID = GetLoggedInUserID();
 
             if (userID == null)
@@ -609,6 +644,7 @@ namespace NKRN.API.Controllers
                     UPDATE dbo.LogisticsRequests
                     SET
                         Status = @Status,
+                        Priority = COALESCE(@Priority, Priority),
                         ManagerNotes = @ManagerNotes,
                         ReviewedByUserID = @ReviewedByUserID,
                         ReviewedDate = SYSDATETIME(),
@@ -616,6 +652,7 @@ namespace NKRN.API.Controllers
                     WHERE RequestID = @RequestID;
                     """;
 
+                AddParameter(command, "@Priority", update.Priority);
                 AddParameter(
                     command,
                     "@Status",
@@ -1440,6 +1477,245 @@ namespace NKRN.API.Controllers
                     await connection.CloseAsync();
                 }
             }
+        }
+
+        // ============================================================
+        // MINIMUM-INPUT INTERNAL TITLE
+        // ============================================================
+
+        private static string BuildRequestTitle(
+            CreateLogisticsRequestRequest request)
+        {
+            var typeLabel =
+                request.RequestType?.Trim() switch
+                {
+                    "Event" => "Funksie / Aktiwiteit",
+                    "Maintenance" => "Instandhouding",
+                    "General" => "Algemeen",
+                    _ => "Logistics"
+                };
+
+            var description =
+                CleanNullable(request.Description)
+                ?? "Logistics-versoek";
+
+            description =
+                description
+                    .Replace("\r", " ")
+                    .Replace("\n", " ")
+                    .Trim();
+
+            while (description.Contains("  "))
+            {
+                description =
+                    description.Replace("  ", " ");
+            }
+
+            var prefix =
+                request.RequestType?.Trim() == "Event" &&
+                !string.IsNullOrWhiteSpace(
+                    request.ActivityCategory)
+                    ? $"{typeLabel} – {request.ActivityCategory.Trim()}"
+                    : typeLabel;
+
+            var title =
+                $"{prefix} – {description}";
+
+            return title.Length <= 200
+                ? title
+                : title[..200];
+        }
+
+        // ============================================================
+        // NEW REQUEST NOTIFICATION
+        //
+        // Uses existing Logistics module permissions.
+        // Request persistence is never rolled back because email fails.
+        // ============================================================
+
+        private async Task TrySendRequestNotificationAsync(
+            LogisticsRequestResponse request,
+            string firstName,
+            string lastName,
+            string requesterEmail)
+        {
+            var sendInDevelopment =
+                _configuration.GetValue<bool>(
+                    "Logistics:SendRequestEmailInDevelopment");
+
+            if (_environment.IsDevelopment() &&
+                !sendInDevelopment)
+            {
+                return;
+            }
+
+            try
+            {
+                var managerUserIDs =
+                    await _context.ModulePermissions
+                        .AsNoTracking()
+                        .Where(permission =>
+                            permission.ModuleKey == "Logistics" &&
+                            permission.CanView &&
+                            permission.CanManage)
+                        .Select(permission =>
+                            permission.UserID)
+                        .Distinct()
+                        .ToListAsync();
+
+                var recipients =
+                    await _context.Users
+                        .AsNoTracking()
+                        .Where(user =>
+                            user.IsActive &&
+                            !string.IsNullOrWhiteSpace(
+                                user.Email) &&
+                            (
+                                user.RoleID == 3 ||
+                                managerUserIDs.Contains(
+                                    user.UserID)
+                            ))
+                        .Select(user => user.Email)
+                        .Distinct()
+                        .ToListAsync();
+
+                if (recipients.Count == 0)
+                {
+                    var fallback =
+                        _configuration[
+                            "Logistics:FallbackNotificationEmail"]
+                        ?.Trim();
+
+                    if (string.IsNullOrWhiteSpace(
+                        fallback))
+                    {
+                        fallback =
+                            _configuration[
+                                "LogisticsAutomation:MasterRecipientEmail"]
+                            ?.Trim();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(
+                        fallback))
+                    {
+                        recipients.Add(fallback);
+                    }
+                }
+
+                if (recipients.Count == 0)
+                {
+                    Console.WriteLine(
+                        $"Logistics Request #{request.RequestID}: no module administrator email recipient is configured.");
+                    return;
+                }
+
+                var subject =
+                    $"Nuwe Logistics-versoek #{request.RequestID} – {request.Title}";
+
+                var body =
+                    BuildRequestEmailBody(
+                        request,
+                        firstName,
+                        lastName,
+                        requesterEmail);
+
+                foreach (var recipient in recipients)
+                {
+                    try
+                    {
+                        await _emailService.SendEmailAsync(
+                            recipient,
+                            subject,
+                            body);
+                    }
+                    catch (Exception emailError)
+                    {
+                        Console.WriteLine(
+                            $"Logistics Request #{request.RequestID}: email to {recipient} failed: {emailError.Message}");
+                    }
+                }
+            }
+            catch (Exception notificationError)
+            {
+                Console.WriteLine(
+                    $"Logistics Request #{request.RequestID}: notification preparation failed: {notificationError.Message}");
+            }
+        }
+
+        private static string BuildRequestEmailBody(
+            LogisticsRequestResponse request,
+            string firstName,
+            string lastName,
+            string requesterEmail)
+        {
+            static string E(string? value) =>
+                WebUtility.HtmlEncode(
+                    value ?? string.Empty);
+
+            var location =
+                request.Locations
+                    .OrderByDescending(item =>
+                        item.IsPrimary)
+                    .Select(item =>
+                        item.LocationName ??
+                        item.LocationText)
+                    .FirstOrDefault(value =>
+                        !string.IsNullOrWhiteSpace(
+                            value))
+                ?? "Nie gespesifiseer nie";
+
+            var equipment =
+                request.Equipment.Count == 0
+                    ? "Geen"
+                    : string.Join(
+                        ", ",
+                        request.Equipment.Select(
+                            item =>
+                                item.EquipmentName));
+
+            var maintenance =
+                request.MaintenanceItems.Count == 0
+                    ? "Nie van toepassing nie"
+                    : string.Join(
+                        ", ",
+                        request.MaintenanceItems.Select(
+                            item =>
+                                $"{item.MaintenanceName} ({item.ActionType})"));
+
+            var when =
+                request.ActivityDate.HasValue
+                    ? request.ActivityDate.Value
+                        .ToString("yyyy-MM-dd")
+                    : "Nie van toepassing nie";
+
+            if (request.StartTime.HasValue &&
+                request.EndTime.HasValue)
+            {
+                when +=
+                    $" {request.StartTime.Value:hh\\:mm}–{request.EndTime.Value:hh\\:mm}";
+            }
+
+            return $"""
+                <html>
+                <body style="font-family:Arial,sans-serif;color:#222;">
+                    <h2>Nuwe Logistics-versoek</h2>
+
+                    <p><strong>Versoek:</strong> #{request.RequestID}</p>
+                    <p><strong>Ingedien deur:</strong> {E($"{firstName} {lastName}".Trim())}</p>
+                    <p><strong>E-pos:</strong> {E(requesterEmail)}</p>
+                    <p><strong>Soort:</strong> {E(request.RequestType)}</p>
+                    <p><strong>Kategorie:</strong> {E(request.ActivityCategory ?? "Nie van toepassing nie")}</p>
+                    <p><strong>Opsomming:</strong> {E(request.Title)}</p>
+                    <p><strong>Besonderhede:</strong><br />{E(request.Description)}</p>
+                    <p><strong>Ligging:</strong> {E(location)}</p>
+                    <p><strong>Datum / tyd:</strong> {E(when)}</p>
+                    <p><strong>Toerusting:</strong> {E(equipment)}</p>
+                    <p><strong>Instandhouding:</strong> {E(maintenance)}</p>
+                    <p><strong>Interne status:</strong> New</p>
+                    <p><strong>Interne prioriteit:</strong> P3</p>
+                </body>
+                </html>
+                """;
         }
 
         // ============================================================

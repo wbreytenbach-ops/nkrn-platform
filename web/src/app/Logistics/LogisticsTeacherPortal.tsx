@@ -1,5 +1,7 @@
 "use client";
 
+import { displayLabel } from "./labels";
+
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -152,7 +154,7 @@ function displayDate(value?: string | null) {
         return value;
     }
 
-    return date.toLocaleDateString("en-ZA", {
+    return date.toLocaleDateString("af-ZA", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -190,7 +192,7 @@ function requestLocation(request: LogisticsRequest) {
     const primary = request.locations?.find((item) => item.isPrimary);
     const first = primary ?? request.locations?.[0];
 
-    return first?.locationName || first?.locationText || "No location";
+    return first?.locationName || first?.locationText || "Geen ligging";
 }
 
 export default function LogisticsTeacherPortal({
@@ -215,12 +217,12 @@ export default function LogisticsTeacherPortal({
         activityCategories: [],
     });
 
+    const [step, setStep] = useState(0);
     const [requestOpen, setRequestOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General">("Event");
-    const [activityCategory, setActivityCategory] = useState("Sport");
-    const [title, setTitle] = useState("");
+    const [activityCategory, setActivityCategory] = useState("Other");
     const [description, setDescription] = useState("");
     const [activityDate, setActivityDate] = useState("");
     const [startTime, setStartTime] = useState("");
@@ -337,8 +339,7 @@ export default function LogisticsTeacherPortal({
 
     function resetRequestForm() {
         setRequestType("Event");
-        setActivityCategory("Sport");
-        setTitle("");
+        setActivityCategory("Other");
         setDescription("");
         setActivityDate("");
         setStartTime("");
@@ -360,6 +361,7 @@ export default function LogisticsTeacherPortal({
         }
         setError("");
         setSuccess("");
+        setStep(type ? 1 : 0);
         setRequestOpen(true);
     }
 
@@ -367,7 +369,7 @@ export default function LogisticsTeacherPortal({
         if (!locationID || !activityDate || !startTime || !endTime) {
             setAvailabilityOkay(null);
             setAvailabilityMessage(
-                "Select a venue, date, start time and end time first."
+                "Kies eers ’n lokaal, datum, begintyd en eindtyd."
             );
             return;
         }
@@ -393,7 +395,7 @@ export default function LogisticsTeacherPortal({
 
             if (!response.ok) {
                 const body = await response.text();
-                throw new Error(body || "Unable to check venue availability.");
+                throw new Error(body || "Lokaalbeskikbaarheid kon nie nagegaan word nie.");
             }
 
             const result = (await response.json()) as {
@@ -404,16 +406,16 @@ export default function LogisticsTeacherPortal({
             setAvailabilityOkay(result.available);
 
             if (result.available) {
-                setAvailabilityMessage("Venue is available for this time.");
+                setAvailabilityMessage("Die lokaal is beskikbaar vir hierdie tyd.");
             } else {
                 const conflict = result.conflicts[0];
 
                 setAvailabilityMessage(
                     conflict
-                        ? `Already booked: ${conflict.title} (${shortTime(
+                        ? `Reeds bespreek: ${conflict.title} (${shortTime(
                               conflict.startTime
                           )}–${shortTime(conflict.endTime)}).`
-                        : "This venue is already booked during the selected time."
+                        : "Die lokaal is reeds vir hierdie tyd bespreek."
                 );
             }
         } catch (availabilityError) {
@@ -421,27 +423,35 @@ export default function LogisticsTeacherPortal({
             setAvailabilityMessage(
                 availabilityError instanceof Error
                     ? availabilityError.message
-                    : "Unable to check venue availability."
+                    : "Lokaalbeskikbaarheid kon nie nagegaan word nie."
             );
         } finally {
             setCheckingAvailability(false);
         }
     }
 
-    async function submitRequest() {
-        if (!title.trim()) {
-            setError("Please enter a short request title.");
+    function continueToReview() {
+        if (!description.trim()) {
+            setError(
+                requestType === "Maintenance"
+                    ? "Beskryf kortliks wat fout is of wat aandag benodig."
+                    : requestType === "Event"
+                    ? "Beskryf kortliks die funksie of aktiwiteit en wat benodig word."
+                    : "Beskryf kortliks waarmee Logistics kan help."
+            );
             return;
         }
 
         if (requestType === "Event") {
             if (!activityDate || !startTime || !endTime) {
-                setError("Event date, start time and end time are required.");
+                setError(
+                    "Vul die aktiwiteitsdatum, begin- en eindtyd in."
+                );
                 return;
             }
 
             if (endTime <= startTime) {
-                setError("The event end time must be after the start time.");
+                setError("Die eindtyd moet ná die begintyd wees.");
                 return;
             }
         }
@@ -450,7 +460,54 @@ export default function LogisticsTeacherPortal({
             requestType === "Maintenance" &&
             !maintenanceTypeID
         ) {
-            setError("Please select what needs attention.");
+            setError("Kies wat aandag benodig.");
+            return;
+        }
+
+        setError("");
+
+        if (
+            requestType === "Event" &&
+            locationID &&
+            activityDate &&
+            startTime &&
+            endTime
+        ) {
+            void checkAvailability();
+        }
+
+        setStep(2);
+    }
+
+    async function submitRequest() {
+        if (!description.trim()) {
+            setError(
+                requestType === "Maintenance"
+                    ? "Beskryf kortliks wat fout is of wat aandag benodig."
+                    : requestType === "Event"
+                    ? "Beskryf kortliks die funksie of aktiwiteit en wat benodig word."
+                    : "Beskryf kortliks waarmee Logistics kan help."
+            );
+            return;
+        }
+
+        if (requestType === "Event") {
+            if (!activityDate || !startTime || !endTime) {
+                setError("Vul die aktiwiteitsdatum, begin- en eindtyd in.");
+                return;
+            }
+
+            if (endTime <= startTime) {
+                setError("Die eindtyd moet ná die begintyd wees.");
+                return;
+            }
+        }
+
+        if (
+            requestType === "Maintenance" &&
+            !maintenanceTypeID
+        ) {
+            setError("Kies wat aandag benodig.");
             return;
         }
 
@@ -472,7 +529,7 @@ export default function LogisticsTeacherPortal({
                       ]
                     : [];
 
-            const equipment = selectedEquipment.map((equipmentTypeID) => ({
+            const equipment = (requestType === "Event" ? selectedEquipment : []).map((equipmentTypeID) => ({
                 equipmentTypeID,
                 quantity: null,
                 notes: null,
@@ -496,14 +553,14 @@ export default function LogisticsTeacherPortal({
                     requestType,
                     activityCategory:
                         requestType === "Event" ? activityCategory : null,
-                    title: title.trim(),
+                    title: "Logistics-versoek",
                     description: description.trim() || null,
                     activityDate:
                         requestType === "Event" ? activityDate : null,
                     startTime:
-                        requestType === "Event" ? startTime : null,
+                        requestType === "Event" ? `${startTime}:00` : null,
                     endTime:
-                        requestType === "Event" ? endTime : null,
+                        requestType === "Event" ? `${endTime}:00` : null,
                     cleanupNextDay:
                         requestType === "Event" ? cleanupNextDay : null,
                     locations,
@@ -520,7 +577,7 @@ export default function LogisticsTeacherPortal({
             }
 
             if (!response.ok) {
-                let message = "Unable to submit this Logistics request.";
+                let message = "Die Logistics-versoek kon nie ingedien word nie.";
 
                 try {
                     const body = (await response.json()) as {
@@ -541,7 +598,7 @@ export default function LogisticsTeacherPortal({
             setRequestOpen(false);
             resetRequestForm();
             setSuccess(
-                `Request #${created.requestID} was submitted to the Logistics team.`
+                `Versoek #${created.requestID} is aan die Logistics-span gestuur.`
             );
 
             await loadPortal();
@@ -551,7 +608,7 @@ export default function LogisticsTeacherPortal({
             setError(
                 submitError instanceof Error
                     ? submitError.message
-                    : "Unable to submit this Logistics request."
+                    : "Die Logistics-versoek kon nie ingedien word nie."
             );
         } finally {
             setSubmitting(false);
@@ -620,7 +677,7 @@ export default function LogisticsTeacherPortal({
                         Logistics
                     </p>
                     <p className="mt-2 text-sm text-zinc-400">
-                        Loading your Logistics portal…
+                        Jou Logistics-portaal laai…
                     </p>
                 </div>
             </main>
@@ -628,10 +685,10 @@ export default function LogisticsTeacherPortal({
     }
 
     return (
-        <main className="nkrn-control relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <main className="nkrn-control q4-logistics relative min-h-screen overflow-hidden bg-zinc-950 text-white">
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
                 <div className="absolute -left-40 -top-40 h-136 w-136 rounded-full bg-white/[0.035] blur-3xl" />
-                <div className="absolute -right-40 top-1/4 h-152 w-152 rounded-full bg-[#d7a31f]/4.5 This process is not fast enough to explain their existence state. The universe is simply result to a supermassive holds that are formed by easing stars and merchant recharge. Something else I'm supposed to explain how we got the largest holes in the universe, we won't need the largest stars that existed greater stars to get a sense of stereostate. We didn't know if I start actually this is very court those that's a test started for a thousand times on starts into their holes while silent states in the process in cycle, field and eating material for into such agree that radiation pressure can start table, and so these grew grown and holds must need to consume spirit than any modern step hole. That holes several thousand times less than the sun and whether the new timer. These black holes are seats for so lesser than holes, so they're on the rightadjust to say introduced those tarry little far from the in my ears in sphere of darkness is so large that it comes out the entire source system and yet there is a sale even above these types of objects contract and a colds. I am the largest single bodies that will ever exist. These ma holes easily so much on the process, the engine for it to black hole in the central guarantee of J twenty seven is eighteen billion that is so making the head is holding three times large than secters ASR. This thing defines imagination and is really hard to compare to a thing it can never do fit free subsystems students. Let's end this in state conditions a geo, and then hold we dserved consuming gas is like a matter is shown by us of a hundred trillion stars visible from eighteen billionway. It has entra sixty six billion services in this process tons of stuff or customs ended negative to the finalfree trade of this. We've created a lot of bad core thoughts. This may be able to explore only from different animals and then gets continued funding their costs up to basically events. The sort of cause to set up much sort of go to the centre as a front standing level under the battery is traffic and removable object and an unstable false fortunately kind of material will be no useful mozle and then it's a productivity way to ensure the university where the similarvacuum absolute physical little shut to stop being such it was to stretch out and secure a situation that slow down to talk, but it's trapped insult and material. It's so cold, dark, complassive on the outside, style of the day in bak holes, but as a curve space rather a presold to fund effects made on black holes for tracking assessment where supremes all slowed down time to get clear not precious a draw time physicist for days. So they do work on people and fit or we see in the sun, so around actually considered them as a music practice should be set by the base drawn that he thought that stocks groups like should sell the music for the cosmos. Unfortunately, so this is my lifter perspective outwards and how the scatter looking for so it's assume that he is able to take horses all instead of the traffic smoke and no ice free I do it's answer what do you think decisions I'll return you let's listen to the secrets and we're covered as well as team drags you start very tight for riquez going ways to keep the system blur-3xl" />
+                <div className="absolute -right-40 top-1/4 h-152 w-152 rounded-full bg-[#d7a31f]/4.5 blur-3xl" />
             </div>
 
             <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-10 lg:py-8">
@@ -654,7 +711,7 @@ export default function LogisticsTeacherPortal({
                                     NKRN · Logistics
                                 </p>
                                 <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-                                    Staff Logistics Portal
+                                    Personeelportaal
                                 </h1>
                                 <p className="mt-1 text-sm text-zinc-500">
                                     Welcome, {user.firstName}. Request assistance,
@@ -669,24 +726,24 @@ export default function LogisticsTeacherPortal({
                                 onClick={() => router.push("/")}
                                 className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-white/10"
                             >
-                                NKRN Home
+                                Tuis
                             </button>
                             <button
                                 type="button"
                                 onClick={logout}
                                 className="rounded-xl border border-red-400/10 bg-red-500/8 px-4 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/14"
                             >
-                                Log Out
+                                Meld af
                             </button>
                         </div>
                     </div>
 
                     <nav className="flex gap-2 overflow-x-auto px-4 py-3 sm:px-6">
                         {[
-                            ["home", "Overview"],
-                            ["requests", "My Requests"],
-                            ["venues", "Venue Bookings"],
-                            ["map", "School Map"],
+                            ["home", "Oorsig"],
+                            ["requests", "My versoeke"],
+                            ["venues", "Lokaalbesprekings"],
+                            ["map", "Skoolkaart"],
                         ].map(([key, label]) => (
                             <button
                                 key={key}
@@ -722,10 +779,10 @@ export default function LogisticsTeacherPortal({
                             <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7a31f]">
-                                        Logistics Service Desk
+                                        Logistiek: Versoeke en terugvoer
                                     </p>
                                     <h2 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-                                        What can the Logistics team help you with?
+                                        Waarmee kan die Logistics-span jou help?
                                     </h2>
                                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400">
                                         Submit one short request and NKRN will keep
@@ -740,10 +797,10 @@ export default function LogisticsTeacherPortal({
                                     className="rounded-2xl border border-[#d7a31f]/30 bg-[#d7a31f]/12 px-6 py-4 text-left transition hover:border-[#e7b42b]/55 hover:bg-[#d7a31f]/18"
                                 >
                                     <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e7b42b]">
-                                        New Request
+                                        Nuwe versoek
                                     </span>
                                     <span className="mt-1 block text-xl font-semibold text-white">
-                                        + Request Logistics Assistance
+                                        + Versoek ondersteuning
                                     </span>
                                 </button>
                             </div>
@@ -756,13 +813,13 @@ export default function LogisticsTeacherPortal({
                                 className={`${glassCard} p-5 text-left transition hover:-translate-y-0.5 hover:border-[#d7a31f]/30`}
                             >
                                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d7a31f]">
-                                    Event & Venue
+                                    Funksie / Aktiwiteit
                                 </p>
                                 <h3 className="mt-2 text-lg font-semibold">
-                                    Event support
+                                    Funksieondersteuning
                                 </h3>
                                 <p className="mt-2 text-sm leading-6 text-zinc-500">
-                                    Venue, tables, chairs, gazebos and other setup.
+                                    Lokale, tafels, stoele, gazebo’s en ander opstelling.
                                 </p>
                             </button>
 
@@ -772,13 +829,13 @@ export default function LogisticsTeacherPortal({
                                 className={`${glassCard} p-5 text-left transition hover:-translate-y-0.5 hover:border-[#d7a31f]/30`}
                             >
                                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d7a31f]">
-                                    Maintenance
+                                    Instandhouding
                                 </p>
                                 <h3 className="mt-2 text-lg font-semibold">
-                                    Report a problem
+                                    Meld ’n probleem aan
                                 </h3>
                                 <p className="mt-2 text-sm leading-6 text-zinc-500">
-                                    Repair, replacement, furniture or facility issues.
+                                    Herstel, vervanging, meubels of fasiliteitsprobleme.
                                 </p>
                             </button>
 
@@ -788,13 +845,13 @@ export default function LogisticsTeacherPortal({
                                 className={`${glassCard} p-5 text-left transition hover:-translate-y-0.5 hover:border-[#d7a31f]/30`}
                             >
                                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d7a31f]">
-                                    General
+                                    Algemeen
                                 </p>
                                 <h3 className="mt-2 text-lg font-semibold">
-                                    Other assistance
+                                    Ander ondersteuning
                                 </h3>
                                 <p className="mt-2 text-sm leading-6 text-zinc-500">
-                                    Anything that does not fit the other categories.
+                                    Enige ander bedryfsondersteuning.
                                 </p>
                             </button>
                         </section>
@@ -804,10 +861,10 @@ export default function LogisticsTeacherPortal({
                                 <div className="flex items-center justify-between border-b border-white/8 p-5">
                                     <div>
                                         <p className="text-xs uppercase tracking-[0.2em] text-zinc-600">
-                                            My Requests
+                                            My versoeke
                                         </p>
                                         <h2 className="mt-1 text-xl font-semibold">
-                                            Active requests
+                                            Aktiewe versoeke
                                         </h2>
                                     </div>
                                     <span className="text-3xl font-bold text-[#e7b42b]">
@@ -838,7 +895,7 @@ export default function LogisticsTeacherPortal({
                                                         request.status
                                                     )}`}
                                                 >
-                                                    {request.status}
+                                                    {displayLabel(request.status)}
                                                 </span>
                                             </div>
                                         </button>
@@ -846,7 +903,7 @@ export default function LogisticsTeacherPortal({
 
                                     {activeRequests.length === 0 && (
                                         <p className="p-5 text-sm text-zinc-500">
-                                            You have no active Logistics requests.
+                                            Jy het geen aktiewe Logistics-versoeke nie.
                                         </p>
                                     )}
                                 </div>
@@ -856,10 +913,10 @@ export default function LogisticsTeacherPortal({
                                 <div className="flex items-center justify-between border-b border-white/8 p-5">
                                     <div>
                                         <p className="text-xs uppercase tracking-[0.2em] text-zinc-600">
-                                            Facilities
+                                            Fasiliteite
                                         </p>
                                         <h2 className="mt-1 text-xl font-semibold">
-                                            Upcoming venue bookings
+                                            Komende lokaalbesprekings
                                         </h2>
                                     </div>
                                     <button
@@ -867,7 +924,7 @@ export default function LogisticsTeacherPortal({
                                         onClick={() => setView("venues")}
                                         className="text-xs font-semibold uppercase tracking-[0.14em] text-[#e7b42b]"
                                     >
-                                        View all
+                                        Sien alles
                                     </button>
                                 </div>
 
@@ -886,7 +943,7 @@ export default function LogisticsTeacherPortal({
 
                                     {bookings.length === 0 && (
                                         <p className="p-5 text-sm text-zinc-500">
-                                            No upcoming venue bookings are recorded.
+                                            Geen komende lokaalbesprekings nie.
                                         </p>
                                     )}
                                 </div>
@@ -900,10 +957,10 @@ export default function LogisticsTeacherPortal({
                         <div className="flex flex-col gap-4 border-b border-white/8 p-5 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
-                                    My Logistics Requests
+                                    My Logistics-versoeke
                                 </p>
                                 <h2 className="mt-1 text-2xl font-semibold">
-                                    Request history
+                                    Versoekgeskiedenis
                                 </h2>
                             </div>
 
@@ -912,7 +969,7 @@ export default function LogisticsTeacherPortal({
                                 onClick={() => openRequestForm()}
                                 className="rounded-xl border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-4 py-2.5 text-sm font-medium text-[#e7b42b]"
                             >
-                                + New Request
+                                + Nuwe versoek
                             </button>
                         </div>
 
@@ -926,7 +983,7 @@ export default function LogisticsTeacherPortal({
                                                     #{request.requestID}
                                                 </span>
                                                 <span className="text-xs text-zinc-600">
-                                                    {request.requestType}
+                                                    {displayLabel(request.requestType)}
                                                     {request.activityCategory
                                                         ? ` · ${request.activityCategory}`
                                                         : ""}
@@ -955,7 +1012,7 @@ export default function LogisticsTeacherPortal({
                                             {request.managerNotes && (
                                                 <div className="mt-4 rounded-xl border border-[#d7a31f]/15 bg-[#d7a31f]/6 px-4 py-3">
                                                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#d7a31f]">
-                                                        Logistics Team
+                                                        Logistics-span
                                                     </p>
                                                     <p className="mt-1 text-sm text-zinc-300">
                                                         {request.managerNotes}
@@ -970,7 +1027,7 @@ export default function LogisticsTeacherPortal({
                                                     request.status
                                                 )}`}
                                             >
-                                                {request.status}
+                                                {displayLabel(request.status)}
                                             </span>
 
                                             {![
@@ -985,7 +1042,7 @@ export default function LogisticsTeacherPortal({
                                                     }
                                                     className="text-xs text-zinc-600 transition hover:text-red-300"
                                                 >
-                                                    Cancel request
+                                                    Kanselleer versoek
                                                 </button>
                                             )}
                                         </div>
@@ -995,7 +1052,7 @@ export default function LogisticsTeacherPortal({
 
                             {requests.length === 0 && (
                                 <p className="p-6 text-sm text-zinc-500">
-                                    No Logistics requests submitted yet.
+                                    Nog geen Logistics-versoeke ingedien nie.
                                 </p>
                             )}
                         </div>
@@ -1006,10 +1063,10 @@ export default function LogisticsTeacherPortal({
                     <section className={`${glassCard} overflow-hidden`}>
                         <div className="border-b border-white/8 p-5 sm:p-6">
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
-                                Venue Availability
+                                Lokaalbeskikbaarheid
                             </p>
                             <h2 className="mt-1 text-2xl font-semibold">
-                                Upcoming bookings
+                                Komende besprekings
                             </h2>
                             <p className="mt-2 text-sm text-zinc-500">
                                 Teachers can see confirmed and pending venue use before
@@ -1041,7 +1098,7 @@ export default function LogisticsTeacherPortal({
 
                             {bookings.length === 0 && (
                                 <p className="text-sm text-zinc-500">
-                                    No venue bookings are currently recorded.
+                                    Geen lokaalbesprekings aangeteken nie.
                                 </p>
                             )}
                         </div>
@@ -1053,10 +1110,10 @@ export default function LogisticsTeacherPortal({
                         <div className={`${glassCard} overflow-hidden`}>
                             <div className="border-b border-white/8 p-5 sm:p-6">
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
-                                    School Map
+                                    Skoolkaart
                                 </p>
                                 <h2 className="mt-1 text-2xl font-semibold">
-                                    Locations & venues
+                                    Ligging en lokale
                                 </h2>
                                 <p className="mt-2 text-sm text-zinc-500">
                                     Select a confirmed NKRN location to see its
@@ -1102,7 +1159,7 @@ export default function LogisticsTeacherPortal({
                             {selectedMapLocation ? (
                                 <>
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d7a31f]">
-                                        Selected Location
+                                        Gekose ligging
                                     </p>
                                     <h3 className="mt-2 text-2xl font-semibold">
                                         {selectedMapLocation.locationName}
@@ -1114,7 +1171,7 @@ export default function LogisticsTeacherPortal({
                                     <div className="my-5 h-px bg-white/8" />
 
                                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-600">
-                                        Upcoming bookings
+                                        Komende besprekings
                                     </p>
 
                                     <div className="mt-3 space-y-3">
@@ -1142,7 +1199,7 @@ export default function LogisticsTeacherPortal({
 
                                         {selectedLocationBookings.length === 0 && (
                                             <p className="text-sm text-zinc-500">
-                                                No upcoming bookings.
+                                                Geen komende besprekings nie.
                                             </p>
                                         )}
                                     </div>
@@ -1170,7 +1227,7 @@ export default function LogisticsTeacherPortal({
                                 </>
                             ) : (
                                 <p className="text-sm leading-6 text-zinc-500">
-                                    Select a location on the left to view its details.
+                                    Kies ’n ligging links om besonderhede te sien.
                                 </p>
                             )}
                         </aside>
@@ -1201,10 +1258,10 @@ export default function LogisticsTeacherPortal({
                         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 rounded-t-[30px] border-b border-white/8 bg-zinc-950/95 p-5 backdrop-blur-xl sm:p-6">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
-                                    New Logistics Request
+                                    Nuwe Logistics-versoek
                                 </p>
                                 <h2 className="mt-1 text-2xl font-semibold">
-                                    How can we help?
+                                    Hoe kan ons help?
                                 </h2>
                             </div>
 
@@ -1214,407 +1271,712 @@ export default function LogisticsTeacherPortal({
                                 onClick={() => setRequestOpen(false)}
                                 className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-400"
                             >
-                                Close
+                                Sluit
                             </button>
                         </div>
 
                         <div className="space-y-6 p-5 sm:p-6">
-                            <div>
-                                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                    Request Type
-                                </label>
-                                <div className="grid gap-3 sm:grid-cols-3">
-                                    {[
-                                        ["Event", "Event / Venue"],
-                                        ["Maintenance", "Repair / Maintenance"],
-                                        ["General", "General Logistics"],
-                                    ].map(([value, label]) => (
+                            {error && (
+                                <p
+                                    role="alert"
+                                    className="rounded-xl border border-red-400/30 bg-red-500/5 p-3 text-sm text-red-300"
+                                >
+                                    {error}
+                                </p>
+                            )}
+
+                            <nav
+                                aria-label="Versoekstappe"
+                                className="grid grid-cols-3 gap-2"
+                            >
+                                {["Soort versoek", "Besonderhede", "Bevestig"].map(
+                                    (label, index) => (
                                         <button
-                                            key={value}
+                                            key={label}
                                             type="button"
-                                            onClick={() =>
-                                                setRequestType(
-                                                    value as
-                                                        | "Event"
-                                                        | "Maintenance"
-                                                        | "General"
-                                                )
+                                            disabled={submitting}
+                                            onClick={() => {
+                                                if (index <= step) {
+                                                    setStep(index);
+                                                    setError("");
+                                                }
+                                            }}
+                                            aria-current={
+                                                step === index
+                                                    ? "step"
+                                                    : undefined
                                             }
-                                            className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                                                requestType === value
-                                                    ? "border-[#d7a31f]/40 bg-[#d7a31f]/10 text-[#e7b42b]"
-                                                    : "border-white/10 bg-white/4 text-zinc-400"
+                                            className={`rounded-xl border p-2 text-xs transition ${
+                                                step === index
+                                                    ? "border-[#d7a31f] bg-[#d7a31f]/8 text-[#e7b42b]"
+                                                    : index < step
+                                                    ? "border-white/10 bg-white/4 text-zinc-300"
+                                                    : "border-white/8 text-zinc-600"
                                             }`}
                                         >
-                                            {label}
+                                            {index + 1}. {label}
                                         </button>
-                                    ))}
-                                </div>
-                            </div>
+                                    )
+                                )}
+                            </nav>
 
-                            {requestType === "Event" && (
+                            <fieldset
+                                hidden={step !== 0}
+                                disabled={submitting}
+                                className="space-y-6"
+                            >
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                        Waarmee kan Logistics help?
+                                    </p>
+
+                                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                                        {[
+                                            ["Event", "Funksie / Aktiwiteit", "Lokaal, tyd en toerusting"],
+                                            ["Maintenance", "Instandhouding", "Iets moet herstel of vervang word"],
+                                            ["General", "Algemeen", "Enige ander logistieke ondersteuning"],
+                                        ].map(([value, label, detail]) => (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => {
+                                                    setRequestType(
+                                                        value as
+                                                            | "Event"
+                                                            | "Maintenance"
+                                                            | "General"
+                                                    );
+                                                    setError("");
+                                                    setStep(1);
+                                                }}
+                                                className={`rounded-xl border p-4 text-left transition ${
+                                                    requestType === value
+                                                        ? "border-[#d7a31f]/40 bg-[#d7a31f]/10"
+                                                        : "border-white/10 bg-white/4 hover:bg-white/6"
+                                                }`}
+                                            >
+                                                <span
+                                                    className={`block text-sm font-semibold ${
+                                                        requestType === value
+                                                            ? "text-[#e7b42b]"
+                                                            : "text-zinc-200"
+                                                    }`}
+                                                >
+                                                    {label}
+                                                </span>
+
+                                                <span className="mt-1 block text-xs leading-5 text-zinc-500">
+                                                    {detail}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset
+                                hidden={step !== 1}
+                                disabled={submitting}
+                                className="space-y-6"
+                            >
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#d7a31f]">
+                                        {displayLabel(requestType)}
+                                    </p>
+
+                                    <h3 className="mt-2 text-lg font-semibold">
+                                        {requestType === "Event"
+                                            ? "Funksie- of aktiwiteitsbesonderhede"
+                                            : requestType === "Maintenance"
+                                            ? "Wat benodig aandag?"
+                                            : "Wat benodig jy?"}
+                                    </h3>
+
+                                    <p className="mt-1 text-sm text-zinc-500">
+                                        Jou naam, e-pos, datum van indiening,
+                                        interne status en prioriteit word
+                                        outomaties deur NKRN hanteer.
+                                    </p>
+                                </div>
+
+                                {requestType === "Event" && (
+                                    <div>
+                                        <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                            Aktiwiteitskategorie
+                                        </label>
+
+                                        <div className="flex flex-wrap gap-2">
+                                            {referenceData.activityCategories.map(
+                                                (category) => (
+                                                    <button
+                                                        key={category}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setActivityCategory(
+                                                                category
+                                                            )
+                                                        }
+                                                        className={`rounded-xl border px-3 py-2 text-sm transition ${
+                                                            activityCategory ===
+                                                            category
+                                                                ? "border-[#d7a31f]/35 bg-[#d7a31f]/10 text-[#e7b42b]"
+                                                                : "border-white/8 bg-white/3 text-zinc-400"
+                                                        }`}
+                                                    >
+                                                        {displayLabel(category)}
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div>
                                     <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                        Activity Category
+                                        {requestType === "Event"
+                                            ? "Wat reël jy en wat moet Logistics weet?"
+                                            : requestType === "Maintenance"
+                                            ? "Wat is fout of wat moet gedoen word?"
+                                            : "Waarmee kan Logistics help?"}
                                     </label>
-                                    <select
-                                        value={activityCategory}
+
+                                    <textarea
+                                        value={description}
                                         onChange={(event) =>
-                                            setActivityCategory(
-                                                event.target.value
-                                            )
+                                            setDescription(event.target.value)
                                         }
+                                        rows={4}
+                                        placeholder={
+                                            requestType === "Event"
+                                                ? "bv. Graad 5-oueraand. Ons benodig die saal gereed voor 17:30."
+                                                : requestType === "Maintenance"
+                                                ? "bv. Die venster in Graad 5A sluit nie en moet nagegaan word."
+                                                : "Beskryf kortliks wat jy benodig."
+                                        }
+                                        className={`${inputClass} resize-none`}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                        Lokaal / ligging
+                                        <span className="ml-1 normal-case tracking-normal text-zinc-600">
+                                            (indien van toepassing)
+                                        </span>
+                                    </label>
+
+                                    <select
+                                        value={locationID}
+                                        onChange={(event) => {
+                                            setLocationID(event.target.value);
+                                            setAvailabilityMessage("");
+                                            setAvailabilityOkay(null);
+                                        }}
                                         className={selectClass}
                                     >
-                                        {referenceData.activityCategories.map(
-                                            (category) => (
+                                        <option value="">
+                                            Kies ’n ligging…
+                                        </option>
+
+                                        {referenceData.locations.map(
+                                            (location) => (
                                                 <option
-                                                    key={category}
-                                                    value={category}
+                                                    key={
+                                                        location.locationID
+                                                    }
+                                                    value={String(
+                                                        location.locationID
+                                                    )}
                                                 >
-                                                    {category}
+                                                    {location.locationName}
                                                 </option>
                                             )
                                         )}
                                     </select>
-                                </div>
-                            )}
 
-                            <div>
-                                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                    Short Title
-                                </label>
-                                <input
-                                    value={title}
-                                    onChange={(event) =>
-                                        setTitle(event.target.value)
-                                    }
-                                    placeholder={
-                                        requestType === "Event"
-                                            ? "e.g. Grade 5 Parent Evening"
-                                            : requestType === "Maintenance"
-                                            ? "e.g. Broken classroom window"
-                                            : "What assistance do you need?"
-                                    }
-                                    className={inputClass}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                    Location
-                                </label>
-                                <select
-                                    value={locationID}
-                                    onChange={(event) => {
-                                        setLocationID(event.target.value);
-                                        setAvailabilityMessage("");
-                                        setAvailabilityOkay(null);
-                                    }}
-                                    className={selectClass}
-                                >
-                                    <option value="">Select a location…</option>
-                                    {referenceData.locations.map((location) => (
-                                        <option
-                                            key={location.locationID}
-                                            value={String(location.locationID)}
-                                        >
-                                            {location.locationName}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <input
-                                    value={customLocation}
-                                    onChange={(event) =>
-                                        setCustomLocation(event.target.value)
-                                    }
-                                    placeholder="Or type a classroom / area not listed above"
-                                    className={`${inputClass} mt-3`}
-                                />
-                            </div>
-
-                            {requestType === "Event" && (
-                                <>
-                                    <div className="grid gap-4 sm:grid-cols-3">
-                                        <div>
-                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                                Date
-                                            </label>
-                                            <input
-                                                type="date"
-                                                min={todayISO()}
-                                                value={activityDate}
-                                                onChange={(event) => {
-                                                    setActivityDate(
-                                                        event.target.value
-                                                    );
-                                                    setAvailabilityMessage("");
-                                                    setAvailabilityOkay(null);
-                                                }}
-                                                className={inputClass}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                                Start
-                                            </label>
-                                            <input
-                                                type="time"
-                                                value={startTime}
-                                                onChange={(event) => {
-                                                    setStartTime(
-                                                        event.target.value
-                                                    );
-                                                    setAvailabilityMessage("");
-                                                    setAvailabilityOkay(null);
-                                                }}
-                                                className={inputClass}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                                Finish
-                                            </label>
-                                            <input
-                                                type="time"
-                                                value={endTime}
-                                                onChange={(event) => {
-                                                    setEndTime(
-                                                        event.target.value
-                                                    );
-                                                    setAvailabilityMessage("");
-                                                    setAvailabilityOkay(null);
-                                                }}
-                                                className={inputClass}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                            <div>
-                                                <p className="text-sm font-medium">
-                                                    Venue availability
-                                                </p>
-                                                <p
-                                                    className={`mt-1 text-xs ${
-                                                        availabilityOkay === true
-                                                            ? "text-green-300"
-                                                            : availabilityOkay ===
-                                                              false
-                                                            ? "text-red-300"
-                                                            : "text-zinc-500"
-                                                    }`}
-                                                >
-                                                    {availabilityMessage ||
-                                                        "Check the selected venue before submitting."}
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    void checkAvailability()
-                                                }
-                                                disabled={
-                                                    checkingAvailability ||
-                                                    !locationID
-                                                }
-                                                className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-zinc-300 disabled:opacity-40"
-                                            >
-                                                {checkingAvailability
-                                                    ? "Checking…"
-                                                    : "Check availability"}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <label className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 p-4">
+                                    {!locationID && (
                                         <input
-                                            type="checkbox"
-                                            checked={cleanupNextDay}
+                                            value={customLocation}
                                             onChange={(event) =>
-                                                setCleanupNextDay(
-                                                    event.target.checked
-                                                )
-                                            }
-                                            className="h-4 w-4 accent-[#d7a31f]"
-                                        />
-                                        <span className="text-sm text-zinc-300">
-                                            Cleanup is required the following morning
-                                        </span>
-                                    </label>
-
-                                    <div>
-                                        <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                            Equipment Required
-                                        </label>
-                                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                            {referenceData.equipment.map((item) => {
-                                                const selected =
-                                                    selectedEquipment.includes(
-                                                        item.equipmentTypeID
-                                                    );
-
-                                                return (
-                                                    <label
-                                                        key={item.equipmentTypeID}
-                                                        className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm ${
-                                                            selected
-                                                                ? "border-[#d7a31f]/30 bg-[#d7a31f]/8 text-zinc-200"
-                                                                : "border-white/8 bg-white/3 text-zinc-400"
-                                                        }`}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selected}
-                                                            onChange={() =>
-                                                                setSelectedEquipment(
-                                                                    (current) =>
-                                                                        selected
-                                                                            ? current.filter(
-                                                                                  (
-                                                                                      id
-                                                                                  ) =>
-                                                                                      id !==
-                                                                                      item.equipmentTypeID
-                                                                              )
-                                                                            : [
-                                                                                  ...current,
-                                                                                  item.equipmentTypeID,
-                                                                              ]
-                                                                )
-                                                            }
-                                                            className="accent-[#d7a31f]"
-                                                        />
-                                                        {item.equipmentName}
-                                                    </label>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {requestType === "Maintenance" && (
-                                <>
-                                    <div>
-                                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                            What needs attention?
-                                        </label>
-                                        <select
-                                            value={maintenanceTypeID}
-                                            onChange={(event) =>
-                                                setMaintenanceTypeID(
+                                                setCustomLocation(
                                                     event.target.value
                                                 )
                                             }
-                                            className={selectClass}
-                                        >
-                                            <option value="">
-                                                Select an item…
-                                            </option>
-                                            {referenceData.maintenance.map(
-                                                (item) => (
-                                                    <option
-                                                        key={
-                                                            item.maintenanceTypeID
-                                                        }
-                                                        value={String(
-                                                            item.maintenanceTypeID
-                                                        )}
-                                                    >
-                                                        {item.maintenanceName}
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
-                                    </div>
+                                            placeholder="Of tik ’n klaskamer / gebied wat nie op die lys is nie"
+                                            className={`${inputClass} mt-3`}
+                                        />
+                                    )}
+                                </div>
 
-                                    <div>
-                                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                            What is required?
-                                        </label>
-                                        <div className="grid gap-3 sm:grid-cols-3">
-                                            {[
-                                                ["Repair", "Repair"],
-                                                ["Replace", "Replace"],
-                                                ["Unsure", "Not sure"],
-                                            ].map(([value, label]) => (
-                                                <button
-                                                    type="button"
-                                                    key={value}
-                                                    onClick={() =>
-                                                        setMaintenanceAction(
-                                                            value as
-                                                                | "Repair"
-                                                                | "Replace"
-                                                                | "Unsure"
-                                                        )
-                                                    }
-                                                    className={`rounded-xl border px-4 py-3 text-sm ${
-                                                        maintenanceAction ===
-                                                        value
-                                                            ? "border-[#d7a31f]/35 bg-[#d7a31f]/10 text-[#e7b42b]"
-                                                            : "border-white/8 bg-white/3 text-zinc-400"
-                                                    }`}
-                                                >
-                                                    {label}
-                                                </button>
-                                            ))}
+                                {requestType === "Event" && (
+                                    <>
+                                        <div className="grid gap-4 sm:grid-cols-3">
+                                            <div>
+                                                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                                    Datum
+                                                </label>
+
+                                                <input
+                                                    type="date"
+                                                    min={todayISO()}
+                                                    value={activityDate}
+                                                    onChange={(event) => {
+                                                        setActivityDate(
+                                                            event.target.value
+                                                        );
+                                                        setAvailabilityMessage(
+                                                            ""
+                                                        );
+                                                        setAvailabilityOkay(
+                                                            null
+                                                        );
+                                                    }}
+                                                    className={inputClass}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                                    Begintyd
+                                                </label>
+
+                                                <input
+                                                    type="time"
+                                                    value={startTime}
+                                                    onChange={(event) => {
+                                                        setStartTime(
+                                                            event.target.value
+                                                        );
+                                                        setAvailabilityMessage(
+                                                            ""
+                                                        );
+                                                        setAvailabilityOkay(
+                                                            null
+                                                        );
+                                                    }}
+                                                    className={inputClass}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                                    Eindtyd
+                                                </label>
+
+                                                <input
+                                                    type="time"
+                                                    value={endTime}
+                                                    onChange={(event) => {
+                                                        setEndTime(
+                                                            event.target.value
+                                                        );
+                                                        setAvailabilityMessage(
+                                                            ""
+                                                        );
+                                                        setAvailabilityOkay(
+                                                            null
+                                                        );
+                                                    }}
+                                                    className={inputClass}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                </>
-                            )}
 
-                            <div>
-                                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                                    Description
-                                </label>
-                                <textarea
-                                    value={description}
-                                    onChange={(event) =>
-                                        setDescription(event.target.value)
-                                    }
-                                    rows={5}
-                                    placeholder="Add the important details. Keep it short and clear."
-                                    className={inputClass}
-                                />
-                            </div>
+                                        {locationID &&
+                                            activityDate &&
+                                            startTime &&
+                                            endTime && (
+                                                <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+                                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                        <div>
+                                                            <p className="text-sm font-medium">
+                                                                Lokaalbeskikbaarheid
+                                                            </p>
 
-                            <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                                <p className="text-xs text-zinc-500">
-                                    Submitted as
-                                </p>
-                                <p className="mt-1 text-sm font-medium text-zinc-200">
-                                    {user.firstName} {user.lastName}
-                                </p>
-                                <p className="text-xs text-zinc-600">
-                                    {user.email}
-                                </p>
-                            </div>
+                                                            <p
+                                                                className={`mt-1 text-xs ${
+                                                                    availabilityOkay ===
+                                                                    true
+                                                                        ? "text-green-300"
+                                                                        : availabilityOkay ===
+                                                                          false
+                                                                        ? "text-red-300"
+                                                                        : "text-zinc-500"
+                                                                }`}
+                                                            >
+                                                                {availabilityMessage ||
+                                                                    "NKRN kan die lokaal teen bestaande besprekings kontroleer."}
+                                                            </p>
+                                                        </div>
 
-                            <div className="flex flex-col-reverse gap-3 border-t border-white/8 pt-5 sm:flex-row sm:justify-end">
-                                <button
-                                    type="button"
-                                    disabled={submitting}
-                                    onClick={() => setRequestOpen(false)}
-                                    className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-zinc-300"
-                                >
-                                    Cancel
-                                </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                void checkAvailability()
+                                                            }
+                                                            disabled={
+                                                                checkingAvailability
+                                                            }
+                                                            className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-zinc-300 disabled:opacity-40"
+                                                        >
+                                                            {checkingAvailability
+                                                                ? "Besig om te kontroleer…"
+                                                                : "Kontroleer"}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                <button
-                                    type="button"
-                                    disabled={submitting}
-                                    onClick={() => void submitRequest()}
-                                    className="rounded-xl border border-[#d7a31f]/35 bg-[#d7a31f]/12 px-5 py-3 text-sm font-semibold text-[#e7b42b] transition hover:bg-[#d7a31f]/18 disabled:opacity-50"
-                                >
-                                    {submitting
-                                        ? "Submitting…"
-                                        : "Submit Logistics Request"}
-                                </button>
-                            </div>
+                                        <label className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 p-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={cleanupNextDay}
+                                                onChange={(event) =>
+                                                    setCleanupNextDay(
+                                                        event.target.checked
+                                                    )
+                                                }
+                                                className="h-4 w-4 accent-[#d7a31f]"
+                                            />
+
+                                            <span className="text-sm text-zinc-300">
+                                                Opruiming word die volgende
+                                                oggend benodig
+                                            </span>
+                                        </label>
+
+                                        {referenceData.equipment.length > 0 && (
+                                            <div>
+                                                <label className="mb-3 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                                    Benodigde toerusting
+                                                    <span className="ml-1 normal-case tracking-normal text-zinc-600">
+                                                        (opsioneel)
+                                                    </span>
+                                                </label>
+
+                                                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                                    {referenceData.equipment.map(
+                                                        (item) => {
+                                                            const selected =
+                                                                selectedEquipment.includes(
+                                                                    item.equipmentTypeID
+                                                                );
+
+                                                            return (
+                                                                <button
+                                                                    key={
+                                                                        item.equipmentTypeID
+                                                                    }
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setSelectedEquipment(
+                                                                            (
+                                                                                current
+                                                                            ) =>
+                                                                                selected
+                                                                                    ? current.filter(
+                                                                                          (
+                                                                                              id
+                                                                                          ) =>
+                                                                                              id !==
+                                                                                              item.equipmentTypeID
+                                                                                      )
+                                                                                    : [
+                                                                                          ...current,
+                                                                                          item.equipmentTypeID,
+                                                                                      ]
+                                                                        )
+                                                                    }
+                                                                    className={`rounded-xl border p-3 text-left text-sm transition ${
+                                                                        selected
+                                                                            ? "border-[#d7a31f]/30 bg-[#d7a31f]/8 text-zinc-200"
+                                                                            : "border-white/8 bg-white/3 text-zinc-400"
+                                                                    }`}
+                                                                >
+                                                                    {selected
+                                                                        ? "✓ "
+                                                                        : ""}
+                                                                    {
+                                                                        item.equipmentName
+                                                                    }
+                                                                </button>
+                                                            );
+                                                        }
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {requestType === "Maintenance" && (
+                                    <>
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                                Wat benodig aandag?
+                                            </label>
+
+                                            <select
+                                                value={maintenanceTypeID}
+                                                onChange={(event) =>
+                                                    setMaintenanceTypeID(
+                                                        event.target.value
+                                                    )
+                                                }
+                                                className={selectClass}
+                                            >
+                                                <option value="">
+                                                    Kies ’n item…
+                                                </option>
+
+                                                {referenceData.maintenance.map(
+                                                    (item) => (
+                                                        <option
+                                                            key={
+                                                                item.maintenanceTypeID
+                                                            }
+                                                            value={String(
+                                                                item.maintenanceTypeID
+                                                            )}
+                                                        >
+                                                            {
+                                                                item.maintenanceName
+                                                            }
+                                                        </option>
+                                                    )
+                                                )}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                                Wat moet gebeur?
+                                            </label>
+
+                                            <div className="grid gap-3 sm:grid-cols-3">
+                                                {[
+                                                    ["Repair", "Herstel"],
+                                                    ["Replace", "Vervang"],
+                                                    ["Unsure", "Onseker"],
+                                                ].map(([value, label]) => (
+                                                    <button
+                                                        type="button"
+                                                        key={value}
+                                                        onClick={() =>
+                                                            setMaintenanceAction(
+                                                                value as
+                                                                    | "Repair"
+                                                                    | "Replace"
+                                                                    | "Unsure"
+                                                            )
+                                                        }
+                                                        className={`rounded-xl border px-4 py-3 text-sm ${
+                                                            maintenanceAction ===
+                                                            value
+                                                                ? "border-[#d7a31f]/35 bg-[#d7a31f]/10 text-[#e7b42b]"
+                                                                : "border-white/8 bg-white/3 text-zinc-400"
+                                                        }`}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="flex flex-col-reverse gap-3 border-t border-white/8 pt-5 sm:flex-row sm:justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setError("");
+                                            setStep(0);
+                                        }}
+                                        className="q4-nav"
+                                    >
+                                        ← Soort versoek
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={continueToReview}
+                                        className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
+                                    >
+                                        Kontroleer versoek
+                                    </button>
+                                </div>
+                            </fieldset>
+
+                            <fieldset
+                                hidden={step !== 2}
+                                disabled={submitting}
+                                className="space-y-6"
+                            >
+                                <div className="rounded-2xl border border-[#d7a31f]/30 bg-[#d7a31f]/5 p-5">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#d7a31f]">
+                                        {displayLabel(requestType)}
+                                    </p>
+
+                                    <h3 className="mt-2 text-lg font-semibold">
+                                        Kontroleer jou versoek
+                                    </h3>
+
+                                    <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                                        {description}
+                                    </p>
+
+                                    {(locationID ||
+                                        customLocation.trim()) && (
+                                        <p className="mt-3 text-sm text-zinc-400">
+                                            <span className="text-zinc-600">
+                                                Ligging:{" "}
+                                            </span>
+                                            {referenceData.locations.find(
+                                                (item) =>
+                                                    String(
+                                                        item.locationID
+                                                    ) === locationID
+                                            )?.locationName ||
+                                                customLocation}
+                                        </p>
+                                    )}
+
+                                    {requestType === "Event" && (
+                                        <div className="mt-3 space-y-2 text-sm text-zinc-400">
+                                            <p>
+                                                <span className="text-zinc-600">
+                                                    Kategorie:{" "}
+                                                </span>
+                                                {displayLabel(
+                                                    activityCategory
+                                                )}
+                                            </p>
+
+                                            <p>
+                                                <span className="text-zinc-600">
+                                                    Wanneer:{" "}
+                                                </span>
+                                                {displayDate(
+                                                    activityDate
+                                                )}{" "}
+                                                · {startTime} – {endTime}
+                                            </p>
+
+                                            <p>
+                                                <span className="text-zinc-600">
+                                                    Opruiming volgende oggend:{" "}
+                                                </span>
+                                                {cleanupNextDay
+                                                    ? "Ja"
+                                                    : "Nee"}
+                                            </p>
+
+                                            {selectedEquipment.length >
+                                                0 && (
+                                                <p>
+                                                    <span className="text-zinc-600">
+                                                        Toerusting:{" "}
+                                                    </span>
+                                                    {referenceData.equipment
+                                                        .filter((item) =>
+                                                            selectedEquipment.includes(
+                                                                item.equipmentTypeID
+                                                            )
+                                                        )
+                                                        .map(
+                                                            (item) =>
+                                                                item.equipmentName
+                                                        )
+                                                        .join(", ")}
+                                                </p>
+                                            )}
+
+                                            {availabilityMessage && (
+                                                <p
+                                                    className={
+                                                        availabilityOkay ===
+                                                        false
+                                                            ? "text-red-300"
+                                                            : availabilityOkay ===
+                                                              true
+                                                            ? "text-green-300"
+                                                            : "text-zinc-500"
+                                                    }
+                                                >
+                                                    {availabilityMessage}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {requestType === "Maintenance" && (
+                                        <p className="mt-3 text-sm text-zinc-400">
+                                            <span className="text-zinc-600">
+                                                Aandag:{" "}
+                                            </span>
+                                            {referenceData.maintenance.find(
+                                                (item) =>
+                                                    String(
+                                                        item.maintenanceTypeID
+                                                    ) === maintenanceTypeID
+                                            )?.maintenanceName ||
+                                                "Nie gekies nie"}{" "}
+                                            ·{" "}
+                                            {displayLabel(
+                                                maintenanceAction
+                                            )}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+                                    <p className="text-xs uppercase tracking-wide text-zinc-600">
+                                        Ingedien deur
+                                    </p>
+
+                                    <p className="mt-1 text-sm font-medium text-zinc-200">
+                                        {user.firstName} {user.lastName}
+                                    </p>
+
+                                    <p className="text-xs text-zinc-600">
+                                        {user.email}
+                                    </p>
+
+                                    <p className="mt-2 text-xs leading-5 text-zinc-600">
+                                        NKRN koppel jou identiteit en die
+                                        indieningstyd outomaties. Die
+                                        Logistics-span bepaal interne
+                                        prioriteit, status en toewysing.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col-reverse gap-3 border-t border-white/8 pt-5 sm:flex-row sm:justify-between">
+                                    <button
+                                        type="button"
+                                        disabled={submitting}
+                                        onClick={() => {
+                                            setError("");
+                                            setStep(1);
+                                        }}
+                                        className="q4-nav"
+                                    >
+                                        ← Wysig
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        disabled={submitting}
+                                        onClick={() =>
+                                            void submitRequest()
+                                        }
+                                        className="rounded-xl border border-[#d7a31f]/35 bg-[#d7a31f]/12 px-5 py-3 text-sm font-semibold text-[#e7b42b] transition hover:bg-[#d7a31f]/18 disabled:opacity-50"
+                                    >
+                                        {submitting
+                                            ? "Besig om in te dien…"
+                                            : "Dien Logistics-versoek in"}
+                                    </button>
+                                </div>
+                            </fieldset>
                         </div>
                     </div>
                 </div>

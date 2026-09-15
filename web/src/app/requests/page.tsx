@@ -1,5 +1,7 @@
 "use client";
 
+import { itLabel } from "../it-labels";
+
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -8,6 +10,9 @@ import {
     createRequest,
     getUserRequests,
     getCategories,
+    getRequesters,
+    RequestSubmissionError,
+    type RequesterOption,
 } from "@/services/requestService";
 
 import { RequestModel } from "@/types/request";
@@ -70,6 +75,10 @@ export default function RequestsPage() {
     const [description, setDescription] = useState("");
     const [priority, setPriority] = useState("Medium");
     const [categoryID, setCategoryID] = useState("");
+    const [requestedForUserID, setRequestedForUserID] = useState("");
+    const [requesters, setRequesters] = useState<RequesterOption[]>([]);
+    const [loadingRequesters, setLoadingRequesters] = useState(false);
+    const [requesterError, setRequesterError] = useState("");
 
     // ========================================
     // UI
@@ -148,6 +157,33 @@ export default function RequestsPage() {
     }, [router]);
 
     // ========================================
+    // LOAD REQUESTER OPTIONS FOR ADMINS ONLY
+    // ========================================
+
+    useEffect(() => {
+        if (user?.roleID !== 3) return;
+        let cancelled = false;
+
+        async function loadRequesters() {
+            setLoadingRequesters(true);
+            setRequesterError("");
+            try {
+                const options = await getRequesters();
+                if (!cancelled) setRequesters(options);
+            } catch {
+                if (!cancelled) {
+                    setRequesterError(itLabel("Unable to load requesters. Refresh the page to try again."));
+                }
+            } finally {
+                if (!cancelled) setLoadingRequesters(false);
+            }
+        }
+
+        void loadRequesters();
+        return () => { cancelled = true; };
+    }, [user]);
+
+    // ========================================
     // LOAD USER REQUESTS
     // ========================================
 
@@ -178,7 +214,7 @@ export default function RequestsPage() {
 
                 if (!cancelled) {
                     setMessage(
-                        "Unable to load your requests."
+                        "Jou versoeke kon nie gelaai word nie."
                     );
                 }
             }
@@ -233,7 +269,7 @@ export default function RequestsPage() {
 
                 if (!cancelled) {
                     setMessage(
-                        "Unable to load request categories."
+                        "Die versoekkategorieë kon nie gelaai word nie."
                     );
                 }
             } finally {
@@ -286,8 +322,17 @@ export default function RequestsPage() {
 
         if (canManageDetails && !categoryID) {
             setMessage(
-                "Please select a category before submitting the request."
+                "Kies ’n kategorie voordat jy die versoek indien."
             );
+            return;
+        }
+
+        const selectedRequester = user.roleID === 3 && requestedForUserID
+            ? requesters.find((person) => person.userID === Number(requestedForUserID))
+            : undefined;
+
+        if (user.roleID === 3 && requestedForUserID && !selectedRequester) {
+            setMessage(itLabel("Please select an active requester."));
             return;
         }
 
@@ -295,8 +340,8 @@ export default function RequestsPage() {
         setMessage("");
 
         try {
-            await createRequest({
-                userID: user.userID,
+            const createdRequest = await createRequest({
+                ...(selectedRequester ? { requestedForUserID: selectedRequester.userID } : {}),
                 title,
                 description,
 
@@ -306,10 +351,6 @@ export default function RequestsPage() {
                     ? priority
                     : "Medium",
 
-                assignedTo: null,
-                createdDate: null,
-                completedDate: null,
-
                 // Technicians/Admins choose category.
                 // Teachers submit 0 because they do not
                 // select a category.
@@ -317,24 +358,27 @@ export default function RequestsPage() {
                     ? Number(categoryID)
                     : 0,
 
-                statusID: 1,
             });
 
             setMessage(
-                "Request submitted successfully."
+                selectedRequester
+                    ? `${itLabel("Request submitted for")} ${selectedRequester.firstName} ${selectedRequester.lastName}. #${createdRequest.requestID}`
+                    : `${itLabel("Request submitted successfully.")} #${createdRequest.requestID}`
             );
 
             setTitle("");
             setDescription("");
+            setRequestedForUserID("");
 
             if (canManageDetails) {
                 setPriority("Medium");
             }
 
-            const updatedRequests =
-                await getUserRequests(user.userID);
-
-            setRequests(updatedRequests);
+            // Ownership determines whose history includes the new request.
+            // Avoid reporting a saved request as failed if a history refresh fails.
+            if (createdRequest.userID === user.userID) {
+                setRequests((current) => [createdRequest, ...current]);
+            }
         } catch (error) {
             console.error(
                 "Unable to submit request:",
@@ -342,7 +386,11 @@ export default function RequestsPage() {
             );
 
             setMessage(
-                "Something went wrong submitting your request."
+                error instanceof RequestSubmissionError && error.status === 403
+                    ? itLabel("Only admins may log requests for another person.")
+                    : error instanceof RequestSubmissionError && error.status === 400 && selectedRequester
+                        ? itLabel("Check the request details and select an active requester with a valid email address.")
+                        : itLabel("Something went wrong submitting your request.")
             );
         } finally {
             setLoading(false);
@@ -356,16 +404,16 @@ export default function RequestsPage() {
     function getStatusLabel(statusID: number): string {
         switch (statusID) {
             case 1:
-                return "Logged";
+                return itLabel("Logged");
 
             case 2:
-                return "Busy";
+                return itLabel("Busy");
 
             case 3:
-                return "Done";
+                return itLabel("Done");
 
             default:
-                return "Unknown";
+                return "Onbekend";
         }
     }
 
@@ -400,7 +448,7 @@ export default function RequestsPage() {
             requestCategoryID === null ||
             requestCategoryID === 0
         ) {
-            return "Pending IT Desk";
+            return "Wag op IT-ondersteuning";
         }
 
         const category = categories.find(
@@ -430,7 +478,7 @@ export default function RequestsPage() {
                     </div>
 
                     <p className="text-sm text-zinc-400">
-                        Loading your account...
+                        Jou rekening laai…
                     </p>
                 </div>
             </main>
@@ -479,7 +527,7 @@ export default function RequestsPage() {
                             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/4">
                                 <Image
                                     src="/wit-logo-tygies.png"
-                                    alt="Laerskool Tygerpoort Logo"
+                                    alt="Laerskool Tygerpoort-logo"
                                     width={150}
                                     height={60}
                                     className="h-auto w-30 object-contain"
@@ -493,7 +541,7 @@ export default function RequestsPage() {
                                 </p>
 
                                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                                    IT Request
+                                    IT-versoek
                                 </h1>
 
                                 <p className="mt-1 text-sm text-zinc-400">
@@ -513,7 +561,7 @@ export default function RequestsPage() {
                                     }
                                     className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
                                 >
-                                    Tech Dashboard
+                                    Tegnikusportaal
                                 </button>
                             )}
 
@@ -525,7 +573,7 @@ export default function RequestsPage() {
                                     }
                                     className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
                                 >
-                                    Admin
+                                    Administrasie
                                 </button>
                             )}
 
@@ -534,7 +582,7 @@ export default function RequestsPage() {
                                 onClick={() => router.push("/")}
                                 className="rounded-xl border border-[#d7a31f]/25 bg-[#d7a31f]/8 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:border-[#d7a31f]/40 hover:bg-[#d7a31f]/12"
                             >
-                                NKRN Home
+                                Tuis
                             </button>
 
                             <button
@@ -542,7 +590,7 @@ export default function RequestsPage() {
                                 onClick={logout}
                                 className="rounded-xl border border-red-400/10 bg-red-500/8 px-4 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/14"
                             >
-                                Log Out
+                                Meld af
                             </button>
                         </div>
                     </div>
@@ -575,15 +623,15 @@ export default function RequestsPage() {
                 >
                     <div className="mb-7">
                         <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                            Helpdesk
+                            IT-ondersteuning
                         </p>
 
                         <h2 className="text-2xl font-semibold">
-                            Submit a Request
+                            Dien ’n versoek in
                         </h2>
 
                         <p className="mt-1 text-sm text-zinc-500">
-                            Tell the IT team what you need assistance with.
+                            Vertel die IT-span waarmee jy hulp benodig.
                         </p>
                     </div>
 
@@ -592,13 +640,42 @@ export default function RequestsPage() {
                         className="space-y-5"
                     >
 
+                        {user.roleID === 3 && (
+                            <div>
+                                <label htmlFor="requested-for" className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                                    {itLabel("Request for")}
+                                </label>
+                                <select
+                                    id="requested-for"
+                                    className={selectClass}
+                                    value={requestedForUserID}
+                                    disabled={loading || loadingRequesters || Boolean(requesterError)}
+                                    onChange={(event) => setRequestedForUserID(event.target.value)}
+                                    aria-describedby="requested-for-help"
+                                >
+                                    <option value="">{itLabel("Myself")} — {user.firstName} {user.lastName}</option>
+                                    {requesters.filter((person) => person.userID !== user.userID).map((person) => (
+                                        <option key={person.userID} value={person.userID}>
+                                            {person.lastName}, {person.firstName} — {person.email}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p id="requested-for-help" className="mt-2 text-xs text-zinc-400">
+                                    {loadingRequesters
+                                        ? itLabel("Loading requesters...")
+                                        : itLabel("The selected person will receive request emails and see the request in their history. You remain recorded as the person who logged it.")}
+                                </p>
+                                {requesterError && <p role="alert" className="mt-2 text-sm text-red-400">{requesterError}</p>}
+                            </div>
+                        )}
+
                         {/* ========================================
                             TITLE
                         ======================================== */}
 
                         <div>
                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                Request title
+                                Versoektitel
                             </label>
 
                             <input
@@ -609,7 +686,7 @@ export default function RequestsPage() {
                                         e.target.value
                                     )
                                 }
-                                placeholder="e.g. Projector not displaying"
+                                placeholder="bv. Die projektor wys geen beeld nie"
                                 className={inputClass}
                             />
                         </div>
@@ -620,7 +697,7 @@ export default function RequestsPage() {
 
                         <div>
                             <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                Describe the problem
+                                Beskryf die probleem
                             </label>
 
                             <textarea
@@ -631,15 +708,13 @@ export default function RequestsPage() {
                                         e.target.value
                                     )
                                 }
-                                placeholder="Please describe what is happening. You may also include a suggested due date or other important information here."
+                                placeholder="Beskryf wat gebeur. Jy kan ook ’n voorgestelde sperdatum of ander belangrike inligting hier byvoeg."
                                 rows={6}
                                 className={`${inputClass} resize-none`}
                             />
 
                             <p className="mt-2 text-xs text-zinc-600">
-                                You can include a preferred completion date,
-                                deadline, or other important information in
-                                the description.
+                                Jy kan ’n voorkeurdatum, sperdatum of ander belangrike inligting by die beskrywing insluit.
                             </p>
                         </div>
 
@@ -664,7 +739,7 @@ export default function RequestsPage() {
                                 {showCategorySelector && (
                                     <div>
                                         <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                            Category
+                                            Kategorie
                                         </label>
 
                                         <select
@@ -682,12 +757,12 @@ export default function RequestsPage() {
                                         >
                                             {loadingCategories ? (
                                                 <option>
-                                                    Loading categories...
+                                                    Kategorieë laai…
                                                 </option>
                                             ) : categories.length ===
                                               0 ? (
                                                 <option value="">
-                                                    No categories available
+                                                    Geen kategorieë beskikbaar nie
                                                 </option>
                                             ) : (
                                                 categories.map(
@@ -703,7 +778,7 @@ export default function RequestsPage() {
                                                             }
                                                         >
                                                             {
-                                                                category.categoryName
+                                                                itLabel(category.categoryName)
                                                             }
                                                         </option>
                                                     )
@@ -718,7 +793,7 @@ export default function RequestsPage() {
                                 {showPrioritySelector && (
                                     <div>
                                         <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                            Priority
+                                            Prioriteit
                                         </label>
 
                                         <select
@@ -731,7 +806,7 @@ export default function RequestsPage() {
                                             className={selectClass}
                                         >
                                             <option value="Low">
-                                                Low
+                                                Laag
                                             </option>
 
                                             <option value="Medium">
@@ -739,11 +814,11 @@ export default function RequestsPage() {
                                             </option>
 
                                             <option value="High">
-                                                High
+                                                Hoog
                                             </option>
 
                                             <option value="Critical">
-                                                Critical
+                                                Kritiek
                                             </option>
                                         </select>
                                     </div>
@@ -787,8 +862,8 @@ export default function RequestsPage() {
                             className="w-full rounded-xl bg-white p-3.5 text-sm font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {loading
-                                ? "Submitting..."
-                                : "Submit Request"}
+                                ? "Besig om in te dien…"
+                                : "Dien versoek in"}
                         </button>
                     </form>
                 </section>
@@ -800,21 +875,21 @@ export default function RequestsPage() {
                 <section className={`${glassCard} nkrn-request-history p-5 sm:p-7`}>
                     <div className="mb-6">
                         <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                            History
+                            Geskiedenis
                         </p>
 
                         <h2 className="text-2xl font-semibold">
-                            My Requests
+                            My versoeke
                         </h2>
 
                         <p className="mt-1 text-sm text-zinc-500">
-                            View the status of requests you have submitted.
+                            Volg die status van jou ingediende versoeke.
                         </p>
                     </div>
 
                     {requests.length === 0 ? (
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-8 text-center text-sm text-zinc-500">
-                            No requests logged yet.
+                            Nog geen versoeke aangemeld nie.
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -853,6 +928,11 @@ export default function RequestsPage() {
                                                         request.description
                                                     }
                                                 </p>
+                                                {request.createdByUserID && request.createdByUserID !== request.userID && (
+                                                    <p className="mt-2 text-xs text-zinc-400">
+                                                        {itLabel("Logged by")}: {request.createdByName || `#${request.createdByUserID}`}
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <div className="flex shrink-0 flex-wrap gap-2 text-xs">
@@ -880,7 +960,7 @@ export default function RequestsPage() {
                                                 Priority:{" "}
                                                 <span className="text-zinc-200">
                                                     {
-                                                        request.priority
+                                                        itLabel(request.priority)
                                                     }
                                                 </span>
                                             </span>
@@ -898,7 +978,7 @@ export default function RequestsPage() {
 
                 <footer className="mt-10 border-t border-white/10 pt-6">
                     <p className="text-center text-sm text-zinc-600">
-                        Laerskool Tygerpoort · IT Desk
+                        Laerskool Tygerpoort · IT Report
                     </p>
                 </footer>
             </div>

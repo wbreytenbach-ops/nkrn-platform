@@ -366,3 +366,14 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Q4 additions are scoped to the new operational surfaces. */
+.q4-home { background: radial-gradient(ellipse at 80% 10%, #d7a31f12, transparent 45%), #09090b; }
+.q4-nav { border: 1px solid #ffffff20; border-radius: .75rem; padding: .65rem 1rem; font-size: .85rem; }
+.q4-nav:disabled { color: #a1a1aa; cursor: not-allowed; }
+.q4-nav[aria-current], .q4-nav:hover:enabled { border-color: #d7a31f80; color: #e7b42b; background: #d7a31f15; }
+.q4-module { border-top: 2px solid #d7a31f80; transition: transform .15s, border-color .15s; }
+.q4-module:hover { transform: translateY(-3px); border-color: #d7a31f; }
+.q4-home :focus-visible, .q4-logistics :focus-visible { outline: 2px solid #e7b42b; outline-offset: 4px; }
+.q4-logistics section[id] { scroll-margin-top: 5rem; }
+@media (prefers-reduced-motion: reduce) { .q4-module { transition: none; } .q4-module:hover { transform: none; } }

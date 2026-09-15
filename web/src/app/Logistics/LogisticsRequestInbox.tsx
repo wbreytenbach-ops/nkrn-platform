@@ -1,5 +1,8 @@
 "use client";
 
+import { displayLabel } from "./labels";
+
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface LogisticsDepartment {
@@ -64,6 +67,7 @@ interface LogisticsRequestInboxProps {
     departments: LogisticsDepartment[];
     workers: LogisticsWorker[];
     onTaskConverted: () => void;
+    tasks: Array<{ taskID: number; responsibleWorkerName?: string | null; responsibleUserName?: string | null; responsibleText: string | null; nextAction: string | null }>;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -95,7 +99,7 @@ function displayDate(value?: string | null) {
         return value;
     }
 
-    return date.toLocaleDateString("en-ZA", {
+    return date.toLocaleDateString("af-ZA", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -111,7 +115,7 @@ function displayDateTime(value?: string | null) {
         return value;
     }
 
-    return date.toLocaleString("en-ZA", {
+    return date.toLocaleString("af-ZA", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -133,7 +137,7 @@ function primaryLocation(request: LogisticsRequest) {
     return (
         primary?.locationName ||
         primary?.locationText ||
-        "No location supplied"
+        "Geen ligging verskaf nie"
     );
 }
 
@@ -180,11 +184,16 @@ export default function LogisticsRequestInbox({
     departments,
     workers,
     onTaskConverted,
+    tasks,
 }: LogisticsRequestInboxProps) {
+    const router = useRouter();
     const [requests, setRequests] = useState<LogisticsRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [search, setSearch] = useState("");
+    const [typeFilter, setTypeFilter] = useState("");
+    const [priorityFilter, setPriorityFilter] = useState("");
     const [filter, setFilter] = useState("Open");
     const [selectedRequest, setSelectedRequest] =
         useState<LogisticsRequest | null>(null);
@@ -214,7 +223,7 @@ export default function LogisticsRequestInbox({
             if (response.status === 401) {
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
-                window.location.assign("/login");
+                router.replace("/login");
                 return;
             }
 
@@ -240,23 +249,21 @@ export default function LogisticsRequestInbox({
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [router]);
 
     useEffect(() => {
-        void loadRequests();
+        const timer = window.setTimeout(() => {
+            void loadRequests();
+        }, 0);
+
+        return () => window.clearTimeout(timer);
     }, [loadRequests]);
 
-    const visibleRequests = useMemo(() => {
-        if (filter === "All") {
-            return requests;
-        }
-
-        if (filter === "Open") {
-            return requests.filter(isOpenRequest);
-        }
-
-        return requests.filter((request) => request.status === filter);
-    }, [requests, filter]);
+    const visibleRequests = useMemo(() => requests.filter(request =>
+        (filter === "All" || (filter === "Open" ? isOpenRequest(request) : request.status === filter)) &&
+        (!typeFilter || request.requestType === typeFilter) && (!priorityFilter || request.priority === priorityFilter) &&
+        `${request.title} ${request.description ?? ""} ${request.requestedByName} ${request.requestedByEmail} ${primaryLocation(request)} ${request.managerNotes ?? ""}`.toLowerCase().includes(search.toLowerCase())
+    ), [requests, filter, typeFilter, priorityFilter, search]);
 
     const newCount = requests.filter(
         (request) => request.status === "New"
@@ -314,6 +321,7 @@ export default function LogisticsRequestInbox({
                     body: JSON.stringify({
                         status: reviewStatus,
                         managerNotes: managerNotes.trim() || null,
+                    priority,
                     }),
                 }
             );
@@ -430,16 +438,16 @@ export default function LogisticsRequestInbox({
 
     return (
         <>
-            <section className="nkrn-panel mb-8 overflow-hidden rounded-[28px] border border-white/10 bg-white/4 shadow-2xl shadow-black/20 backdrop-blur-2xl">
+            <section id="versoeke" className="nkrn-panel mb-8 overflow-hidden rounded-[28px] border border-white/10 bg-white/4 shadow-2xl shadow-black/20 backdrop-blur-2xl">
                 <div className="border-b border-white/8 p-5 sm:p-6">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                Staff Requests
+                                Personeelversoeke
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-3">
                                 <h2 className="text-xl font-semibold">
-                                    Logistics Request Inbox
+                                    Versoekinkassie
                                 </h2>
                                 {newCount > 0 && (
                                     <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-2.5 py-1 text-xs font-semibold text-yellow-200">
@@ -448,7 +456,7 @@ export default function LogisticsRequestInbox({
                                 )}
                             </div>
                             <p className="mt-1 text-sm text-zinc-500">
-                                Review staff submissions before turning approved work into operational tasks.
+                                Hersien personeelversoeke, ken verantwoordelikheid toe en beplan die volgende aksie.
                             </p>
                         </div>
 
@@ -457,20 +465,24 @@ export default function LogisticsRequestInbox({
                                 {openCount} open
                             </span>
 
+                            <input aria-label="Soek versoeke" placeholder="Soek naam, versoek of lokaal…" className={inputClass} value={search} onChange={e => setSearch(e.target.value)} />
+                            <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
+                            <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["P1", "P2", "P3", "P4"].map(value => <option key={value}>{value}</option>)}</select>
                             <select
+                                aria-label="Versoekstatus"
                                 value={filter}
                                 onChange={(event) => setFilter(event.target.value)}
                                 className="nkrn-select rounded-xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white outline-none"
                             >
-                                <option value="Open">Open requests</option>
-                                <option value="New">New</option>
-                                <option value="Under Review">Under Review</option>
-                                <option value="Needs Information">Needs Information</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Converted">Converted</option>
-                                <option value="Declined">Declined</option>
-                                <option value="Cancelled">Cancelled</option>
-                                <option value="All">All requests</option>
+                                <option value="Open">Oop versoeke</option>
+                                <option value="New">Nuut</option>
+                                <option value="Under Review">Onder hersiening</option>
+                                <option value="Needs Information">Meer inligting benodig</option>
+                                <option value="Approved">Goedgekeur</option>
+                                <option value="Converted">Na taak omgeskakel</option>
+                                <option value="Declined">Afgekeur</option>
+                                <option value="Cancelled">Gekanselleer</option>
+                                <option value="All">Alle versoeke</option>
                             </select>
 
                             <button
@@ -478,7 +490,7 @@ export default function LogisticsRequestInbox({
                                 onClick={() => void loadRequests()}
                                 className={secondaryButton}
                             >
-                                Refresh Requests
+                                Verfris versoeke
                             </button>
                         </div>
                     </div>
@@ -498,12 +510,12 @@ export default function LogisticsRequestInbox({
 
                 {loading ? (
                     <div className="p-6 text-sm text-zinc-500">
-                        Loading Logistics requests…
+                        Logistics-versoeke laai…
                     </div>
                 ) : visibleRequests.length === 0 ? (
                     <div className="p-5 sm:p-6">
                         <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-zinc-500">
-                            No Logistics requests match the current filter.
+                            Geen versoeke pas by die filter nie.
                         </div>
                     </div>
                 ) : (
@@ -511,13 +523,13 @@ export default function LogisticsRequestInbox({
                         <table className="min-w-full text-left text-sm">
                             <thead className="border-b border-white/8 bg-black/15 text-xs uppercase tracking-[0.12em] text-zinc-500">
                                 <tr>
-                                    <th className="px-5 py-4 font-medium">Request</th>
-                                    <th className="px-5 py-4 font-medium">Submitted By</th>
-                                    <th className="px-5 py-4 font-medium">Type</th>
-                                    <th className="px-5 py-4 font-medium">Location</th>
-                                    <th className="px-5 py-4 font-medium">Submitted</th>
+                                    <th className="px-5 py-4 font-medium">Versoek</th>
+                                    <th className="px-5 py-4 font-medium">Ingedien deur</th>
+                                    <th className="px-5 py-4 font-medium">Soort</th>
+                                    <th className="px-5 py-4 font-medium">Lokaal / Ligging</th>
+                                    <th className="px-5 py-4 font-medium">Ingedien</th>
                                     <th className="px-5 py-4 font-medium">Status</th>
-                                    <th className="px-5 py-4 text-right font-medium">Action</th>
+                                    <th className="px-5 py-4 text-right font-medium">Aksie</th>
                                 </tr>
                             </thead>
 
@@ -531,6 +543,13 @@ export default function LogisticsRequestInbox({
                                             <p className="font-medium text-zinc-100">
                                                 {request.title}
                                             </p>
+                                            <p className="mt-2 whitespace-pre-wrap text-zinc-300">{request.description || "Geen beskrywing"}</p>
+                                            <p className="mt-2 text-xs text-[#e7b42b]">{request.priority} · {displayDate(request.activityDate)} {shortTime(request.startTime)} – {shortTime(request.endTime)}</p>
+                                            <p className="mt-2 text-xs text-zinc-300">Toerusting: {request.equipment.map(item => `${item.equipmentName}${item.quantity ? ` × ${item.quantity}` : ""}${item.notes ? ` (${item.notes})` : ""}`).join(", ") || "Geen"}</p>
+                                            <p className="mt-1 text-xs text-zinc-300">{request.maintenanceItems.map(item => `${item.maintenanceName}: ${displayLabel(item.actionType)} ${item.notes || ""}`).join("; ")}</p>
+                                            <p className="mt-2 text-xs text-zinc-300">Bestuurdersnota: {request.managerNotes || "Nog geen nota"}</p>
+                                            <p className="mt-1 text-xs text-zinc-300">Verantwoordelik: {(() => { const task = tasks.find(task => task.taskID === request.convertedTaskID); return task?.responsibleWorkerName || task?.responsibleUserName || task?.responsibleText || "Nie toegeken nie"; })()}</p>
+                                            <p className="mt-1 text-xs text-zinc-300">Volgende aksie: {tasks.find(task => task.taskID === request.convertedTaskID)?.nextAction || (isOpenRequest(request) ? "Hersien en ken verantwoordelikheid toe" : displayLabel(request.status))}</p>
                                             <p className="mt-1 font-mono text-xs text-zinc-600">
                                                 Request #{request.requestID}
                                                 {request.convertedTaskID
@@ -547,7 +566,7 @@ export default function LogisticsRequestInbox({
                                         </td>
 
                                         <td className="px-5 py-4 text-zinc-400">
-                                            {request.requestType}
+                                            {displayLabel(request.requestType)}
                                         </td>
 
                                         <td className="min-w-44 px-5 py-4 text-zinc-400">
@@ -564,7 +583,7 @@ export default function LogisticsRequestInbox({
                                                     request.status
                                                 )}`}
                                             >
-                                                {request.status}
+                                                {displayLabel(request.status)}
                                             </span>
                                         </td>
 
@@ -574,7 +593,7 @@ export default function LogisticsRequestInbox({
                                                 onClick={() => openRequest(request)}
                                                 className={secondaryButton}
                                             >
-                                                Review
+                                                Hersien
                                             </button>
                                         </td>
                                     </tr>
@@ -615,7 +634,7 @@ export default function LogisticsRequestInbox({
                                 disabled={savingReview || converting}
                                 className={secondaryButton}
                             >
-                                Close
+                                Sluit
                             </button>
                         </div>
 
@@ -624,15 +643,15 @@ export default function LogisticsRequestInbox({
                                 <div className="rounded-2xl border border-white/8 bg-black/15 p-5">
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         <Info
-                                            label="Request Type"
-                                            value={selectedRequest.requestType}
+                                            label="Soort versoek"
+                                            value={displayLabel(selectedRequest.requestType)}
                                         />
                                         <Info
-                                            label="Location"
+                                            label="Lokaal / Ligging"
                                             value={primaryLocation(selectedRequest)}
                                         />
                                         <Info
-                                            label="Activity Category"
+                                            label="Aktiwiteitskategorie"
                                             value={selectedRequest.activityCategory || "—"}
                                         />
                                         <Info
@@ -651,13 +670,13 @@ export default function LogisticsRequestInbox({
                                         />
                                         <Info
                                             label="Current Status"
-                                            value={selectedRequest.status}
+                                            value={displayLabel(selectedRequest.status)}
                                         />
                                     </div>
 
                                     <div className="mt-5">
                                         <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-600">
-                                            Description
+                                            Beskrywing
                                         </p>
                                         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
                                             {selectedRequest.description || "No description supplied."}
@@ -668,7 +687,7 @@ export default function LogisticsRequestInbox({
                                 {selectedRequest.maintenanceItems.length > 0 && (
                                     <div className="rounded-2xl border border-white/8 bg-black/15 p-5">
                                         <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-600">
-                                            Maintenance
+                                            Instandhouding
                                         </p>
                                         <div className="mt-3 space-y-2">
                                             {selectedRequest.maintenanceItems.map((item) => (
@@ -676,7 +695,7 @@ export default function LogisticsRequestInbox({
                                                     key={item.requestMaintenanceItemID}
                                                     className="rounded-xl border border-white/8 bg-white/2.5 px-4 py-3 text-sm text-zinc-300"
                                                 >
-                                                    {item.maintenanceName} · {item.actionType}
+                                                    {item.maintenanceName} · {displayLabel(item.actionType)}
                                                 </div>
                                             ))}
                                         </div>
@@ -686,7 +705,7 @@ export default function LogisticsRequestInbox({
                                 {selectedRequest.equipment.length > 0 && (
                                     <div className="rounded-2xl border border-white/8 bg-black/15 p-5">
                                         <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-600">
-                                            Equipment
+                                            Toerusting
                                         </p>
                                         <div className="mt-3 flex flex-wrap gap-2">
                                             {selectedRequest.equipment.map((item) => (
@@ -706,12 +725,12 @@ export default function LogisticsRequestInbox({
                             <div className="space-y-5">
                                 <div className="rounded-2xl border border-white/8 bg-black/15 p-5">
                                     <p className="text-xs font-medium uppercase tracking-[0.18em] text-yellow-400">
-                                        Review
+                                        Hersien
                                     </p>
 
                                     <label className="mt-4 block">
                                         <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                            Request Status
+                                            Versoekstatus
                                         </span>
                                         <select
                                             value={reviewStatus}
@@ -720,19 +739,19 @@ export default function LogisticsRequestInbox({
                                             }
                                             className={selectClass}
                                         >
-                                            <option value="New">New</option>
-                                            <option value="Under Review">Under Review</option>
+                                            <option value="New">Nuut</option>
+                                            <option value="Under Review">Onder hersiening</option>
                                             <option value="Needs Information">
-                                                Needs Information
+                                                Meer inligting benodig
                                             </option>
-                                            <option value="Approved">Approved</option>
-                                            <option value="Declined">Declined</option>
+                                            <option value="Approved">Goedgekeur</option>
+                                            <option value="Declined">Afgekeur</option>
                                         </select>
                                     </label>
 
                                     <label className="mt-4 block">
                                         <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                            Manager Notes
+                                            Bestuurdersnotas
                                         </span>
                                         <textarea
                                             value={managerNotes}
@@ -758,16 +777,16 @@ export default function LogisticsRequestInbox({
                                 {isOpenRequest(selectedRequest) && (
                                     <div className="rounded-2xl border border-yellow-400/15 bg-yellow-500/5 p-5">
                                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-yellow-400">
-                                            Convert to Operational Task
+                                            Skakel om na operasionele taak
                                         </p>
                                         <p className="mt-2 text-xs leading-5 text-zinc-500">
-                                            This creates a Logistics task and links this request to it in one transaction.
+                                            Dit skep ’n Logistics-taak en koppel die versoek in een transaksie.
                                         </p>
 
                                         <div className="mt-4 grid gap-4 sm:grid-cols-2">
                                             <label className="block">
                                                 <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                                    Department
+                                                    Afdeling
                                                 </span>
                                                 <select
                                                     value={departmentID}
@@ -776,7 +795,7 @@ export default function LogisticsRequestInbox({
                                                     }
                                                     className={selectClass}
                                                 >
-                                                    <option value="">Unassigned</option>
+                                                    <option value="">Nie toegeken nie</option>
                                                     {departments
                                                         .filter(
                                                             (department) =>
@@ -797,7 +816,7 @@ export default function LogisticsRequestInbox({
 
                                             <label className="block">
                                                 <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                                    Worker
+                                                    Werker
                                                 </span>
                                                 <select
                                                     value={workerID}
@@ -806,7 +825,7 @@ export default function LogisticsRequestInbox({
                                                     }
                                                     className={selectClass}
                                                 >
-                                                    <option value="">Unassigned</option>
+                                                    <option value="">Nie toegeken nie</option>
                                                     {workers
                                                         .filter(
                                                             (worker) => worker.isActive !== false
@@ -827,7 +846,7 @@ export default function LogisticsRequestInbox({
 
                                             <label className="block">
                                                 <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                                    Priority
+                                                    Prioriteit
                                                 </span>
                                                 <select
                                                     value={priority}
@@ -836,16 +855,16 @@ export default function LogisticsRequestInbox({
                                                     }
                                                     className={selectClass}
                                                 >
-                                                    <option value="P1">P1 · Critical</option>
-                                                    <option value="P2">P2 · Urgent</option>
-                                                    <option value="P3">P3 · Planned</option>
-                                                    <option value="P4">P4 · Improvement</option>
+                                                    <option value="P1">P1 · Kritiek</option>
+                                                    <option value="P2">P2 · Dringend</option>
+                                                    <option value="P3">P3 · Beplan</option>
+                                                    <option value="P4">P4 · Verbetering</option>
                                                 </select>
                                             </label>
 
                                             <label className="block">
                                                 <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                                    Due Date
+                                                    Sperdatum
                                                 </span>
                                                 <input
                                                     type="date"
@@ -860,7 +879,7 @@ export default function LogisticsRequestInbox({
 
                                         <label className="mt-4 block">
                                             <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                                Next Action
+                                                Volgende aksie
                                             </span>
                                             <textarea
                                                 value={nextAction}
@@ -884,7 +903,7 @@ export default function LogisticsRequestInbox({
                                                 className="h-4 w-4 rounded border-white/20 bg-zinc-900"
                                             />
                                             <span className="text-sm text-zinc-300">
-                                                Include this task when generating job cards
+                                                Sluit die taak by werkkaarte in
                                             </span>
                                         </label>
 

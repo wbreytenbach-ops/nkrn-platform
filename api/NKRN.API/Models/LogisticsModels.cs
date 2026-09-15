@@ -191,6 +191,13 @@ namespace NKRN.API.Models
         [MaxLength(50)]
         public string Status { get; set; } = "Beplan";
 
+        [MaxLength(1024)]
+        public string? CalendarEventID { get; set; }
+        [MaxLength(40)]
+        public string? CalendarSyncStatus { get; set; }
+        public string? CalendarSyncError { get; set; }
+        public DateTime? CalendarSyncedAt { get; set; }
+
         public DateTime? WorkerSignedOffAt { get; set; }
 
         public DateTime? ManagerSignedOffAt { get; set; }
@@ -224,6 +231,8 @@ namespace NKRN.API.Models
         [Required]
         [MaxLength(50)]
         public string Status { get; set; } = "Draft";
+
+        public string? DeliveryNote { get; set; }
 
         public DateTime GeneratedAt { get; set; }
 
@@ -270,6 +279,9 @@ namespace NKRN.API.Models
         [Required]
         [MaxLength(50)]
         public string Status { get; set; } = "Beplan";
+
+        public TimeSpan? PlannedStart { get; set; }
+        public TimeSpan? PlannedEnd { get; set; }
 
         public int SortOrder { get; set; }
 

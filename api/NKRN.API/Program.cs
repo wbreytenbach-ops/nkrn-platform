@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
+        builder.Configuration.GetConnectionString("DefaultConnection"), sql => sql.UseCompatibilityLevel(130)
     )
 );
 
@@ -30,6 +30,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:3000",
+                "https://portal.tygies.co.za",
                 "http://TYGIES-APP:3000",
                 "http://tygies-app:3000",
                 "http://192.168.3.6:3000"
@@ -109,6 +110,10 @@ builder.Services.Configure<EmailSettings>(
 );
 
 builder.Services.AddScoped<EmailService>();
+builder.Services.Configure<LogisticsAutomationOptions>(builder.Configuration.GetSection("LogisticsAutomation"));
+builder.Services.AddScoped<LogisticsJobCardService>();
+builder.Services.AddScoped<LogisticsCalendarSyncService>();
+builder.Services.AddHostedService<LogisticsAutomationService>();
 
 // ============================================================
 // GOOGLE CALENDAR

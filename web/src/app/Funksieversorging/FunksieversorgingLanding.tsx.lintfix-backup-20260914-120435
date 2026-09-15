@@ -1,0 +1,1474 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import "../nkrn-control.css";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+type User = {
+    userID: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    roleID: number;
+};
+
+type Step = 1 | 2 | 3;
+type StockGroup = "table" | "dining" | "serving";
+
+type StockItem = {
+    code: string;
+    name: string;
+    group: StockGroup;
+    available: number | null;
+    attendanceDerived?: boolean;
+};
+
+type SelectedItem = StockItem & {
+    quantity: number;
+    customName?: string;
+};
+
+type RequestItem = {
+    code: string;
+    name: string;
+    category: string;
+    requestedQuantity: number;
+    recordedAvailableQuantity: number | null;
+    isAttendanceDerived: boolean;
+};
+
+type RequestRecord = {
+    requestID: number;
+    requesterName: string;
+    requesterEmail: string;
+    neededDate: string;
+    functionName: string;
+    venue: string;
+    otherVenue: string | null;
+    attendance: number;
+    status: string;
+    leadTimeWarning: boolean;
+    notificationError: string | null;
+    items: RequestItem[];
+};
+
+const venues = [
+    "Saal",
+    "Panthera (losie bo)",
+    "Panthera (onder)",
+    "Klaskamers",
+    "Personeelkamer",
+    "Ander",
+];
+
+const tableItems: StockItem[] = [
+    { code: "swart-tafeldoek", name: "Swart tafeldoeke", group: "table", available: 15 },
+    { code: "tygerpoort-tafeldoek", name: "Tygerpoort tafeldoeke", group: "table", available: 5 },
+    { code: "swart-spantafeldoek", name: "Swart spantafeldoeke (bemarking)", group: "table", available: 4 },
+    { code: "rooi-wit-tafeldoek", name: "Rooi-en-wit gestreepte tafeldoeke (bemarking)", group: "table", available: 4 },
+];
+
+const diningItems: StockItem[] = [
+    { code: "groot-borde-grys", name: "Groot borde - grys", group: "dining", available: 200, attendanceDerived: true },
+    { code: "kleinbordjies-grys", name: "Kleinbordjies - grys", group: "dining", available: 200, attendanceDerived: true },
+    { code: "bakkies-grys", name: "Sop-/poedingbakkies - grys", group: "dining", available: 200, attendanceDerived: true },
+    { code: "groot-borde-wit", name: "Groot borde - wit", group: "dining", available: 102, attendanceDerived: true },
+    { code: "kleinbordjies-wit", name: "Kleinbordjies - wit", group: "dining", available: 80, attendanceDerived: true },
+    { code: "bakkies-wit", name: "Sop-/poedingbakkies - wit", group: "dining", available: 6, attendanceDerived: true },
+    { code: "glase-gin", name: "Glase - gin", group: "dining", available: 20, attendanceDerived: true },
+    { code: "glase-koeldrank", name: "Glase - koeldrank", group: "dining", available: 200, attendanceDerived: true },
+    { code: "glase-wyn", name: "Glase - wyn", group: "dining", available: 200, attendanceDerived: true },
+    { code: "pierings-wit", name: "Pierings - wit", group: "dining", available: 150, attendanceDerived: true },
+    { code: "koppies-wit", name: "Koppies - wit", group: "dining", available: 150, attendanceDerived: true },
+    { code: "koffiebekers-wit", name: "Koffiebekers - wit", group: "dining", available: 80, attendanceDerived: true },
+    { code: "koffiebekers-wapen", name: "Koffiebekers met wapen - wit", group: "dining", available: 150, attendanceDerived: true },
+    { code: "koffiebekers-grys", name: "Koffiebekers - grys", group: "dining", available: 200, attendanceDerived: true },
+    { code: "messe-silwer", name: "Messe - silwer", group: "dining", available: 157, attendanceDerived: true },
+    { code: "vurke-silwer", name: "Vurke - silwer", group: "dining", available: 200, attendanceDerived: true },
+    { code: "nagereglepels-silwer", name: "Nagereglepels - silwer", group: "dining", available: 186, attendanceDerived: true },
+    { code: "teelepels-silwer", name: "Teelepels - silwer", group: "dining", available: 100, attendanceDerived: true },
+];
+
+const servingItems: StockItem[] = [
+    { code: "bekers-sonder-wapen", name: "Bekers - sonder wapen", group: "serving", available: 3 },
+    { code: "drukflesse-groot", name: "Drukflesse groot - warm", group: "serving", available: 2 },
+    { code: "drukflesse-klein", name: "Drukflesse klein - warm", group: "serving", available: 2 },
+    { code: "houtborde", name: "Houtborde - uitpak", group: "serving", available: 4 },
+    { code: "opskepskottels-silwer", name: "Opskepbakke - silwer", group: "serving", available: 3 },
+    { code: "opskepskottels-wit", name: "Opskepbakke - wit", group: "serving", available: 4 },
+    { code: "opskeplepels", name: "Opskeplepels - silwer", group: "serving", available: 9 },
+    { code: "suikerpotte", name: "Suikerpotte - wit", group: "serving", available: 4 },
+    { code: "teeketels", name: "Teeketels - staal", group: "serving", available: 10 },
+    { code: "urn-warm", name: "Urn - warm", group: "serving", available: 1 },
+    { code: "urn-koud", name: "Urn - koud", group: "serving", available: 1 },
+    { code: "warmskinkborde", name: "Warmskinkborde / hot trays", group: "serving", available: 3 },
+    { code: "yshouers", name: "Yshouers / ysbakke", group: "serving", available: 4 },
+    { code: "blompotte", name: "Blompotte (slegs vir skoolgebruik)", group: "serving", available: null },
+];
+
+const inputClass =
+    "nkrn-input w-full border border-white/10 bg-zinc-900/70 p-3 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-white/25 focus:bg-zinc-900";
+
+const selectClass =
+    "nkrn-select w-full border border-white/10 bg-zinc-900/70 p-3 text-sm text-white outline-none transition focus:border-white/25 focus:bg-zinc-900";
+
+function todayInputValue() {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+}
+
+function workingDaysUntil(dateValue: string) {
+    if (!dateValue) return 0;
+
+    const target = new Date(`${dateValue}T12:00:00`);
+    const cursor = new Date();
+    cursor.setHours(12, 0, 0, 0);
+
+    let count = 0;
+
+    while (cursor < target) {
+        cursor.setDate(cursor.getDate() + 1);
+
+        if (cursor.getDay() !== 0 && cursor.getDay() !== 6) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+function formatDate(value: string) {
+    if (!value) return "—";
+
+    return new Intl.DateTimeFormat("af-ZA", {
+        dateStyle: "medium",
+    }).format(new Date(value));
+}
+
+function statusLabel(status: string) {
+    if (status === "Logged") return "Aangemeld";
+    if (status === "InReview") return "Word hanteer";
+    if (status === "Done") return "Afgehandel";
+    if (status === "Declined") return "Nie goedgekeur nie";
+    return status;
+}
+
+export default function FunksieversorgingLanding() {
+    const router = useRouter();
+
+    const [user, setUser] = useState<User | null>(null);
+    const [ready, setReady] = useState(false);
+
+    const [step, setStep] = useState<Step>(1);
+    const [activeGroup, setActiveGroup] = useState<StockGroup>("table");
+
+    const [neededDate, setNeededDate] = useState("");
+    const [functionName, setFunctionName] = useState("");
+    const [venue, setVenue] = useState("");
+    const [otherVenue, setOtherVenue] = useState("");
+    const [attendance, setAttendance] = useState(0);
+
+    const [quantities, setQuantities] = useState<Record<string, number>>({});
+    const [diningSelected, setDiningSelected] = useState<Record<string, boolean>>({});
+
+    const [otherEnabled, setOtherEnabled] = useState(false);
+    const [otherName, setOtherName] = useState("");
+    const [otherQuantity, setOtherQuantity] = useState(1);
+
+    const [notes, setNotes] = useState("");
+    const [acknowledged, setAcknowledged] = useState(false);
+
+    const [message, setMessage] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
+    const [mine, setMine] = useState<RequestRecord[]>([]);
+    const [showMine, setShowMine] = useState(false);
+
+    const [canManage, setCanManage] = useState(false);
+    const [adminRequests, setAdminRequests] = useState<RequestRecord[]>([]);
+    const [showAdmin, setShowAdmin] = useState(false);
+
+    const authHeaders = useCallback(
+        () => ({
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") ?? ""}`,
+        }),
+        []
+    );
+
+    const loadMine = useCallback(async () => {
+        try {
+            const response = await fetch(
+                `${API_URL}/api/FunksieversorgingRequests/mine`,
+                { headers: authHeaders() }
+            );
+
+            if (response.ok) {
+                setMine((await response.json()) as RequestRecord[]);
+            }
+        } catch {
+            // History remains optional while the form is usable.
+        }
+    }, [authHeaders]);
+
+    const loadAdmin = useCallback(async () => {
+        try {
+            const response = await fetch(
+                `${API_URL}/api/FunksieversorgingRequests`,
+                { headers: authHeaders() }
+            );
+
+            if (response.ok) {
+                setAdminRequests((await response.json()) as RequestRecord[]);
+            }
+        } catch {
+            // Admin list is supplementary.
+        }
+    }, [authHeaders]);
+
+    useEffect(() => {
+        const storedToken = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
+
+        if (!storedToken || !storedUser) {
+            router.replace("/login");
+            return;
+        }
+
+        try {
+            setUser(JSON.parse(storedUser) as User);
+            setReady(true);
+        } catch {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            router.replace("/login");
+        }
+    }, [router]);
+
+    useEffect(() => {
+        if (!ready) return;
+
+        void loadMine();
+
+        const loadAccess = async () => {
+            try {
+                const response = await fetch(
+                    `${API_URL}/api/FunksieversorgingRequests/access`,
+                    { headers: authHeaders() }
+                );
+
+                if (!response.ok) return;
+
+                const result = (await response.json()) as {
+                    canManage: boolean;
+                };
+
+                setCanManage(result.canManage);
+
+                if (result.canManage) {
+                    await loadAdmin();
+                }
+            } catch {
+                setCanManage(false);
+            }
+        };
+
+        void loadAccess();
+    }, [ready, authHeaders, loadMine, loadAdmin]);
+
+    const selectedItems = useMemo<SelectedItem[]>(() => {
+        const result: SelectedItem[] = [];
+
+        for (const item of tableItems) {
+            const quantity = quantities[item.code] ?? 0;
+
+            if (quantity > 0) {
+                result.push({ ...item, quantity });
+            }
+        }
+
+        for (const item of diningItems) {
+            if (diningSelected[item.code]) {
+                result.push({
+                    ...item,
+                    quantity: attendance,
+                });
+            }
+        }
+
+        for (const item of servingItems) {
+            const quantity = quantities[item.code] ?? 0;
+
+            if (quantity > 0) {
+                result.push({ ...item, quantity });
+            }
+        }
+
+        if (
+            otherEnabled &&
+            otherName.trim() &&
+            otherQuantity > 0
+        ) {
+            result.push({
+                code: "ander",
+                name: otherName.trim(),
+                group: "serving",
+                available: null,
+                quantity: otherQuantity,
+                customName: otherName.trim(),
+            });
+        }
+
+        return result;
+    }, [
+        quantities,
+        diningSelected,
+        attendance,
+        otherEnabled,
+        otherName,
+        otherQuantity,
+    ]);
+
+    const selectedCounts = useMemo(
+        () => ({
+            table: selectedItems.filter((item) => item.group === "table").length,
+            dining: selectedItems.filter((item) => item.group === "dining").length,
+            serving: selectedItems.filter((item) => item.group === "serving").length,
+        }),
+        [selectedItems]
+    );
+
+    const stockWarning = selectedItems.some(
+        (item) =>
+            item.available !== null &&
+            item.quantity > item.available
+    );
+
+    function setQuantity(
+        code: string,
+        next: number
+    ) {
+        setQuantities((current) => ({
+            ...current,
+            [code]: Math.max(0, next),
+        }));
+    }
+
+    function continueFromDetails() {
+        if (
+            !neededDate ||
+            !functionName.trim() ||
+            !venue ||
+            attendance <= 0
+        ) {
+            setMessage(
+                "Voltooi asseblief die datum, funksie, lokaal en aantal persone."
+            );
+            return;
+        }
+
+        if (venue === "Ander" && !otherVenue.trim()) {
+            setMessage("Spesifiseer asseblief die ander lokaal.");
+            return;
+        }
+
+        setMessage("");
+        setStep(2);
+    }
+
+    function continueFromStock() {
+        if (selectedItems.length === 0) {
+            setMessage("Kies minstens een voorraaditem.");
+            return;
+        }
+
+        setMessage("");
+        setStep(3);
+    }
+
+    async function submitRequest() {
+        if (!acknowledged) {
+            setMessage(
+                "Bevestig asseblief die terugbesorgingsvoorwaardes."
+            );
+            return;
+        }
+
+        setSubmitting(true);
+        setMessage("");
+
+        try {
+            const response = await fetch(
+                `${API_URL}/api/FunksieversorgingRequests`,
+                {
+                    method: "POST",
+                    headers: authHeaders(),
+                    body: JSON.stringify({
+                        neededDate,
+                        functionName: functionName.trim(),
+                        venue,
+                        otherVenue:
+                            venue === "Ander"
+                                ? otherVenue.trim()
+                                : null,
+                        attendance,
+                        notes: notes.trim() || null,
+                        returnAcknowledged: true,
+                        items: selectedItems.map((item) => ({
+                            code: item.code,
+                            quantity: item.quantity,
+                            customName:
+                                item.code === "ander"
+                                    ? item.customName
+                                    : null,
+                        })),
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                const detail = await response.text();
+                throw new Error(
+                    detail || "Versoek kon nie ingedien word nie."
+                );
+            }
+
+            const created =
+                (await response.json()) as RequestRecord;
+
+            setMessage(
+                `Versoek #${created.requestID} is suksesvol ingedien.`
+            );
+
+            setStep(1);
+            setActiveGroup("table");
+            setNeededDate("");
+            setFunctionName("");
+            setVenue("");
+            setOtherVenue("");
+            setAttendance(0);
+            setQuantities({});
+            setDiningSelected({});
+            setOtherEnabled(false);
+            setOtherName("");
+            setOtherQuantity(1);
+            setNotes("");
+            setAcknowledged(false);
+
+            await loadMine();
+
+            if (canManage) {
+                await loadAdmin();
+            }
+        } catch (error) {
+            setMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Versoek kon nie ingedien word nie."
+            );
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        router.push("/login");
+    }
+
+    if (!ready || !user) {
+        return (
+            <main className="nkrn-control min-h-screen bg-zinc-950 p-10 text-zinc-300">
+                Werksruimte laai…
+            </main>
+        );
+    }
+
+    const leadTimeWarning =
+        Boolean(neededDate) &&
+        workingDaysUntil(neededDate) < 3;
+
+    return (
+        <main className="nkrn-control q4-home min-h-screen bg-zinc-950 px-5 py-8 text-white sm:px-10">
+            <div className="mx-auto max-w-6xl">
+                <nav
+                    aria-label="Navigasie"
+                    className="mb-8 flex flex-wrap gap-3"
+                >
+                    <Link href="/" className="q4-nav">
+                        Tuis
+                    </Link>
+
+                    <Link href="/requests" className="q4-nav">
+                        IT Report
+                    </Link>
+
+                    <Link href="/Logistics" className="q4-nav">
+                        Logistics
+                    </Link>
+
+                    <span className="q4-nav border-[#d7a31f]/35 bg-[#d7a31f]/10 text-[#efc04a]">
+                        Funksieversorging
+                    </span>
+
+                    <button
+                        type="button"
+                        onClick={logout}
+                        className="q4-nav"
+                    >
+                        Meld af
+                    </button>
+                </nav>
+
+                <header className="nkrn-panel p-8 sm:p-12">
+                    <p className="text-sm uppercase tracking-[.2em] text-[#e7b42b]">
+                        NKRN · In werking
+                    </p>
+
+                    <h1 className="mt-4 text-4xl font-bold sm:text-5xl">
+                        Funksieversorging
+                    </h1>
+
+                    <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
+                        Reël voorraad vir ’n funksie vinnig en eenvoudig.
+                        NKRN gebruik jou profiel outomaties.
+                    </p>
+
+                    <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-500">
+                        Voorraad moet minstens drie werksdae voor die funksie
+                        aangevra word. Geleende items moet skoongemaak en
+                        terugbesorg word, en skade of breuke moet aangemeld word.
+                    </p>
+                </header>
+
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                    {[
+                        [1, "Funksie"],
+                        [2, "Voorraad"],
+                        [3, "Bevestig"],
+                    ].map(([number, label]) => {
+                        const active = step === number;
+
+                        return (
+                            <div
+                                key={String(number)}
+                                className={`nkrn-panel px-3 py-4 text-center text-sm ${
+                                    active
+                                        ? "border-[#d7a31f]/35 bg-[#d7a31f]/8 text-[#efc04a]"
+                                        : "text-zinc-500"
+                                }`}
+                            >
+                                <span className="font-semibold">
+                                    {number}
+                                </span>
+                                <span className="ml-2 hidden sm:inline">
+                                    {label}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {message && (
+                    <div className="mt-6 nkrn-panel border-[#d7a31f]/20 p-4 text-sm text-zinc-200">
+                        {message}
+                    </div>
+                )}
+
+                {step === 1 && (
+                    <section className="mt-6 nkrn-panel p-7 sm:p-8">
+                        <p className="text-xs uppercase tracking-widest text-[#e7b42b]">
+                            Stap 1
+                        </p>
+
+                        <h2 className="mt-3 text-2xl font-semibold">
+                            Funksiebesonderhede
+                        </h2>
+
+                        <p className="mt-2 text-sm text-zinc-500">
+                            Ons vra net wat NKRN nie reeds van jou weet nie.
+                        </p>
+
+                        <div className="mt-7 grid gap-5 md:grid-cols-2">
+                            <Field label="Datum benodig">
+                                <input
+                                    type="date"
+                                    min={todayInputValue()}
+                                    value={neededDate}
+                                    onChange={(event) =>
+                                        setNeededDate(
+                                            event.target.value
+                                        )
+                                    }
+                                    className={inputClass}
+                                />
+                            </Field>
+
+                            <Field label="Lokaal">
+                                <select
+                                    value={venue}
+                                    onChange={(event) =>
+                                        setVenue(
+                                            event.target.value
+                                        )
+                                    }
+                                    className={selectClass}
+                                >
+                                    <option value="">
+                                        Kies ’n lokaal
+                                    </option>
+
+                                    {venues.map((item) => (
+                                        <option
+                                            key={item}
+                                            value={item}
+                                        >
+                                            {item}
+                                        </option>
+                                    ))}
+                                </select>
+                            </Field>
+
+                            <Field label="Funksie">
+                                <input
+                                    value={functionName}
+                                    onChange={(event) =>
+                                        setFunctionName(
+                                            event.target.value
+                                        )
+                                    }
+                                    placeholder="bv. Graad 7-afskeid"
+                                    className={inputClass}
+                                />
+                            </Field>
+
+                            <Field label="Aantal persone">
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={5000}
+                                    value={
+                                        attendance > 0
+                                            ? attendance
+                                            : ""
+                                    }
+                                    onChange={(event) =>
+                                        setAttendance(
+                                            Number(
+                                                event.target.value
+                                            )
+                                        )
+                                    }
+                                    placeholder="bv. 120"
+                                    className={inputClass}
+                                />
+                            </Field>
+
+                            {venue === "Ander" && (
+                                <div className="md:col-span-2">
+                                    <Field label="Ander lokaal">
+                                        <input
+                                            value={otherVenue}
+                                            onChange={(event) =>
+                                                setOtherVenue(
+                                                    event.target.value
+                                                )
+                                            }
+                                            placeholder="Spesifiseer die lokaal"
+                                            className={inputClass}
+                                        />
+                                    </Field>
+                                </div>
+                            )}
+                        </div>
+
+                        {leadTimeWarning && (
+                            <div className="mt-5 rounded-xl border border-orange-400/15 bg-orange-500/7 p-4 text-sm text-orange-200">
+                                Hierdie datum is binne drie werksdae.
+                                Die versoek kan steeds ingedien word vir
+                                administratiewe bevestiging.
+                            </div>
+                        )}
+
+                        <div className="mt-7 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={continueFromDetails}
+                                className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
+                            >
+                                Gaan voort
+                            </button>
+                        </div>
+                    </section>
+                )}
+
+                {step === 2 && (
+                    <section className="mt-6 nkrn-panel p-7 sm:p-8">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <p className="text-xs uppercase tracking-widest text-[#e7b42b]">
+                                    Stap 2
+                                </p>
+
+                                <h2 className="mt-3 text-2xl font-semibold">
+                                    Wat benodig jy?
+                                </h2>
+
+                                <p className="mt-2 text-sm text-zinc-500">
+                                    Kies ’n afdeling. Net daardie voorraad
+                                    word op die skerm gewys.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setStep(1)}
+                                className="q4-nav self-start"
+                            >
+                                ← Terug
+                            </button>
+                        </div>
+
+                        <div className="mt-7 grid gap-3 md:grid-cols-3">
+                            <GroupButton
+                                active={activeGroup === "table"}
+                                label="Tafeldoeke"
+                                detail="Tafeldoeke & versiering"
+                                count={selectedCounts.table}
+                                onClick={() =>
+                                    setActiveGroup("table")
+                                }
+                            />
+
+                            <GroupButton
+                                active={activeGroup === "dining"}
+                                label="Eetgerei"
+                                detail="Breekware & eetgerei"
+                                count={selectedCounts.dining}
+                                onClick={() =>
+                                    setActiveGroup("dining")
+                                }
+                            />
+
+                            <GroupButton
+                                active={activeGroup === "serving"}
+                                label="Opdien"
+                                detail="Opdieningsvoorraad"
+                                count={selectedCounts.serving}
+                                onClick={() =>
+                                    setActiveGroup("serving")
+                                }
+                            />
+                        </div>
+
+                        <div className="mt-5 rounded-2xl border border-white/8 bg-black/20 p-4 sm:p-5">
+                            {activeGroup === "table" && (
+                                <QuantityGrid
+                                    items={tableItems}
+                                    quantities={quantities}
+                                    onChange={setQuantity}
+                                />
+                            )}
+
+                            {activeGroup === "dining" && (
+                                <DiningGrid
+                                    items={diningItems}
+                                    attendance={attendance}
+                                    selected={diningSelected}
+                                    onToggle={(code) =>
+                                        setDiningSelected(
+                                            (current) => ({
+                                                ...current,
+                                                [code]:
+                                                    !current[
+                                                        code
+                                                    ],
+                                            })
+                                        )
+                                    }
+                                />
+                            )}
+
+                            {activeGroup === "serving" && (
+                                <>
+                                    <QuantityGrid
+                                        items={servingItems}
+                                        quantities={quantities}
+                                        onChange={setQuantity}
+                                    />
+
+                                    <div className="mt-5 border-t border-white/8 pt-5">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setOtherEnabled(
+                                                    (current) =>
+                                                        !current
+                                                )
+                                            }
+                                            className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                                                otherEnabled
+                                                    ? "border-[#d7a31f]/35 bg-[#d7a31f]/8 text-[#efc04a]"
+                                                    : "border-white/10 bg-white/4 text-zinc-300"
+                                            }`}
+                                        >
+                                            {otherEnabled
+                                                ? "✓ Ander item"
+                                                : "+ Ander item"}
+                                        </button>
+
+                                        {otherEnabled && (
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_140px]">
+                                                <input
+                                                    value={otherName}
+                                                    onChange={(event) =>
+                                                        setOtherName(
+                                                            event
+                                                                .target
+                                                                .value
+                                                        )
+                                                    }
+                                                    placeholder="Wat benodig jy?"
+                                                    className={
+                                                        inputClass
+                                                    }
+                                                />
+
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    value={
+                                                        otherQuantity
+                                                    }
+                                                    onChange={(event) =>
+                                                        setOtherQuantity(
+                                                            Math.max(
+                                                                1,
+                                                                Number(
+                                                                    event
+                                                                        .target
+                                                                        .value
+                                                                )
+                                                            )
+                                                        )
+                                                    }
+                                                    className={
+                                                        inputClass
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="mt-5 flex flex-col gap-3 rounded-xl border border-white/8 bg-white/3 px-4 py-3 text-sm text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+                            <span>
+                                {selectedItems.length === 0
+                                    ? "Nog geen voorraad gekies nie."
+                                    : `${selectedItems.length} item${
+                                          selectedItems.length === 1
+                                              ? ""
+                                              : "s"
+                                      } gekies.`}
+                            </span>
+
+                            {stockWarning && (
+                                <span className="text-orange-300">
+                                    Meer as aangetekende voorraad
+                                    by een of meer items.
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="mt-7 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={continueFromStock}
+                                className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
+                            >
+                                Kontroleer versoek
+                            </button>
+                        </div>
+                    </section>
+                )}
+
+                {step === 3 && (
+                    <section className="mt-6 nkrn-panel p-7 sm:p-8">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <p className="text-xs uppercase tracking-widest text-[#e7b42b]">
+                                    Stap 3
+                                </p>
+
+                                <h2 className="mt-3 text-2xl font-semibold">
+                                    Bevestig
+                                </h2>
+
+                                <p className="mt-2 text-sm text-zinc-500">
+                                    Kontroleer net die inligting wat
+                                    gestuur gaan word.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setStep(2)}
+                                className="q4-nav self-start"
+                            >
+                                ← Terug
+                            </button>
+                        </div>
+
+                        <div className="mt-7 grid gap-3 md:grid-cols-2">
+                            <Summary
+                                label="Ingedien deur"
+                                value={`${user.firstName} ${user.lastName}`}
+                            />
+
+                            <Summary
+                                label="Funksie"
+                                value={functionName}
+                            />
+
+                            <Summary
+                                label="Datum"
+                                value={formatDate(neededDate)}
+                            />
+
+                            <Summary
+                                label="Lokaal"
+                                value={
+                                    venue === "Ander"
+                                        ? otherVenue
+                                        : venue
+                                }
+                            />
+
+                            <Summary
+                                label="Aantal persone"
+                                value={String(attendance)}
+                            />
+
+                            <Summary
+                                label="Profiel"
+                                value="Naam en e-pos word outomaties aan die versoek gekoppel."
+                            />
+                        </div>
+
+                        <div className="mt-6 rounded-2xl border border-white/8 bg-black/20 p-5">
+                            <h3 className="font-semibold">
+                                Gekose voorraad
+                            </h3>
+
+                            <div className="mt-4 divide-y divide-white/8">
+                                {selectedItems.map((item) => (
+                                    <div
+                                        key={item.code}
+                                        className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"
+                                    >
+                                        <span className="text-sm text-zinc-200">
+                                            {item.name}
+                                        </span>
+
+                                        <span className="text-xs text-zinc-500">
+                                            {item.quantity} benodig
+                                            {item.available !== null
+                                                ? ` · ${item.available} aangeteken`
+                                                : ""}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="mt-6">
+                            <Field label="Enigiets anders? (opsioneel)">
+                                <textarea
+                                    value={notes}
+                                    onChange={(event) =>
+                                        setNotes(
+                                            event.target.value
+                                        )
+                                    }
+                                    rows={3}
+                                    placeholder="Slegs indien daar iets is wat die administrateur moet weet."
+                                    className={`${inputClass} resize-none`}
+                                />
+                            </Field>
+                        </div>
+
+                        <label className="mt-6 flex cursor-pointer gap-3 rounded-xl border border-white/10 bg-white/3 p-4">
+                            <input
+                                type="checkbox"
+                                checked={acknowledged}
+                                onChange={(event) =>
+                                    setAcknowledged(
+                                        event.target.checked
+                                    )
+                                }
+                                className="mt-1 h-4 w-4 shrink-0"
+                            />
+
+                            <span className="text-sm leading-6 text-zinc-300">
+                                Ek bevestig dat die geleende voorraad
+                                skoongemaak en volgens afspraak
+                                terugbesorg sal word, en dat enige skade
+                                of breuke aangemeld sal word.
+                            </span>
+                        </label>
+
+                        <div className="mt-7 flex justify-end">
+                            <button
+                                type="button"
+                                disabled={
+                                    submitting ||
+                                    !acknowledged
+                                }
+                                onClick={() =>
+                                    void submitRequest()
+                                }
+                                className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {submitting
+                                    ? "Besig om in te dien…"
+                                    : "Dien versoek in"}
+                            </button>
+                        </div>
+                    </section>
+                )}
+
+                <section className="mt-6 nkrn-panel">
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setShowMine((current) => !current)
+                        }
+                        className="flex w-full items-center justify-between gap-4 p-6 text-left"
+                    >
+                        <div>
+                            <p className="text-xs uppercase tracking-widest text-zinc-500">
+                                Geskiedenis
+                            </p>
+
+                            <h2 className="mt-2 text-lg font-semibold">
+                                My versoeke
+                            </h2>
+                        </div>
+
+                        <span className="text-sm text-zinc-500">
+                            {mine.length} ·{" "}
+                            {showMine ? "Versteek" : "Wys"}
+                        </span>
+                    </button>
+
+                    {showMine && (
+                        <div className="border-t border-white/8 p-6">
+                            {mine.length === 0 ? (
+                                <p className="text-sm text-zinc-500">
+                                    Nog geen versoeke nie.
+                                </p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {mine.map((request) => (
+                                        <RequestRow
+                                            key={
+                                                request.requestID
+                                            }
+                                            request={request}
+                                            admin={false}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </section>
+
+                {canManage && (
+                    <section className="mt-6 nkrn-panel">
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setShowAdmin(
+                                    (current) => !current
+                                )
+                            }
+                            className="flex w-full items-center justify-between gap-4 p-6 text-left"
+                        >
+                            <div>
+                                <p className="text-xs uppercase tracking-widest text-[#e7b42b]">
+                                    Module-administrasie
+                                </p>
+
+                                <h2 className="mt-2 text-lg font-semibold">
+                                    Alle Funksieversorging-versoeke
+                                </h2>
+                            </div>
+
+                            <span className="text-sm text-zinc-500">
+                                {adminRequests.length} ·{" "}
+                                {showAdmin
+                                    ? "Versteek"
+                                    : "Wys"}
+                            </span>
+                        </button>
+
+                        {showAdmin && (
+                            <div className="border-t border-white/8 p-6">
+                                {adminRequests.length === 0 ? (
+                                    <p className="text-sm text-zinc-500">
+                                        Geen versoeke om te wys nie.
+                                    </p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {adminRequests.map(
+                                            (request) => (
+                                                <RequestRow
+                                                    key={
+                                                        request.requestID
+                                                    }
+                                                    request={
+                                                        request
+                                                    }
+                                                    admin
+                                                />
+                                            )
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                <footer className="mt-10 border-t border-white/10 pt-6">
+                    <p className="text-center text-sm text-zinc-600">
+                        Laerskool Tygerpoort · Funksieversorging
+                    </p>
+                </footer>
+            </div>
+        </main>
+    );
+}
+
+function Field({
+    label,
+    children,
+}: {
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <label className="block">
+            <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                {label}
+            </span>
+            {children}
+        </label>
+    );
+}
+
+function GroupButton({
+    active,
+    label,
+    detail,
+    count,
+    onClick,
+}: {
+    active: boolean;
+    label: string;
+    detail: string;
+    count: number;
+    onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`rounded-xl border p-4 text-left transition ${
+                active
+                    ? "border-[#d7a31f]/35 bg-[#d7a31f]/8"
+                    : "border-white/10 bg-white/3 hover:bg-white/6"
+            }`}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p
+                        className={`font-semibold ${
+                            active
+                                ? "text-[#efc04a]"
+                                : "text-zinc-200"
+                        }`}
+                    >
+                        {label}
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                        {detail}
+                    </p>
+                </div>
+
+                {count > 0 && (
+                    <span className="rounded-full border border-[#d7a31f]/25 bg-[#d7a31f]/10 px-2 py-1 text-xs text-[#efc04a]">
+                        {count}
+                    </span>
+                )}
+            </div>
+        </button>
+    );
+}
+
+function QuantityGrid({
+    items,
+    quantities,
+    onChange,
+}: {
+    items: StockItem[];
+    quantities: Record<string, number>;
+    onChange: (code: string, next: number) => void;
+}) {
+    return (
+        <div className="grid gap-2 md:grid-cols-2">
+            {items.map((item) => {
+                const quantity =
+                    quantities[item.code] ?? 0;
+
+                const warning =
+                    item.available !== null &&
+                    quantity > item.available;
+
+                return (
+                    <div
+                        key={item.code}
+                        className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3 ${
+                            quantity > 0
+                                ? "border-[#d7a31f]/25 bg-[#d7a31f]/6"
+                                : "border-white/8 bg-white/3"
+                        }`}
+                    >
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-zinc-200">
+                                {item.name}
+                            </p>
+
+                            <p
+                                className={`mt-1 text-xs ${
+                                    warning
+                                        ? "text-orange-300"
+                                        : "text-zinc-600"
+                                }`}
+                            >
+                                {item.available === null
+                                    ? "Hoeveelheid word bevestig"
+                                    : `${item.available} beskikbaar`}
+                            </p>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onChange(
+                                        item.code,
+                                        quantity - 1
+                                    )
+                                }
+                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/4 text-lg text-zinc-300"
+                            >
+                                −
+                            </button>
+
+                            <span className="w-7 text-center text-sm font-semibold">
+                                {quantity}
+                            </span>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onChange(
+                                        item.code,
+                                        quantity + 1
+                                    )
+                                }
+                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/4 text-lg text-zinc-300"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function DiningGrid({
+    items,
+    attendance,
+    selected,
+    onToggle,
+}: {
+    items: StockItem[];
+    attendance: number;
+    selected: Record<string, boolean>;
+    onToggle: (code: string) => void;
+}) {
+    return (
+        <>
+            <div className="mb-4 rounded-xl border border-white/8 bg-white/3 px-4 py-3 text-sm text-zinc-400">
+                Hoeveelheid word outomaties bepaal deur die{" "}
+                <span className="text-zinc-200">
+                    {attendance} persone
+                </span>{" "}
+                wat die funksie bywoon.
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
+                {items.map((item) => {
+                    const isSelected =
+                        Boolean(selected[item.code]);
+
+                    const warning =
+                        isSelected &&
+                        item.available !== null &&
+                        attendance > item.available;
+
+                    return (
+                        <button
+                            key={item.code}
+                            type="button"
+                            onClick={() =>
+                                onToggle(item.code)
+                            }
+                            className={`rounded-xl border px-4 py-3 text-left transition ${
+                                isSelected
+                                    ? "border-[#d7a31f]/30 bg-[#d7a31f]/7"
+                                    : "border-white/8 bg-white/3 hover:bg-white/6"
+                            }`}
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-medium text-zinc-200">
+                                        {item.name}
+                                    </p>
+
+                                    <p
+                                        className={`mt-1 text-xs ${
+                                            warning
+                                                ? "text-orange-300"
+                                                : "text-zinc-600"
+                                        }`}
+                                    >
+                                        {isSelected
+                                            ? `${attendance} benodig · `
+                                            : ""}
+                                        {item.available} beskikbaar
+                                    </p>
+                                </div>
+
+                                <span
+                                    className={`text-sm ${
+                                        isSelected
+                                            ? "text-[#efc04a]"
+                                            : "text-zinc-700"
+                                    }`}
+                                >
+                                    {isSelected ? "✓" : "○"}
+                                </span>
+                            </div>
+                        </button>
+                    );
+                })}
+            </div>
+        </>
+    );
+}
+
+function Summary({
+    label,
+    value,
+}: {
+    label: string;
+    value: string;
+}) {
+    return (
+        <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+            <p className="text-xs uppercase tracking-wide text-zinc-600">
+                {label}
+            </p>
+            <p className="mt-1 text-sm text-zinc-200">
+                {value || "—"}
+            </p>
+        </div>
+    );
+}
+
+function RequestRow({
+    request,
+    admin,
+}: {
+    request: RequestRecord;
+    admin: boolean;
+}) {
+    return (
+        <article className="rounded-xl border border-white/8 bg-black/20 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <p className="font-medium text-zinc-200">
+                        #{request.requestID} ·{" "}
+                        {request.functionName}
+                    </p>
+
+                    <p className="mt-1 text-xs text-zinc-500">
+                        {formatDate(request.neededDate)} ·{" "}
+                        {request.otherVenue ||
+                            request.venue}{" "}
+                        · {request.attendance} persone
+                    </p>
+
+                    {admin && (
+                        <p className="mt-2 text-sm text-zinc-400">
+                            {request.requesterName} ·{" "}
+                            {request.requesterEmail}
+                        </p>
+                    )}
+                </div>
+
+                <span className="rounded-full border border-white/10 bg-white/4 px-3 py-1 text-xs text-zinc-400">
+                    {statusLabel(request.status)}
+                </span>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+                {request.items.map((item) => (
+                    <span
+                        key={`${request.requestID}-${item.code}`}
+                        className="rounded-lg border border-white/8 bg-white/3 px-2.5 py-1.5 text-xs text-zinc-500"
+                    >
+                        {item.requestedQuantity} ×{" "}
+                        {item.name}
+                    </span>
+                ))}
+            </div>
+
+            {request.leadTimeWarning && (
+                <p className="mt-3 text-xs text-orange-300">
+                    Binne drie werksdae ingedien.
+                </p>
+            )}
+
+            {admin && request.notificationError && (
+                <p className="mt-3 text-xs text-red-300">
+                    Kennisgewing:{" "}
+                    {request.notificationError}
+                </p>
+            )}
+        </article>
+    );
+}

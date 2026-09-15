@@ -1,4 +1,4 @@
-const CACHE_VERSION = "nkrn-static-v1";
+const CACHE_VERSION = "nkrn-static-v2";
 const STATIC_CACHE = CACHE_VERSION;
 
 const PRECACHE_URLS = [

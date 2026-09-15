@@ -194,6 +194,45 @@ namespace NKRN.API.Services
             await request.ExecuteAsync();
         }
 
+        // Logistics uses the existing OAuth store and calendar, with a client-assigned ID.
+        // A lost insert response is safe to retry: the same ID is updated, never duplicated.
+        public async Task UpsertLogisticsEventAsync(string userId, string eventId, LogisticsWorkPlanItem item, string workerName)
+        {
+            using var calendar = await CreateCalendarServiceAsync(userId);
+            if (item.Status is "Cancelled" or "Gekanselleer")
+            {
+                try { await calendar.Events.Delete(_settings.CalendarId, eventId).ExecuteAsync(); }
+                catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound || ex.HttpStatusCode == System.Net.HttpStatusCode.Gone) { }
+                return;
+            }
+            var value = new Event {
+                Id = eventId,
+                Summary = $"Logistics: {item.TaskDescription} — {workerName} [{item.Status}]",
+                Description = $"Verantwoordelik: {workerName}\nPrioriteit: {item.Priority}\nMateriaal: {item.MaterialsRequired}\nNota: {item.ManagerNote}\nStatus: {item.Status}",
+                Location = item.Area
+            };
+            if (item.PlannedStart.HasValue && item.PlannedEnd.HasValue)
+            {
+                var start = item.WorkDate.Date.Add(item.PlannedStart.Value);
+                var end = item.WorkDate.Date.Add(item.PlannedEnd.Value);
+                if (end <= start) throw new InvalidOperationException("Planned end must follow start.");
+                value.Start = new EventDateTime { DateTimeDateTimeOffset = CreateSouthAfricanDateTime(start), TimeZone = "Africa/Johannesburg" };
+                value.End = new EventDateTime { DateTimeDateTimeOffset = CreateSouthAfricanDateTime(end), TimeZone = "Africa/Johannesburg" };
+            }
+            else
+            {
+                value.Start = new EventDateTime { Date = item.WorkDate.ToString("yyyy-MM-dd") };
+                value.End = new EventDateTime { Date = item.WorkDate.AddDays(1).ToString("yyyy-MM-dd") };
+            }
+            try { await calendar.Events.Update(value, _settings.CalendarId, eventId).ExecuteAsync(); }
+            catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                try { await calendar.Events.Insert(value, _settings.CalendarId).ExecuteAsync(); }
+                catch (Google.GoogleApiException conflict) when (conflict.HttpStatusCode == System.Net.HttpStatusCode.Conflict)
+                { await calendar.Events.Update(value, _settings.CalendarId, eventId).ExecuteAsync(); }
+            }
+        }
+
         // ============================================================
         // BUILD CALENDAR EVENT
         // ============================================================

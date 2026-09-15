@@ -67,6 +67,7 @@ namespace NKRN.API.Models
 
     public class UpdateLogisticsRequestStatusRequest
     {
+        public string? Priority { get; set; }
         [Required]
         public string Status { get; set; } = string.Empty;
 

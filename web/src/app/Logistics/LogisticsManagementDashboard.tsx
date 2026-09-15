@@ -1,9 +1,14 @@
 "use client";
 
+import { displayLabel } from "./labels";
+
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import "../nkrn-control.css";
+import LogisticsJobCardHistory from "./LogisticsJobCardHistory";
+import LogisticsAllocationBoard from "./LogisticsAllocationBoard";
+import LogisticsTaskEditor from "./LogisticsTaskEditor";
 import LogisticsRequestInbox from "./LogisticsRequestInbox";
 
 // ============================================================
@@ -18,14 +23,14 @@ interface NKRNUser {
     roleID: number;
 }
 
-interface LogisticsDepartment {
+export interface LogisticsDepartment {
     departmentID: number;
     departmentName: string;
     isActive?: boolean;
     sortOrder?: number;
 }
 
-interface LogisticsWorker {
+export interface LogisticsWorker {
     workerID: number;
     userID: number | null;
     firstName: string;
@@ -36,7 +41,7 @@ interface LogisticsWorker {
     isActive: boolean;
 }
 
-interface LogisticsTask {
+export interface LogisticsTask {
     taskID: number;
     departmentID: number | null;
     departmentName: string | null;
@@ -153,7 +158,7 @@ function displayDate(value: string | null | undefined): string {
         return value;
     }
 
-    return date.toLocaleDateString("en-ZA", {
+    return date.toLocaleDateString("af-ZA", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -171,7 +176,7 @@ function displayDateTime(value: string | null | undefined): string {
         return value;
     }
 
-    return date.toLocaleString("en-ZA", {
+    return date.toLocaleString("af-ZA", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -216,7 +221,7 @@ function responsibleName(task: LogisticsTask): string {
         task.responsibleWorkerName ||
         task.responsibleUserName ||
         task.responsibleText ||
-        "Unassigned"
+        "Nie toegeken nie"
     );
 }
 
@@ -436,7 +441,7 @@ export default function LogisticsManagementDashboard() {
                 (task) => task.status?.trim().toLowerCase() === "in proses"
             ).length,
             unassigned: open.filter(
-                (task) => responsibleName(task) === "Unassigned"
+                (task) => responsibleName(task) === "Nie toegeken nie"
             ).length,
         };
     }, [tasks]);
@@ -1009,12 +1014,12 @@ export default function LogisticsManagementDashboard() {
 
     if (loading) {
         return (
-            <main className="nkrn-control relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 text-white">
+            <main className="nkrn-control q4-logistics relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 text-white">
                 <div className={`${glassCard} p-8 text-center`}>
                     <p className="text-xs font-medium uppercase tracking-[0.25em] text-yellow-400">
                         Logistics
                     </p>
-                    <h1 className="mt-2 text-xl font-semibold">Loading dashboard…</h1>
+                    <h1 className="mt-2 text-xl font-semibold">Beheersentrum laai…</h1>
                 </div>
             </main>
         );
@@ -1022,12 +1027,12 @@ export default function LogisticsManagementDashboard() {
 
     if (accessDenied) {
         return (
-            <main className="nkrn-control relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-5 text-white">
+            <main className="nkrn-control q4-logistics relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-5 text-white">
                 <div className={`${glassCard} w-full max-w-lg p-8 text-center`}>
                     <p className="text-xs font-medium uppercase tracking-[0.25em] text-red-400">
-                        Access restricted
+                        Toegang beperk
                     </p>
-                    <h1 className="mt-3 text-2xl font-semibold">Logistics access required</h1>
+                    <h1 className="mt-3 text-2xl font-semibold">Logistics-toegang benodig</h1>
                     <p className="mt-3 text-sm leading-6 text-zinc-400">
                         Your NKRN account does not currently have permission to open the Logistics module.
                     </p>
@@ -1036,7 +1041,7 @@ export default function LogisticsManagementDashboard() {
                         onClick={() => router.back()}
                         className={`${buttonClass} mt-6`}
                     >
-                        Go Back
+                        Gaan terug
                     </button>
                 </div>
             </main>
@@ -1044,7 +1049,7 @@ export default function LogisticsManagementDashboard() {
     }
 
     return (
-        <main className="nkrn-control relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <main className="nkrn-control q4-logistics relative min-h-screen overflow-hidden bg-zinc-950 text-white">
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
                 <div className="absolute -left-40 -top-40 h-125 w-125 rounded-full bg-yellow-500/4 blur-3xl" />
                 <div className="absolute -right-40 top-1/4 h-150 w-150 rounded-full bg-white/3 blur-3xl" />
@@ -1071,10 +1076,10 @@ export default function LogisticsManagementDashboard() {
                                     Logistics
                                 </p>
                                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                                    Logistics Control Centre
+                                    Logistics-beheersentrum
                                 </h1>
                                 <p className="mt-1 text-sm text-zinc-400">
-                                    Welcome {user?.firstName}. Track operational work, priorities and daily execution.
+                                    Welkom {user?.firstName}. Bestuur versoeke, verantwoordelikheid en daaglikse werk.
                                 </p>
                             </div>
                         </div>
@@ -1086,7 +1091,7 @@ export default function LogisticsManagementDashboard() {
                                     onClick={() => router.push("/Admin")}
                                     className={buttonClass}
                                 >
-                                    Admin Dashboard
+                                    Administrasie
                                 </button>
                             )}
                             <button
@@ -1094,14 +1099,14 @@ export default function LogisticsManagementDashboard() {
                                 onClick={() => void loadLogistics()}
                                 className={buttonClass}
                             >
-                                Refresh
+                                Verfris
                             </button>
                             <button
                                 type="button"
                                 onClick={() => router.push("/")}
                                 className="rounded-xl border border-[#d7a31f]/25 bg-[#d7a31f]/8 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:border-[#d7a31f]/40 hover:bg-[#d7a31f]/12"
                             >
-                                NKRN Home
+                                Tuis
                             </button>
 
                             <button
@@ -1109,7 +1114,7 @@ export default function LogisticsManagementDashboard() {
                                 onClick={logout}
                                 className="rounded-xl border border-red-400/10 bg-red-500/8 px-4 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/14"
                             >
-                                Log Out
+                                Meld af
                             </button>
                         </div>
                     </div>
@@ -1127,19 +1132,21 @@ export default function LogisticsManagementDashboard() {
                     </div>
                 )}
 
+                <nav className="sticky top-2 z-20 mb-6 flex flex-wrap gap-2 rounded-2xl border border-white/15 bg-zinc-950/95 p-3" aria-label="Logistics-bestuur">{[["oorsig","Oorsig"],["versoeke","Versoeke"],["take","Take"],["werkplan","Werkplan"],["werkkaarte","Werkkaarte"]].map(([id,label]) => <a className="q4-nav" key={id} href={`#${id}`}>{label}</a>)}</nav>
                 <LogisticsRequestInbox
+                    tasks={tasks}
                     departments={departments}
                     workers={workers}
                     onTaskConverted={() => {
                         void loadLogistics();
                     }}
                 />
-                <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                    <StatCard label="All Tasks" value={statistics.total} note="Imported + new" />
-                    <StatCard label="Open" value={statistics.open} note="Needs attention" />
-                    <StatCard label="P1 / P2" value={statistics.urgent} note="Critical + urgent" accent="text-orange-300" />
-                    <StatCard label="In Progress" value={statistics.inProgress} note="Currently active" accent="text-blue-300" />
-                    <StatCard label="Unassigned" value={statistics.unassigned} note="Needs an owner" accent="text-yellow-300" />
+                <section id="oorsig" className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    <StatCard label="Alle take" value={statistics.total} note="Ingevoer en nuut" />
+                    <StatCard label="Open" value={statistics.open} note="Benodig aandag" />
+                    <StatCard label="P1 / P2" value={statistics.urgent} note="Kritiek en dringend" accent="text-orange-300" />
+                    <StatCard label="In proses" value={statistics.inProgress} note="Tans aktief" accent="text-blue-300" />
+                    <StatCard label="Nie toegeken nie" value={statistics.unassigned} note="Benodig ’n verantwoordelike" accent="text-yellow-300" />
                 </section>
 
                 <section className="mb-8 grid gap-6 lg:grid-cols-2">
@@ -1147,9 +1154,9 @@ export default function LogisticsManagementDashboard() {
                         <div className="mb-5 flex items-start justify-between gap-4">
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                    Daily Work Plan
+                                    Daaglikse werkplan
                                 </p>
-                                <h2 className="mt-1 text-xl font-semibold">Today</h2>
+                                <h2 className="mt-1 text-xl font-semibold">Vandag</h2>
                             </div>
                             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400">
                                 {workPlan.length} item{workPlan.length === 1 ? "" : "s"}
@@ -1158,7 +1165,7 @@ export default function LogisticsManagementDashboard() {
 
                         {workPlan.length === 0 ? (
                             <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-zinc-500">
-                                No work-plan items are scheduled for today yet.
+                                Nog geen werk vir vandag beplan nie.
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -1173,7 +1180,7 @@ export default function LogisticsManagementDashboard() {
                                                     {item.taskDescription}
                                                 </p>
                                                 <p className="mt-1 text-xs text-zinc-500">
-                                                    {item.workerName || "Unassigned"} · {item.area || item.departmentName || "No area"}
+                                                    {item.workerName || "Nie toegeken nie"} · {item.area || item.departmentName || "No area"}
                                                 </p>
                                             </div>
                                             <span className={`rounded-full border px-2.5 py-1 text-xs ${priorityClass(item.priority)}`}>
@@ -1190,11 +1197,11 @@ export default function LogisticsManagementDashboard() {
                         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                    Job Cards
+                                    Werkkaarte
                                 </p>
-                                <h2 className="mt-1 text-xl font-semibold">Daily job card</h2>
+                                <h2 className="mt-1 text-xl font-semibold">Daaglikse meesterwerkkaart</h2>
                                 <p className="mt-1 text-sm text-zinc-500">
-                                    Generate the consolidated work card for a selected date.
+                                    Stel die meesterwerkkaart vir die gekose datum saam.
                                 </p>
                             </div>
                             <span className="w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400">
@@ -1205,7 +1212,7 @@ export default function LogisticsManagementDashboard() {
                         <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                             <label className="block">
                                 <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                    Job-card date
+                                    Werkkaartdatum
                                 </span>
                                 <input
                                     type="date"
@@ -1224,8 +1231,8 @@ export default function LogisticsManagementDashboard() {
                                 {generatingJobCard
                                     ? "Generating…"
                                     : selectedDateJobCard
-                                      ? "Already Generated"
-                                      : "Generate Job Card"}
+                                      ? "Reeds gegenereer"
+                                      : "Genereer werkkaart"}
                             </button>
                         </div>
 
@@ -1237,14 +1244,14 @@ export default function LogisticsManagementDashboard() {
 
                         {!latestJobCard ? (
                             <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-zinc-500">
-                                No Logistics job card has been generated yet.
+                                Nog geen Logistics-werkkaart gegenereer nie.
                             </div>
                         ) : (
                             <div className="rounded-2xl border border-white/8 bg-black/10 p-5">
                                 <div className="flex flex-wrap items-start justify-between gap-4">
                                     <div>
                                         <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-600">
-                                            Latest job card
+                                            Jongste werkkaart
                                         </p>
                                         <p className="mt-1 text-lg font-semibold text-zinc-100">
                                             {latestJobCard.jobCardNumber}
@@ -1254,16 +1261,16 @@ export default function LogisticsManagementDashboard() {
                                         </p>
                                     </div>
                                     <span className={`rounded-full border px-3 py-1 text-xs ${latestJobCard.status === "Sent" ? "border-green-400/15 bg-green-500/10 text-green-300" : "border-yellow-400/15 bg-yellow-500/10 text-yellow-300"}`}>
-                                        {latestJobCard.status}
+                                        {displayLabel(latestJobCard.status)}
                                     </span>
                                 </div>
 
                                 <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-                                    <Info label="Recipient" value={latestJobCard.recipientEmail || "—"} />
-                                    <Info label="Sent" value={displayDateTime(latestJobCard.sentAt)} />
+                                    <Info label="Ontvanger" value={latestJobCard.recipientEmail || "—"} />
+                                    <Info label="Gestuur" value={displayDateTime(latestJobCard.sentAt)} />
                                 </div>
 
-                                {latestJobCard.status !== "Sent" && (
+                                {["Generated", "Draft"].includes(latestJobCard.status) && (
                                     <button
                                         type="button"
                                         onClick={() => void sendJobCard(latestJobCard)}
@@ -1272,7 +1279,7 @@ export default function LogisticsManagementDashboard() {
                                     >
                                         {sendingJobCardID === latestJobCard.jobCardID
                                             ? "Sending…"
-                                            : "Send Job Card"}
+                                            : "Stuur werkkaart"}
                                     </button>
                                 )}
                             </div>
@@ -1280,14 +1287,17 @@ export default function LogisticsManagementDashboard() {
                     </div>
                 </section>
 
+                <LogisticsAllocationBoard workers={workers} />
+                <LogisticsJobCardHistory cards={jobCards} refresh={() => void loadLogistics()} />
+                <LogisticsTaskEditor tasks={tasks} workers={workers} departments={departments} refresh={() => void loadLogistics()} />
                 <section className={`${glassCard} mb-8 overflow-hidden`}>
                     <div className="border-b border-white/8 p-5 sm:p-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                    Logistics Team
+                                    Logistics-span
                                 </p>
-                                <h2 className="mt-1 text-xl font-semibold">Worker Management</h2>
+                                <h2 className="mt-1 text-xl font-semibold">Werkerbestuur</h2>
                                 <p className="mt-1 text-sm text-zinc-500">
                                     {activeWorkers.length} active worker{activeWorkers.length === 1 ? "" : "s"} · {workers.length} total
                                 </p>
@@ -1298,7 +1308,7 @@ export default function LogisticsManagementDashboard() {
                                 onClick={startAddingWorker}
                                 className="w-fit rounded-xl border border-yellow-400/20 bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold text-yellow-200 transition hover:bg-yellow-500/15"
                             >
-                                + Add Worker
+                                + Voeg werker by
                             </button>
                         </div>
                     </div>
@@ -1314,11 +1324,11 @@ export default function LogisticsManagementDashboard() {
                             <table className="min-w-full text-left text-sm">
                                 <thead className="border-b border-white/8 bg-black/15 text-xs uppercase tracking-[0.12em] text-zinc-500">
                                     <tr>
-                                        <th className="px-5 py-4 font-medium">Worker</th>
-                                        <th className="px-5 py-4 font-medium">Type</th>
-                                        <th className="px-5 py-4 font-medium">Contact</th>
+                                        <th className="px-5 py-4 font-medium">Werker</th>
+                                        <th className="px-5 py-4 font-medium">Soort</th>
+                                        <th className="px-5 py-4 font-medium">Kontak</th>
                                         <th className="px-5 py-4 font-medium">Status</th>
-                                        <th className="px-5 py-4 text-right font-medium">Actions</th>
+                                        <th className="px-5 py-4 text-right font-medium">Aksies</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/6">
@@ -1372,7 +1382,7 @@ export default function LogisticsManagementDashboard() {
                                                             onClick={() => startEditingWorker(worker)}
                                                             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-white/10"
                                                         >
-                                                            Edit
+                                                            Wysig
                                                         </button>
                                                         {worker.isActive !== false && (
                                                             <button
@@ -1396,14 +1406,14 @@ export default function LogisticsManagementDashboard() {
                     )}
                 </section>
 
-                <section className={`${glassCard} overflow-hidden`}>
+                <section id="take" className={`${glassCard} overflow-hidden`}>
                     <div className="border-b border-white/8 p-5 sm:p-6">
                         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                    Tasks & Maintenance
+                                    Take en instandhouding
                                 </p>
-                                <h2 className="mt-1 text-xl font-semibold">Operational Task Register</h2>
+                                <h2 className="mt-1 text-xl font-semibold">Operasionele taakregister</h2>
                                 <p className="mt-1 text-sm text-zinc-500">
                                     Showing {filteredTasks.length} of {tasks.length} tasks.
                                 </p>
@@ -1423,7 +1433,7 @@ export default function LogisticsManagementDashboard() {
                                     onChange={(event) => setDepartmentFilter(event.target.value)}
                                     className={selectClass}
                                 >
-                                    <option value="All">All departments</option>
+                                    <option value="All">Alle afdelings</option>
                                     {departments.map((department) => (
                                         <option key={department.departmentID} value={String(department.departmentID)}>
                                             {department.departmentName}
@@ -1436,11 +1446,11 @@ export default function LogisticsManagementDashboard() {
                                     onChange={(event) => setPriorityFilter(event.target.value)}
                                     className={selectClass}
                                 >
-                                    <option value="All">All priorities</option>
-                                    <option value="P1">P1 · Critical</option>
-                                    <option value="P2">P2 · Urgent</option>
-                                    <option value="P3">P3 · Planned</option>
-                                    <option value="P4">P4 · Improvement</option>
+                                    <option value="All">Alle prioriteite</option>
+                                    <option value="P1">P1 · Kritiek</option>
+                                    <option value="P2">P2 · Dringend</option>
+                                    <option value="P3">P3 · Beplan</option>
+                                    <option value="P4">P4 · Verbetering</option>
                                 </select>
 
                                 <select
@@ -1448,8 +1458,8 @@ export default function LogisticsManagementDashboard() {
                                     onChange={(event) => setStatusFilter(event.target.value)}
                                     className={selectClass}
                                 >
-                                    <option value="Open">Open tasks</option>
-                                    <option value="All">All statuses</option>
+                                    <option value="Open">Oop take</option>
+                                    <option value="All">Alle statusse</option>
                                     <option value="Nog nie begin">Nog nie begin</option>
                                     <option value="In Proses">In Proses</option>
                                     <option value="Staan oor">Staan oor</option>
@@ -1462,7 +1472,7 @@ export default function LogisticsManagementDashboard() {
                                     disabled={filteredTasks.length === 0}
                                     className="rounded-xl border border-yellow-400/20 bg-yellow-400/10 px-4 py-3 text-sm font-semibold text-yellow-300 transition hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-45"
                                 >
-                                    Export CSV
+                                    Voer CSV uit
                                 </button>
                             </div>
                         </div>
@@ -1473,13 +1483,13 @@ export default function LogisticsManagementDashboard() {
                             <thead className="border-b border-white/8 bg-black/15 text-xs uppercase tracking-[0.12em] text-zinc-500">
                                 <tr>
                                     <th className="px-5 py-4 font-medium">ID</th>
-                                    <th className="px-5 py-4 font-medium">Task</th>
-                                    <th className="px-5 py-4 font-medium">Department</th>
-                                    <th className="px-5 py-4 font-medium">Priority</th>
-                                    <th className="px-5 py-4 font-medium">Responsible</th>
-                                    <th className="px-5 py-4 font-medium">Deadline</th>
+                                    <th className="px-5 py-4 font-medium">Taak</th>
+                                    <th className="px-5 py-4 font-medium">Afdeling</th>
+                                    <th className="px-5 py-4 font-medium">Prioriteit</th>
+                                    <th className="px-5 py-4 font-medium">Verantwoordelik</th>
+                                    <th className="px-5 py-4 font-medium">Sperdatum</th>
                                     <th className="px-5 py-4 font-medium">Status</th>
-                                    <th className="px-5 py-4 font-medium">Next Action</th>
+                                    <th className="px-5 py-4 font-medium">Volgende aksie</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/6">
@@ -1501,7 +1511,7 @@ export default function LogisticsManagementDashboard() {
                                                 disabled={task.status?.trim().toLowerCase() === "afgehandel"}
                                                 className="mt-3 whitespace-nowrap rounded-xl border border-yellow-400/15 bg-yellow-500/10 px-3 py-2 text-xs font-semibold text-yellow-200 transition hover:bg-yellow-500/15 disabled:cursor-not-allowed disabled:opacity-35"
                                             >
-                                                Add to Plan
+                                                Voeg by werkplan
                                             </button>
                                         </td>
                                         <td className="min-w-44 px-5 py-4 text-zinc-400">
@@ -1520,7 +1530,7 @@ export default function LogisticsManagementDashboard() {
                                         </td>
                                         <td className="px-5 py-4">
                                             <span className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-xs ${statusClass(task.status)}`}>
-                                                {task.status}
+                                                {displayLabel(task.status)}
                                             </span>
                                         </td>
                                         <td className="min-w-56 px-5 py-4 text-zinc-400">
@@ -1532,7 +1542,7 @@ export default function LogisticsManagementDashboard() {
                                 {filteredTasks.length === 0 && (
                                     <tr>
                                         <td colSpan={8} className="px-5 py-12 text-center text-zinc-500">
-                                            No tasks match the current filters.
+                                            Geen take pas by die filters nie.
                                         </td>
                                     </tr>
                                 )}
@@ -1554,7 +1564,7 @@ export default function LogisticsManagementDashboard() {
                             <div className="flex items-start justify-between gap-5 border-b border-white/8 pb-5">
                                 <div>
                                     <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                        Logistics Team
+                                        Logistics-span
                                     </p>
                                     <h2 className="mt-1 text-2xl font-semibold">
                                         {editingWorker ? "Edit Worker" : "Add Worker"}
@@ -1570,14 +1580,14 @@ export default function LogisticsManagementDashboard() {
                                     disabled={savingWorker}
                                     className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-400 transition hover:bg-white/10 disabled:opacity-40"
                                 >
-                                    Close
+                                    Sluit
                                 </button>
                             </div>
 
                             <div className="mt-6 grid gap-5 sm:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        First Name *
+                                        Voornaam *
                                     </span>
                                     <input
                                         type="text"
@@ -1590,7 +1600,7 @@ export default function LogisticsManagementDashboard() {
 
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Last Name
+                                        Van
                                     </span>
                                     <input
                                         type="text"
@@ -1602,23 +1612,23 @@ export default function LogisticsManagementDashboard() {
 
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Worker Type
+                                        Soort werker
                                     </span>
                                     <select
                                         value={workerType}
                                         onChange={(event) => setWorkerType(event.target.value)}
                                         className={selectClass}
                                     >
-                                        <option value="Grounds">Grounds</option>
-                                        <option value="Cleaning">Cleaning</option>
-                                        <option value="Maintenance">Maintenance</option>
-                                        <option value="Other">Other</option>
+                                        <option value="Grounds">Terrein</option>
+                                        <option value="Cleaning">Skoonmaak</option>
+                                        <option value="Maintenance">Instandhouding</option>
+                                        <option value="Other">Ander</option>
                                     </select>
                                 </label>
 
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Mobile Number
+                                        Selfoonnommer
                                     </span>
                                     <input
                                         type="tel"
@@ -1632,7 +1642,7 @@ export default function LogisticsManagementDashboard() {
 
                             <label className="mt-5 block">
                                 <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                    Email Address
+                                    E-posadres
                                 </span>
                                 <input
                                     type="email"
@@ -1652,9 +1662,9 @@ export default function LogisticsManagementDashboard() {
                                         className="h-4 w-4 rounded border-white/20 bg-zinc-900"
                                     />
                                     <span>
-                                        <span className="block text-sm font-medium text-zinc-200">Active worker</span>
+                                        <span className="block text-sm font-medium text-zinc-200">Aktiewe werker</span>
                                         <span className="mt-1 block text-xs text-zinc-500">
-                                            Inactive workers remain in history but cannot be assigned to new work.
+                                            Onaktiewe werkers bly in die geskiedenis maar kan nie nuwe werk ontvang nie.
                                         </span>
                                     </span>
                                 </label>
@@ -1667,7 +1677,7 @@ export default function LogisticsManagementDashboard() {
                                     disabled={savingWorker}
                                     className={buttonClass}
                                 >
-                                    Cancel
+                                    Kanselleer
                                 </button>
                                 <button
                                     type="button"
@@ -1699,7 +1709,7 @@ export default function LogisticsManagementDashboard() {
                             <div className="flex items-start justify-between gap-5 border-b border-white/8 pb-5">
                                 <div>
                                     <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                        Daily Work Plan
+                                        Daaglikse werkplan
                                     </p>
                                     <h2 className="mt-1 text-2xl font-semibold">
                                         Schedule Task #{selectedTask.taskID}
@@ -1715,14 +1725,14 @@ export default function LogisticsManagementDashboard() {
                                     disabled={savingPlan}
                                     className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-400 transition hover:bg-white/10 disabled:opacity-40"
                                 >
-                                    Close
+                                    Sluit
                                 </button>
                             </div>
 
                             <div className="mt-6 grid gap-5 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Work Date
+                                        Werkdatum
                                     </span>
                                     <input
                                         type="date"
@@ -1734,14 +1744,14 @@ export default function LogisticsManagementDashboard() {
 
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Worker
+                                        Werker
                                     </span>
                                     <select
                                         value={planWorkerID}
                                         onChange={(event) => setPlanWorkerID(event.target.value)}
                                         className={selectClass}
                                     >
-                                        <option value="">Unassigned</option>
+                                        <option value="">Nie toegeken nie</option>
                                         {workers
                                             .filter((worker) => worker.isActive !== false)
                                             .map((worker) => (
@@ -1760,7 +1770,7 @@ export default function LogisticsManagementDashboard() {
 
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Area
+                                        Gebied
                                     </span>
                                     <input
                                         type="text"
@@ -1773,24 +1783,24 @@ export default function LogisticsManagementDashboard() {
 
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Priority
+                                        Prioriteit
                                     </span>
                                     <select
                                         value={planPriority}
                                         onChange={(event) => setPlanPriority(event.target.value)}
                                         className={selectClass}
                                     >
-                                        <option value="P1">P1 · Critical</option>
-                                        <option value="P2">P2 · Urgent</option>
-                                        <option value="P3">P3 · Planned</option>
-                                        <option value="P4">P4 · Improvement</option>
+                                        <option value="P1">P1 · Kritiek</option>
+                                        <option value="P2">P2 · Dringend</option>
+                                        <option value="P3">P3 · Beplan</option>
+                                        <option value="P4">P4 · Verbetering</option>
                                     </select>
                                 </label>
                             </div>
 
                             <label className="mt-5 block">
                                 <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                    Work Description
+                                    Werkbeskrywing
                                 </span>
                                 <textarea
                                     value={planDescription}
@@ -1803,7 +1813,7 @@ export default function LogisticsManagementDashboard() {
                             <div className="mt-5 grid gap-5 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Materials Required
+                                        Benodigde materiaal
                                     </span>
                                     <textarea
                                         value={planMaterials}
@@ -1816,7 +1826,7 @@ export default function LogisticsManagementDashboard() {
 
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                                        Manager Note
+                                        Bestuurdersnota
                                     </span>
                                     <textarea
                                         value={planManagerNote}
@@ -1831,11 +1841,11 @@ export default function LogisticsManagementDashboard() {
                             <div className="mt-6 rounded-2xl border border-white/8 bg-black/15 p-4 text-sm text-zinc-400">
                                 <div className="grid gap-2 sm:grid-cols-2">
                                     <p>
-                                        <span className="text-zinc-600">Department:</span>{" "}
+                                        <span className="text-zinc-600">Afdeling:</span>{" "}
                                         {selectedTask.departmentName || "—"}
                                     </p>
                                     <p>
-                                        <span className="text-zinc-600">Current responsible:</span>{" "}
+                                        <span className="text-zinc-600">Huidige verantwoordelike:</span>{" "}
                                         {responsibleName(selectedTask)}
                                     </p>
                                 </div>
@@ -1848,7 +1858,7 @@ export default function LogisticsManagementDashboard() {
                                     disabled={savingPlan}
                                     className={buttonClass}
                                 >
-                                    Cancel
+                                    Kanselleer
                                 </button>
                                 <button
                                     type="button"

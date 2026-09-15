@@ -132,6 +132,7 @@ namespace NKRN.API.Controllers
                         item.ManagerNote,
 
                         item.Status,
+                        item.CalendarEventID, item.CalendarSyncStatus, item.CalendarSyncError, item.CalendarSyncedAt,
 
                         item.WorkerSignedOffAt,
                         item.ManagerSignedOffAt,
@@ -250,6 +251,10 @@ namespace NKRN.API.Controllers
                 }
             }
 
+            if ((request.PlannedStart.HasValue != request.PlannedEnd.HasValue) ||
+                (request.PlannedStart.HasValue && (request.PlannedStart < TimeSpan.Zero || request.PlannedEnd >= TimeSpan.FromDays(1) || request.PlannedEnd <= request.PlannedStart)))
+                return BadRequest(new { message = "Provide both planned times, with end after start on the same day." });
+
             string priority =
                 string.IsNullOrWhiteSpace(
                     request.Priority)
@@ -323,6 +328,7 @@ namespace NKRN.API.Controllers
                 item
             );
 
+            item.CalendarSyncStatus = "Pending";
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(
@@ -409,6 +415,10 @@ namespace NKRN.API.Controllers
                 }
             }
 
+            if ((request.PlannedStart.HasValue != request.PlannedEnd.HasValue) ||
+                (request.PlannedStart.HasValue && (request.PlannedStart < TimeSpan.Zero || request.PlannedEnd >= TimeSpan.FromDays(1) || request.PlannedEnd <= request.PlannedStart)))
+                return BadRequest(new { message = "Provide both planned times, with end after start on the same day." });
+
             string priority =
                 string.IsNullOrWhiteSpace(
                     request.Priority)
@@ -471,6 +481,7 @@ namespace NKRN.API.Controllers
             item.UpdatedDate =
                 DateTime.Now;
 
+            item.CalendarSyncStatus = "Pending";
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -518,6 +529,7 @@ namespace NKRN.API.Controllers
             item.UpdatedDate =
                 DateTime.Now;
 
+            item.CalendarSyncStatus = "Pending";
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -575,10 +587,11 @@ namespace NKRN.API.Controllers
                 });
             }
 
-            _context.LogisticsWorkPlanItems.Remove(
-                item
-            );
+            // Preserve a tombstone until Calendar deletion has succeeded, and retain audit history.
+            item.Status = "Cancelled";
+            item.UpdatedDate = DateTime.UtcNow;
 
+            item.CalendarSyncStatus = "Pending";
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -586,6 +599,14 @@ namespace NKRN.API.Controllers
                 message =
                     "Work-plan item deleted successfully."
             });
+        }
+
+        [HttpPost("{id}/calendar-sync")]
+        public async Task<IActionResult> SyncCalendar(int id, [FromServices] NKRN.API.Services.LogisticsCalendarSyncService sync)
+        {
+            if (!await CanManageLogistics()) return Forbid();
+            if (!await _context.LogisticsWorkPlanItems.AnyAsync(i => i.WorkPlanItemID == id)) return NotFound();
+            return Ok(new { synced = await sync.SyncAsync(id) });
         }
 
         // ============================================================
