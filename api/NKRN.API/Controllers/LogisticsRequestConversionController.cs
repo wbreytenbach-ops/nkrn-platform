@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NKRN.API.Data;
 using NKRN.API.Models;
+using NKRN.API.Services;
 
 namespace NKRN.API.Controllers
 {
@@ -15,6 +16,7 @@ namespace NKRN.API.Controllers
     public class LogisticsRequestConversionController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly LogisticsRequestNotificationService _notifications;
 
         private static readonly HashSet<string> AllowedPriorities =
             new(StringComparer.OrdinalIgnoreCase)
@@ -35,9 +37,10 @@ namespace NKRN.API.Controllers
             };
 
         public LogisticsRequestConversionController(
-            ApplicationDbContext context)
+            ApplicationDbContext context, LogisticsRequestNotificationService notifications)
         {
             _context = context;
+            _notifications = notifications;
         }
 
         [HttpPost("{id:int}/convert")]
@@ -193,7 +196,7 @@ namespace NKRN.API.Controllers
                         null,
 
                     Status =
-                        "Nog nie begin",
+                        "In Proses",
 
                     NextAction =
                         CleanNullable(request.NextAction),
@@ -255,6 +258,7 @@ namespace NKRN.API.Controllers
                             UpdatedDate = SYSDATETIME()
                         WHERE
                             RequestID = {id}
+                            AND IsDeleted = 0
                             AND ConvertedTaskID IS NULL
                             AND Status NOT IN
                             (
@@ -279,6 +283,8 @@ namespace NKRN.API.Controllers
                 }
 
                 await transaction.CommitAsync();
+                await transaction.DisposeAsync();
+                await _notifications.NotifyByIDAsync(id);
 
                 return Ok(new
                 {
@@ -348,7 +354,7 @@ namespace NKRN.API.Controllers
                             RL.IsPrimary DESC,
                             RL.RequestLocationID
                     ) LocationInfo
-                    WHERE R.RequestID = @RequestID;
+                    WHERE R.RequestID = @RequestID AND R.IsDeleted = 0;
                     """;
 
                 AddParameter(
@@ -416,26 +422,10 @@ namespace NKRN.API.Controllers
 
         private async Task<bool> CanManageLogisticsAsync()
         {
-            if (User.IsInRole("3"))
-            {
-                return true;
-            }
-
-            var userID =
-                GetLoggedInUserID();
-
-            if (userID == null)
-            {
-                return false;
-            }
-
-            return await _context.ModulePermissions
-                .AsNoTracking()
-                .AnyAsync(permission =>
-                    permission.UserID == userID.Value &&
-                    permission.ModuleKey == "Logistics" &&
-                    permission.CanView &&
-                    permission.CanManage);
+            var id = GetLoggedInUserID();
+            return id.HasValue && await _context.Users.AnyAsync(u => u.UserID == id.Value && u.IsActive &&
+                (u.RoleID == 3 || _context.ModulePermissions.Any(p => p.UserID == id.Value &&
+                    p.ModuleKey.ToLower() == "logistics" && p.CanView && (p.CanManage || p.CanAdmin))));
         }
 
         private int? GetLoggedInUserID()

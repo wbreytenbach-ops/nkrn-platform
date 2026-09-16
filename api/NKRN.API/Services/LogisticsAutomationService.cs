@@ -11,6 +11,7 @@ public class LogisticsAutomationOptions
     public string? DailyRunTime { get; set; }
     public string TimeZoneId { get; set; } = "Africa/Johannesburg";
     public string MasterRecipientEmail { get; set; } = "terreinbestuur@tygies.co.za";
+    public string[] MasterRecipientEmails { get; set; } = ["terreinbestuur@tygies.co.za", "mcarnie@tygies.co.za"];
     public bool GenerateWorkerCards { get; set; } = true;
     public bool SyncCalendar { get; set; }
     public string CalendarUserId { get; set; } = "itdesk@tygerpoort.co.za";

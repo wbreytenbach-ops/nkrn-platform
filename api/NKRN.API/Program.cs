@@ -110,6 +110,7 @@ builder.Services.Configure<EmailSettings>(
 );
 
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<LogisticsRequestNotificationService>();
 builder.Services.Configure<LogisticsAutomationOptions>(builder.Configuration.GetSection("LogisticsAutomation"));
 builder.Services.AddScoped<LogisticsJobCardService>();
 builder.Services.AddScoped<LogisticsCalendarSyncService>();

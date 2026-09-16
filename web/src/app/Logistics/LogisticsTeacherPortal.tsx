@@ -1,6 +1,7 @@
 "use client";
+import LogisticsRequestDiscussion from "./LogisticsRequestDiscussion";
 
-import { displayLabel } from "./labels";
+import { displayLabel, requestStage } from "./labels";
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -167,13 +168,13 @@ function shortTime(value?: string | null) {
 }
 
 function statusStyle(status: string) {
-    const value = status.toLowerCase();
+    const value = requestStage(status).toLowerCase();
 
-    if (value === "completed") {
+    if (value === "done") {
         return "border-green-400/15 bg-green-500/10 text-green-300";
     }
 
-    if (value === "approved" || value === "converted") {
+    if (value === "busy") {
         return "border-[#d7a31f]/25 bg-[#d7a31f]/10 text-[#e7b42b]";
     }
 
@@ -1030,7 +1031,7 @@ export default function LogisticsTeacherPortal({
                                                 {displayLabel(request.status)}
                                             </span>
 
-                                            {![
+                                            {!request.convertedTaskID && ![
                                                 "Converted",
                                                 "Completed",
                                                 "Cancelled",
@@ -1047,6 +1048,7 @@ export default function LogisticsTeacherPortal({
                                             )}
                                         </div>
                                     </div>
+                                    <LogisticsRequestDiscussion requestID={request.requestID} />
                                 </article>
                             ))}
 

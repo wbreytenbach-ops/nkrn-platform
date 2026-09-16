@@ -27,6 +27,10 @@ type TranslationEntry = {
  * covers pages that were added later (and avoids changing API/database values).
  */
 const translations: readonly TranslationEntry[] = [
+    { en: "Optional work assignment", af: "Opsionele werktoewysing" },
+    { en: "Use this when the request should appear on a job card. You can also complete the request directly here.", af: "Gebruik dit wanneer die versoek op ’n werkkaart moet verskyn. Jy kan die versoek ook direk hier afhandel." },
+    { en: "Assign work", af: "Ken werk toe" },
+    { en: "High / Critical", af: "Hoog / Kritiek" },
     // Shared shell and navigation
     { en: "Language", af: "Taal" },
     { en: "English", af: "Engels" },

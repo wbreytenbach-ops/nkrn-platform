@@ -16,10 +16,22 @@ namespace NKRN.API.Services
             _settings = settings.Value;
         }
 
-        public virtual async Task SendEmailAsync(
-            string recipientEmail,
-            string subject,
-            string body)
+        public static string AddPortalButton(string body)
+        {
+            const string button = """
+                <div style="margin:24px 0;padding:16px 0;">
+                  <a href="https://portal.tygies.co.za" style="display:inline-block;background:#d7a31f;color:#171717;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold;padding:14px 22px;border-radius:6px;">Open NKRN Portal / Maak NKRN-portaal oop</a>
+                  <p style="font-family:Arial,sans-serif;font-size:12px;color:#666;">https://portal.tygies.co.za</p>
+                </div>
+                """;
+            var position = body.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
+            return position < 0 ? body + button : body.Insert(position, button);
+        }
+
+        public virtual Task SendEmailAsync(string recipientEmail, string subject, string body) =>
+            SendEmailToManyAsync(new[] { recipientEmail }, subject, body);
+
+        public virtual async Task SendEmailToManyAsync(IEnumerable<string> recipientEmails, string subject, string body)
         {
             // ========================================
             // VALIDATE BASIC EMAIL SETTINGS
@@ -92,18 +104,15 @@ namespace NKRN.API.Services
                 )
             );
 
-            message.To.Add(
-                new MailboxAddress(
-                    recipientEmail,
-                    recipientEmail
-                )
-            );
+            foreach (var address in recipientEmails.Select(a => a.Trim()).Where(a => a.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase))
+                message.To.Add(MailboxAddress.Parse(address));
+            if (message.To.Count == 0) throw new InvalidOperationException("At least one email recipient is required.");
 
             message.Subject = subject;
 
             message.Body = new TextPart("html")
             {
-                Text = body
+                Text = AddPortalButton(body)
             };
 
             // ========================================

@@ -1,6 +1,9 @@
 "use client";
 
-import { displayLabel } from "./labels";
+import { displayLabel, requestStage } from "./labels";
+
+import LogisticsRequestDiscussion from "./LogisticsRequestDiscussion";
+import { useLanguage } from "../language";
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -64,6 +67,7 @@ interface LogisticsRequest {
 }
 
 interface LogisticsRequestInboxProps {
+    isAdmin: boolean;
     departments: LogisticsDepartment[];
     workers: LogisticsWorker[];
     onTaskConverted: () => void;
@@ -149,13 +153,13 @@ function workerName(worker: LogisticsWorker) {
 }
 
 function requestStatusClass(status: string) {
-    const value = status.toLowerCase();
+    const value = requestStage(status).toLowerCase();
 
-    if (value === "new") {
+    if (value === "logged") {
         return "border-yellow-400/20 bg-yellow-500/10 text-yellow-200";
     }
 
-    if (value === "under review" || value === "needs information") {
+    if (value === "busy") {
         return "border-orange-400/20 bg-orange-500/10 text-orange-200";
     }
 
@@ -163,7 +167,7 @@ function requestStatusClass(status: string) {
         return "border-blue-400/20 bg-blue-500/10 text-blue-200";
     }
 
-    if (value === "converted" || value === "completed") {
+    if (value === "done") {
         return "border-green-400/20 bg-green-500/10 text-green-200";
     }
 
@@ -175,18 +179,21 @@ function requestStatusClass(status: string) {
 }
 
 function isOpenRequest(request: LogisticsRequest) {
-    return !["Converted", "Completed", "Declined", "Cancelled"].includes(
+    return !["Completed", "Declined", "Cancelled"].includes(
         request.status
     );
 }
 
 export default function LogisticsRequestInbox({
+    isAdmin,
     departments,
     workers,
     onTaskConverted,
     tasks,
 }: LogisticsRequestInboxProps) {
     const router = useRouter();
+    const { language, t } = useLanguage();
+    const [deleting, setDeleting] = useState(false);
     const [requests, setRequests] = useState<LogisticsRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -239,7 +246,9 @@ export default function LogisticsRequestInbox({
                 );
             }
 
-            setRequests((await response.json()) as LogisticsRequest[]);
+            const loaded = (await response.json()) as LogisticsRequest[];
+            setRequests(loaded);
+            setSelectedRequest(current => current ? loaded.find(item => item.requestID === current.requestID) ?? null : null);
         } catch (loadError) {
             setError(
                 loadError instanceof Error
@@ -260,7 +269,7 @@ export default function LogisticsRequestInbox({
     }, [loadRequests]);
 
     const visibleRequests = useMemo(() => requests.filter(request =>
-        (filter === "All" || (filter === "Open" ? isOpenRequest(request) : request.status === filter)) &&
+        (filter === "All" || (filter === "Open" ? isOpenRequest(request) : requestStage(request.status) === filter)) &&
         (!typeFilter || request.requestType === typeFilter) && (!priorityFilter || request.priority === priorityFilter) &&
         `${request.title} ${request.description ?? ""} ${request.requestedByName} ${request.requestedByEmail} ${primaryLocation(request)} ${request.managerNotes ?? ""}`.toLowerCase().includes(search.toLowerCase())
     ), [requests, filter, typeFilter, priorityFilter, search]);
@@ -274,11 +283,7 @@ export default function LogisticsRequestInbox({
     function openRequest(request: LogisticsRequest) {
         setSelectedRequest(request);
         setReviewStatus(
-            ["New", "Under Review", "Needs Information", "Approved", "Declined"].includes(
-                request.status
-            )
-                ? request.status
-                : "Under Review"
+            requestStage(request.status) === "Logged" ? "New" : requestStage(request.status) === "Done" ? "Completed" : "Under Review"
         );
         setManagerNotes(request.managerNotes || "");
         setDepartmentID("");
@@ -296,11 +301,29 @@ export default function LogisticsRequestInbox({
     }
 
     function closeRequest() {
-        if (savingReview || converting) {
+        if (savingReview || converting || deleting) {
             return;
         }
 
         setSelectedRequest(null);
+    }
+
+    async function deleteRequest() {
+        if (!selectedRequest || !isAdmin || deleting) return;
+        const confirmed = window.confirm(language === "af"
+            ? `Verwyder versoek #${selectedRequest.requestID}? Dit verdwyn uit die versoeklyste. Bestaande werk bly behoue.`
+            : `Delete request #${selectedRequest.requestID}? It will disappear from request lists. Existing work is retained.`);
+        if (!confirmed) return;
+        setDeleting(true);
+        setError("");
+        try {
+            const response = await fetch(`${API_URL}/api/LogisticsRequests/${selectedRequest.requestID}`, { method: "DELETE", headers: authHeaders() });
+            if (!response.ok) throw new Error(language === "af" ? "Die versoek kon nie verwyder word nie." : "Unable to delete the request.");
+            setSelectedRequest(null);
+            await loadRequests();
+            setSuccess(language === "af" ? "Versoek verwyder." : "Request deleted.");
+        } catch (error) { setError(error instanceof Error ? error.message : "Unable to delete the request."); }
+        finally { setDeleting(false); }
     }
 
     async function saveReview() {
@@ -343,7 +366,7 @@ export default function LogisticsRequestInbox({
             }
 
             setSuccess(
-                `Request #${selectedRequest.requestID} was updated to ${reviewStatus}.`
+                language === "af" ? `Versoek #${selectedRequest.requestID}: ${t(displayLabel(requestStage(reviewStatus)))}.` : `Request #${selectedRequest.requestID}: ${requestStage(reviewStatus)}.`
             );
 
             setSelectedRequest(null);
@@ -365,7 +388,7 @@ export default function LogisticsRequestInbox({
         }
 
         const confirmed = window.confirm(
-            `Convert Logistics Request #${selectedRequest.requestID} into an operational task?`
+            language === "af" ? `Ken werk toe vir versoek #${selectedRequest.requestID}?` : `Assign work for request #${selectedRequest.requestID}?`
         );
 
         if (!confirmed) {
@@ -467,7 +490,7 @@ export default function LogisticsRequestInbox({
 
                             <input aria-label="Soek versoeke" placeholder="Soek naam, versoek of lokaal…" className={inputClass} value={search} onChange={e => setSearch(e.target.value)} />
                             <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
-                            <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["P1", "P2", "P3", "P4"].map(value => <option key={value}>{value}</option>)}</select>
+                            <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["P1", "P2", "P3", "P4"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
                             <select
                                 aria-label="Versoekstatus"
                                 value={filter}
@@ -475,11 +498,9 @@ export default function LogisticsRequestInbox({
                                 className="nkrn-select rounded-xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white outline-none"
                             >
                                 <option value="Open">Oop versoeke</option>
-                                <option value="New">Nuut</option>
-                                <option value="Under Review">Onder hersiening</option>
-                                <option value="Needs Information">Meer inligting benodig</option>
-                                <option value="Approved">Goedgekeur</option>
-                                <option value="Converted">Na taak omgeskakel</option>
+                                <option value="Logged">Logged</option>
+                                <option value="Busy">Busy</option>
+                                <option value="Done">Done</option>
                                 <option value="Declined">Afgekeur</option>
                                 <option value="Cancelled">Gekanselleer</option>
                                 <option value="All">Alle versoeke</option>
@@ -544,7 +565,7 @@ export default function LogisticsRequestInbox({
                                                 {request.title}
                                             </p>
                                             <p className="mt-2 whitespace-pre-wrap text-zinc-300">{request.description || "Geen beskrywing"}</p>
-                                            <p className="mt-2 text-xs text-[#e7b42b]">{request.priority} · {displayDate(request.activityDate)} {shortTime(request.startTime)} – {shortTime(request.endTime)}</p>
+                                            <p className="mt-2 text-xs text-[#e7b42b]">{displayLabel(request.priority)} · {displayDate(request.activityDate)} {shortTime(request.startTime)} – {shortTime(request.endTime)}</p>
                                             <p className="mt-2 text-xs text-zinc-300">Toerusting: {request.equipment.map(item => `${item.equipmentName}${item.quantity ? ` × ${item.quantity}` : ""}${item.notes ? ` (${item.notes})` : ""}`).join(", ") || "Geen"}</p>
                                             <p className="mt-1 text-xs text-zinc-300">{request.maintenanceItems.map(item => `${item.maintenanceName}: ${displayLabel(item.actionType)} ${item.notes || ""}`).join("; ")}</p>
                                             <p className="mt-2 text-xs text-zinc-300">Bestuurdersnota: {request.managerNotes || "Nog geen nota"}</p>
@@ -631,7 +652,7 @@ export default function LogisticsRequestInbox({
                             <button
                                 type="button"
                                 onClick={closeRequest}
-                                disabled={savingReview || converting}
+                                disabled={savingReview || converting || deleting}
                                 className={secondaryButton}
                             >
                                 Sluit
@@ -640,6 +661,7 @@ export default function LogisticsRequestInbox({
 
                         <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
                             <div className="space-y-5">
+                                <LogisticsRequestDiscussion key={selectedRequest.requestID} requestID={selectedRequest.requestID} canEdit onSaved={() => { void loadRequests(); }} />
                                 <div className="rounded-2xl border border-white/8 bg-black/15 p-5">
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         <Info
@@ -739,16 +761,17 @@ export default function LogisticsRequestInbox({
                                             }
                                             className={selectClass}
                                         >
-                                            <option value="New">Nuut</option>
-                                            <option value="Under Review">Onder hersiening</option>
-                                            <option value="Needs Information">
-                                                Meer inligting benodig
-                                            </option>
-                                            <option value="Approved">Goedgekeur</option>
-                                            <option value="Declined">Afgekeur</option>
+                                            <option value="New">Logged</option>
+                                            <option value="Under Review">Busy</option>
+                                            <option value="Completed">Done</option>
                                         </select>
                                     </label>
 
+                                    <label className="mt-4 block">{t("Priority")}
+                                        <select className={selectClass} value={priority} onChange={event => setPriority(event.target.value)}>
+                                            {["P4", "P3", "P2", "P1"].map(value => <option key={value} value={value}>{t(displayLabel(value))}</option>)}
+                                        </select>
+                                    </label>
                                     <label className="mt-4 block">
                                         <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
                                             Bestuurdersnotas
@@ -764,23 +787,27 @@ export default function LogisticsRequestInbox({
                                         />
                                     </label>
 
+                                    {isAdmin && <button type="button" onClick={() => void deleteRequest()} disabled={deleting || savingReview || converting}
+                                        className="mt-4 w-full rounded-xl border border-red-400/30 px-4 py-3 text-red-300">
+                                        {language === "af" ? (deleting ? "Verwyder…" : "Verwyder versoek") : (deleting ? "Deleting…" : "Delete request")}
+                                    </button>}
                                     <button
                                         type="button"
                                         onClick={() => void saveReview()}
-                                        disabled={savingReview || converting}
+                                        disabled={savingReview || converting || deleting}
                                         className="mt-4 w-full rounded-xl border border-white/10 bg-white/7 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-45"
                                     >
                                         {savingReview ? "Saving…" : "Save Review"}
                                     </button>
                                 </div>
 
-                                {isOpenRequest(selectedRequest) && (
+                                {isOpenRequest(selectedRequest) && !selectedRequest.convertedTaskID && (
                                     <div className="rounded-2xl border border-yellow-400/15 bg-yellow-500/5 p-5">
                                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-yellow-400">
-                                            Skakel om na operasionele taak
+                                            Opsionele werktoewysing
                                         </p>
                                         <p className="mt-2 text-xs leading-5 text-zinc-500">
-                                            Dit skep ’n Logistics-taak en koppel die versoek in een transaksie.
+                                            Gebruik dit wanneer die versoek op ’n werkkaart moet verskyn. Jy kan die versoek ook direk hier afhandel.
                                         </p>
 
                                         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -844,23 +871,7 @@ export default function LogisticsRequestInbox({
                                                 </select>
                                             </label>
 
-                                            <label className="block">
-                                                <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
-                                                    Prioriteit
-                                                </span>
-                                                <select
-                                                    value={priority}
-                                                    onChange={(event) =>
-                                                        setPriority(event.target.value)
-                                                    }
-                                                    className={selectClass}
-                                                >
-                                                    <option value="P1">P1 · Kritiek</option>
-                                                    <option value="P2">P2 · Dringend</option>
-                                                    <option value="P3">P3 · Beplan</option>
-                                                    <option value="P4">P4 · Verbetering</option>
-                                                </select>
-                                            </label>
+
 
                                             <label className="block">
                                                 <span className="mb-2 block text-xs uppercase tracking-[0.12em] text-zinc-500">
@@ -910,12 +921,12 @@ export default function LogisticsRequestInbox({
                                         <button
                                             type="button"
                                             onClick={() => void convertToTask()}
-                                            disabled={converting || savingReview}
+                                            disabled={converting || savingReview || deleting}
                                             className="mt-5 w-full rounded-xl border border-yellow-300/20 bg-yellow-400 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             {converting
                                                 ? "Converting…"
-                                                : "Approve & Convert to Task"}
+                                                : "Assign work"}
                                         </button>
                                     </div>
                                 )}

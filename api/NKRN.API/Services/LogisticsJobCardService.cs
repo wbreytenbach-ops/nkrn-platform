@@ -21,7 +21,7 @@ public class LogisticsJobCardService(ApplicationDbContext context, EmailService 
             if (existing != null) { await transaction.CommitAsync(); return existing; }
             var settings = await _context.LogisticsSettings.AsNoTracking().FirstOrDefaultAsync(s => s.SettingsID == 1)
                 ?? throw new InvalidOperationException("Logistics settings have not been configured.");
-            string recipientEmail = _options.MasterRecipientEmail;
+            string recipientEmail = string.Join(";", _options.MasterRecipientEmails.Select(a => a.Trim()).Where(a => a.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase));
 
             // ========================================================
             // LOAD WORK PLAN
@@ -30,7 +30,8 @@ public class LogisticsJobCardService(ApplicationDbContext context, EmailService 
             var workPlanQuery =
                 _context.LogisticsWorkPlanItems
                     .AsNoTracking()
-                    .Where(item => item.Status != "Cancelled" && item.Status != "Gekanselleer")
+                    .Where(item => item.Status != "Cancelled" && item.Status != "Gekanselleer" &&
+                        (!item.TaskID.HasValue || !_context.LogisticsTasks.Any(t => t.TaskID == item.TaskID && (t.IsArchived || t.Status == "Afgehandel" || t.Status == "Completed" || t.Status == "Cancelled"))))
                     .AsQueryable();
 
             if (settings.CarryOverIncompleteWork)
@@ -89,12 +90,6 @@ public class LogisticsJobCardService(ApplicationDbContext context, EmailService 
                         .OrderBy(task => task.Priority)
                         .ThenBy(task => task.DueDate)
                         .ToListAsync();
-            }
-
-            if (workPlanItems.Count == 0 &&
-                overdueTasks.Count == 0)
-            {
-                throw new InvalidOperationException("There is no work available for this job card.");
             }
 
             // ========================================================
@@ -416,15 +411,18 @@ public class LogisticsJobCardService(ApplicationDbContext context, EmailService 
             ?? throw new InvalidOperationException("Werkkaart is nie gevind nie.");
         if (card.SentAt.HasValue || card.Status == "Sent") return card;
         var items = await _context.LogisticsJobCardItems.AsNoTracking().Where(i => i.JobCardID == id).OrderBy(i => i.SortOrder).ToListAsync();
-        if (items.Count == 0 || string.IsNullOrWhiteSpace(card.RecipientEmail)) throw new InvalidOperationException("Card has no items or recipient.");
+        var recipients = _options.MasterRecipientEmails.Select(a => a.Trim()).Where(a => a.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (recipients.Length == 0) throw new InvalidOperationException("Card has no recipient.");
+        var recipientList = string.Join(";", recipients);
+        if (recipientList.Length > 255) throw new InvalidOperationException("Master recipient list exceeds the configured database limit.");
         // Durable atomic claim: ambiguous SMTP outcomes are never retried automatically.
         var claimed = await _context.LogisticsJobCards.Where(c => c.JobCardID == id && c.SentAt == null &&
             (c.Status == "Generated" || c.Status == "Draft" || (manualRetry && c.Status == "Failed")))
-            .ExecuteUpdateAsync(set => set.SetProperty(c => c.Status, "Sending"));
+            .ExecuteUpdateAsync(set => set.SetProperty(c => c.Status, "Sending").SetProperty(c => c.RecipientEmail, recipientList));
         if (claimed == 0) throw new InvalidOperationException("Card is sent, sending, or awaiting a manager's delivery review.");
         try
         {
-            await email.SendEmailAsync(card.RecipientEmail, $"Daaglikse Logistics werkkaart - {card.JobCardDate:yyyy-MM-dd}", BuildEmailBody(card, items));
+            await email.SendEmailToManyAsync(recipients, $"Daaglikse Logistics werkkaart - {card.JobCardDate:yyyy-MM-dd}", BuildEmailBody(card, items));
         }
         catch (Exception ex)
         {
@@ -466,6 +464,7 @@ public class LogisticsJobCardService(ApplicationDbContext context, EmailService 
                 "<h1 style='margin:6px 0 0 0;'>Daaglikse Logistics-werkkaart</h1>");
 
             html.Append("</div>");
+            if (items.Count == 0) html.Append("<p style='padding:20px'>Geen werk is tans vir hierdie datum beplan nie / No work is currently scheduled for this date.</p>");
 
             html.Append(
                 "<div style='padding:24px;'>");
@@ -509,7 +508,7 @@ public class LogisticsJobCardService(ApplicationDbContext context, EmailService 
 
                     html.Append(
                         "<p><strong>Prioriteit:</strong> " +
-                        Encode(item.Priority) +
+                        Encode(LogisticsWorkflow.PriorityLabel(item.Priority)) +
                         "</p>");
 
                     if (!string.IsNullOrWhiteSpace(
@@ -541,7 +540,7 @@ public class LogisticsJobCardService(ApplicationDbContext context, EmailService 
 
                     html.Append(
                         "<p><strong>Status:</strong> " +
-                        Encode(item.Status) +
+                        Encode(LogisticsWorkflow.StatusLabel(item.Status)) +
                         "</p>");
 
                     html.Append("</div>");

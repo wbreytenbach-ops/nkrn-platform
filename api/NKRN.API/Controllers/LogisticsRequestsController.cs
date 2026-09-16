@@ -1,6 +1,5 @@
 using System.Data;
 using System.Data.Common;
-using System.Net;
 using System.Security.Claims;
 using NKRN.API.Data;
 using NKRN.API.Models;
@@ -17,9 +16,7 @@ namespace NKRN.API.Controllers
     public class LogisticsRequestsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly EmailService _emailService;
-        private readonly IConfiguration _configuration;
-        private readonly IWebHostEnvironment _environment;
+        private readonly LogisticsRequestNotificationService _notifications;
 
         private static readonly HashSet<string> AllowedStatuses =
             new(StringComparer.OrdinalIgnoreCase)
@@ -44,14 +41,10 @@ namespace NKRN.API.Controllers
 
         public LogisticsRequestsController(
             ApplicationDbContext context,
-            EmailService emailService,
-            IConfiguration configuration,
-            IWebHostEnvironment environment)
+            LogisticsRequestNotificationService notifications)
         {
             _context = context;
-            _emailService = emailService;
-            _configuration = configuration;
-            _environment = environment;
+            _notifications = notifications;
         }
 
         // ============================================================
@@ -554,11 +547,7 @@ namespace NKRN.API.Controllers
                         });
                 }
 
-                await TrySendRequestNotificationAsync(
-                    created,
-                    requester.FirstName,
-                    requester.LastName,
-                    requester.Email);
+                await _notifications.NotifyAsync(created, created: true);
 
                 return CreatedAtAction(
                     nameof(GetRequest),
@@ -586,6 +575,20 @@ namespace NKRN.API.Controllers
         // ============================================================
         // UPDATE REQUEST STATUS / MANAGER NOTES
         // ============================================================
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteRequest(int id)
+        {
+            var userID = GetLoggedInUserID();
+            if (userID == null) return Unauthorized();
+            if (!await _context.Users.AnyAsync(u => u.UserID == userID && u.IsActive && u.RoleID == 3)) return Forbid();
+            var affected = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+                UPDATE dbo.LogisticsRequests SET IsDeleted = 1, DeletedByUserID = {userID.Value},
+                    DeletedAt = SYSUTCDATETIME(), UpdatedDate = SYSDATETIME()
+                WHERE RequestID = {id} AND IsDeleted = 0;
+                """);
+            return affected == 0 ? NotFound() : NoContent();
+        }
 
         [HttpPut("{id:int}/status")]
         public async Task<IActionResult> UpdateStatus(
@@ -637,8 +640,9 @@ namespace NKRN.API.Controllers
 
             try
             {
-                await using var command =
-                    connection.CreateCommand();
+                await using var transaction = await connection.BeginTransactionAsync();
+                await using var command = connection.CreateCommand();
+                command.Transaction = transaction;
 
                 command.CommandText = """
                     UPDATE dbo.LogisticsRequests
@@ -649,7 +653,8 @@ namespace NKRN.API.Controllers
                         ReviewedByUserID = @ReviewedByUserID,
                         ReviewedDate = SYSDATETIME(),
                         UpdatedDate = SYSDATETIME()
-                    WHERE RequestID = @RequestID;
+                    OUTPUT deleted.Status
+                    WHERE RequestID = @RequestID AND IsDeleted = 0;
                     """;
 
                 AddParameter(command, "@Priority", update.Priority);
@@ -673,14 +678,29 @@ namespace NKRN.API.Controllers
                     "@RequestID",
                     id);
 
-                var affected =
-                    await command.ExecuteNonQueryAsync();
+                var previousStatus = await command.ExecuteScalarAsync();
 
-                if (affected == 0)
+                if (previousStatus == null)
                 {
                     return NotFound();
                 }
 
+                await using var taskCommand = connection.CreateCommand();
+                taskCommand.Transaction = transaction;
+                taskCommand.CommandText = """
+                    UPDATE T SET Status = CASE @status WHEN 'Completed' THEN 'Afgehandel' WHEN 'New' THEN 'Nog nie begin' WHEN 'Cancelled' THEN 'Cancelled' WHEN 'Declined' THEN 'Cancelled' ELSE 'In Proses' END,
+                        Priority = R.Priority, CompletedDate = CASE WHEN @status = 'Completed' THEN COALESCE(T.CompletedDate, SYSDATETIME()) ELSE NULL END,
+                        UpdatedDate = SYSDATETIME()
+                    FROM dbo.LogisticsTasks T JOIN dbo.LogisticsRequests R ON R.ConvertedTaskID = T.TaskID
+                    WHERE R.RequestID = @id AND R.IsDeleted = 0;
+                    """;
+                AddParameter(taskCommand, "@status", CanonicalStatus(update.Status));
+                AddParameter(taskCommand, "@id", id);
+                await taskCommand.ExecuteNonQueryAsync();
+                await transaction.CommitAsync();
+                await transaction.DisposeAsync();
+                if (!string.Equals(Convert.ToString(previousStatus), CanonicalStatus(update.Status), StringComparison.OrdinalIgnoreCase))
+                    await _notifications.NotifyByIDAsync(id);
                 return NoContent();
             }
             finally
@@ -732,7 +752,9 @@ namespace NKRN.API.Controllers
                         UpdatedDate = SYSDATETIME()
                     WHERE
                         RequestID = @RequestID
+                        AND IsDeleted = 0
                         AND RequestedByUserID = @UserID
+                        AND ConvertedTaskID IS NULL
                         AND Status NOT IN ('Converted', 'Completed', 'Cancelled');
                     """;
 
@@ -758,6 +780,7 @@ namespace NKRN.API.Controllers
                     });
                 }
 
+                await _notifications.NotifyByIDAsync(id);
                 return NoContent();
             }
             finally
@@ -824,7 +847,7 @@ namespace NKRN.API.Controllers
                     LEFT JOIN dbo.Users U
                         ON U.UserID = R.RequestedByUserID
                     WHERE
-                        (@RequestedByUserID IS NULL
+                        R.IsDeleted = 0 AND (@RequestedByUserID IS NULL
                             OR R.RequestedByUserID = @RequestedByUserID)
                         AND
                         (@Status IS NULL
@@ -916,7 +939,7 @@ namespace NKRN.API.Controllers
                         FROM dbo.LogisticsRequests R
                         LEFT JOIN dbo.Users U
                             ON U.UserID = R.RequestedByUserID
-                        WHERE R.RequestID = @RequestID;
+                        WHERE R.RequestID = @RequestID AND R.IsDeleted = 0;
                         """;
 
                     AddParameter(
@@ -1533,191 +1556,6 @@ namespace NKRN.API.Controllers
         // Request persistence is never rolled back because email fails.
         // ============================================================
 
-        private async Task TrySendRequestNotificationAsync(
-            LogisticsRequestResponse request,
-            string firstName,
-            string lastName,
-            string requesterEmail)
-        {
-            var sendInDevelopment =
-                _configuration.GetValue<bool>(
-                    "Logistics:SendRequestEmailInDevelopment");
-
-            if (_environment.IsDevelopment() &&
-                !sendInDevelopment)
-            {
-                return;
-            }
-
-            try
-            {
-                var managerUserIDs =
-                    await _context.ModulePermissions
-                        .AsNoTracking()
-                        .Where(permission =>
-                            permission.ModuleKey == "Logistics" &&
-                            permission.CanView &&
-                            permission.CanManage)
-                        .Select(permission =>
-                            permission.UserID)
-                        .Distinct()
-                        .ToListAsync();
-
-                var recipients =
-                    await _context.Users
-                        .AsNoTracking()
-                        .Where(user =>
-                            user.IsActive &&
-                            !string.IsNullOrWhiteSpace(
-                                user.Email) &&
-                            (
-                                user.RoleID == 3 ||
-                                managerUserIDs.Contains(
-                                    user.UserID)
-                            ))
-                        .Select(user => user.Email)
-                        .Distinct()
-                        .ToListAsync();
-
-                if (recipients.Count == 0)
-                {
-                    var fallback =
-                        _configuration[
-                            "Logistics:FallbackNotificationEmail"]
-                        ?.Trim();
-
-                    if (string.IsNullOrWhiteSpace(
-                        fallback))
-                    {
-                        fallback =
-                            _configuration[
-                                "LogisticsAutomation:MasterRecipientEmail"]
-                            ?.Trim();
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(
-                        fallback))
-                    {
-                        recipients.Add(fallback);
-                    }
-                }
-
-                if (recipients.Count == 0)
-                {
-                    Console.WriteLine(
-                        $"Logistics Request #{request.RequestID}: no module administrator email recipient is configured.");
-                    return;
-                }
-
-                var subject =
-                    $"Nuwe Logistics-versoek #{request.RequestID} – {request.Title}";
-
-                var body =
-                    BuildRequestEmailBody(
-                        request,
-                        firstName,
-                        lastName,
-                        requesterEmail);
-
-                foreach (var recipient in recipients)
-                {
-                    try
-                    {
-                        await _emailService.SendEmailAsync(
-                            recipient,
-                            subject,
-                            body);
-                    }
-                    catch (Exception emailError)
-                    {
-                        Console.WriteLine(
-                            $"Logistics Request #{request.RequestID}: email to {recipient} failed: {emailError.Message}");
-                    }
-                }
-            }
-            catch (Exception notificationError)
-            {
-                Console.WriteLine(
-                    $"Logistics Request #{request.RequestID}: notification preparation failed: {notificationError.Message}");
-            }
-        }
-
-        private static string BuildRequestEmailBody(
-            LogisticsRequestResponse request,
-            string firstName,
-            string lastName,
-            string requesterEmail)
-        {
-            static string E(string? value) =>
-                WebUtility.HtmlEncode(
-                    value ?? string.Empty);
-
-            var location =
-                request.Locations
-                    .OrderByDescending(item =>
-                        item.IsPrimary)
-                    .Select(item =>
-                        item.LocationName ??
-                        item.LocationText)
-                    .FirstOrDefault(value =>
-                        !string.IsNullOrWhiteSpace(
-                            value))
-                ?? "Nie gespesifiseer nie";
-
-            var equipment =
-                request.Equipment.Count == 0
-                    ? "Geen"
-                    : string.Join(
-                        ", ",
-                        request.Equipment.Select(
-                            item =>
-                                item.EquipmentName));
-
-            var maintenance =
-                request.MaintenanceItems.Count == 0
-                    ? "Nie van toepassing nie"
-                    : string.Join(
-                        ", ",
-                        request.MaintenanceItems.Select(
-                            item =>
-                                $"{item.MaintenanceName} ({item.ActionType})"));
-
-            var when =
-                request.ActivityDate.HasValue
-                    ? request.ActivityDate.Value
-                        .ToString("yyyy-MM-dd")
-                    : "Nie van toepassing nie";
-
-            if (request.StartTime.HasValue &&
-                request.EndTime.HasValue)
-            {
-                when +=
-                    $" {request.StartTime.Value:hh\\:mm}–{request.EndTime.Value:hh\\:mm}";
-            }
-
-            return $"""
-                <html>
-                <body style="font-family:Arial,sans-serif;color:#222;">
-                    <h2>Nuwe Logistics-versoek</h2>
-
-                    <p><strong>Versoek:</strong> #{request.RequestID}</p>
-                    <p><strong>Ingedien deur:</strong> {E($"{firstName} {lastName}".Trim())}</p>
-                    <p><strong>E-pos:</strong> {E(requesterEmail)}</p>
-                    <p><strong>Soort:</strong> {E(request.RequestType)}</p>
-                    <p><strong>Kategorie:</strong> {E(request.ActivityCategory ?? "Nie van toepassing nie")}</p>
-                    <p><strong>Opsomming:</strong> {E(request.Title)}</p>
-                    <p><strong>Besonderhede:</strong><br />{E(request.Description)}</p>
-                    <p><strong>Ligging:</strong> {E(location)}</p>
-                    <p><strong>Datum / tyd:</strong> {E(when)}</p>
-                    <p><strong>Toerusting:</strong> {E(equipment)}</p>
-                    <p><strong>Instandhouding:</strong> {E(maintenance)}</p>
-                    <p><strong>Interne status:</strong> New</p>
-                    <p><strong>Interne prioriteit:</strong> P3</p>
-                </body>
-                </html>
-                """;
-        }
-
         // ============================================================
         // LOGISTICS PERMISSION
         // Role 3 remains the existing NKRN admin bypass.
@@ -1725,25 +1563,10 @@ namespace NKRN.API.Controllers
 
         private async Task<bool> CanManageLogisticsAsync()
         {
-            if (User.IsInRole("3"))
-            {
-                return true;
-            }
-
-            var userID =
-                GetLoggedInUserID();
-
-            if (userID == null)
-            {
-                return false;
-            }
-
-            return await _context.ModulePermissions
-                .AnyAsync(permission =>
-                    permission.UserID == userID.Value &&
-                    permission.ModuleKey == "Logistics" &&
-                    permission.CanView &&
-                    permission.CanManage);
+            var id = GetLoggedInUserID();
+            return id.HasValue && await _context.Users.AnyAsync(u => u.UserID == id.Value && u.IsActive &&
+                (u.RoleID == 3 || _context.ModulePermissions.Any(p => p.UserID == id.Value &&
+                    p.ModuleKey.ToLower() == "logistics" && p.CanView && (p.CanManage || p.CanAdmin))));
         }
 
         private int? GetLoggedInUserID()

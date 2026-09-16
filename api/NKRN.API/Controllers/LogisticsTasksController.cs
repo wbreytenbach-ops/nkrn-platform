@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using NKRN.API.Data;
 using NKRN.API.Models;
+using NKRN.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,13 @@ namespace NKRN.API.Controllers
     public class LogisticsTasksController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly LogisticsRequestNotificationService _notifications;
 
         public LogisticsTasksController(
-            ApplicationDbContext context)
+            ApplicationDbContext context, LogisticsRequestNotificationService notifications)
         {
             _context = context;
+            _notifications = notifications;
         }
 
         // ============================================================
@@ -667,7 +670,12 @@ namespace NKRN.API.Controllers
             task.UpdatedDate =
                 DateTime.Now;
 
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             await _context.SaveChangesAsync();
+            var changedRequests = await _notifications.SynchronizeTaskAsync(task.TaskID, task.Status);
+            await transaction.CommitAsync();
+            await transaction.DisposeAsync();
+            foreach (var requestID in changedRequests) await _notifications.NotifyByIDAsync(requestID);
 
             return Ok(new
             {

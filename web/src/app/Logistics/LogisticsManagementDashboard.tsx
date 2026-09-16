@@ -961,7 +961,7 @@ export default function LogisticsManagementDashboard() {
             task.background ?? "",
             task.requestedDate ?? "",
             task.requestedByName ?? (task.requestedByUserID ? `User #${task.requestedByUserID}` : ""),
-            task.priority,
+            displayLabel(task.priority),
             responsibleName(task),
             task.quoteRequired ? "Yes" : "No",
             task.quoteReceived ? "Yes" : "No",
@@ -1134,6 +1134,7 @@ export default function LogisticsManagementDashboard() {
 
                 <nav className="sticky top-2 z-20 mb-6 flex flex-wrap gap-2 rounded-2xl border border-white/15 bg-zinc-950/95 p-3" aria-label="Logistics-bestuur">{[["oorsig","Oorsig"],["versoeke","Versoeke"],["take","Take"],["werkplan","Werkplan"],["werkkaarte","Werkkaarte"]].map(([id,label]) => <a className="q4-nav" key={id} href={`#${id}`}>{label}</a>)}</nav>
                 <LogisticsRequestInbox
+                    isAdmin={user?.roleID === 3}
                     tasks={tasks}
                     departments={departments}
                     workers={workers}
@@ -1144,7 +1145,7 @@ export default function LogisticsManagementDashboard() {
                 <section id="oorsig" className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                     <StatCard label="Alle take" value={statistics.total} note="Ingevoer en nuut" />
                     <StatCard label="Open" value={statistics.open} note="Benodig aandag" />
-                    <StatCard label="P1 / P2" value={statistics.urgent} note="Kritiek en dringend" accent="text-orange-300" />
+                    <StatCard label="High / Critical" value={statistics.urgent} note="Kritiek en dringend" accent="text-orange-300" />
                     <StatCard label="In proses" value={statistics.inProgress} note="Tans aktief" accent="text-blue-300" />
                     <StatCard label="Nie toegeken nie" value={statistics.unassigned} note="Benodig ’n verantwoordelike" accent="text-yellow-300" />
                 </section>
@@ -1184,7 +1185,7 @@ export default function LogisticsManagementDashboard() {
                                                 </p>
                                             </div>
                                             <span className={`rounded-full border px-2.5 py-1 text-xs ${priorityClass(item.priority)}`}>
-                                                {item.priority}
+                                                {displayLabel(item.priority)}
                                             </span>
                                         </div>
                                     </div>
@@ -1447,10 +1448,10 @@ export default function LogisticsManagementDashboard() {
                                     className={selectClass}
                                 >
                                     <option value="All">Alle prioriteite</option>
-                                    <option value="P1">P1 · Kritiek</option>
-                                    <option value="P2">P2 · Dringend</option>
-                                    <option value="P3">P3 · Beplan</option>
-                                    <option value="P4">P4 · Verbetering</option>
+                                    <option value="P1">Critical</option>
+                                    <option value="P2">High</option>
+                                    <option value="P3">Medium</option>
+                                    <option value="P4">Low</option>
                                 </select>
 
                                 <select
@@ -1460,10 +1461,10 @@ export default function LogisticsManagementDashboard() {
                                 >
                                     <option value="Open">Oop take</option>
                                     <option value="All">Alle statusse</option>
-                                    <option value="Nog nie begin">Nog nie begin</option>
-                                    <option value="In Proses">In Proses</option>
-                                    <option value="Staan oor">Staan oor</option>
-                                    <option value="Afgehandel">Afgehandel</option>
+                                    <option value="Nog nie begin">Logged</option>
+                                    <option value="In Proses">Busy</option>
+
+                                    <option value="Afgehandel">Done</option>
                                 </select>
 
                                 <button
@@ -1519,7 +1520,7 @@ export default function LogisticsManagementDashboard() {
                                         </td>
                                         <td className="px-5 py-4">
                                             <span className={`rounded-full border px-2.5 py-1 text-xs ${priorityClass(task.priority)}`}>
-                                                {task.priority}
+                                                {displayLabel(task.priority)}
                                             </span>
                                         </td>
                                         <td className="min-w-40 px-5 py-4 text-zinc-300">
@@ -1790,10 +1791,10 @@ export default function LogisticsManagementDashboard() {
                                         onChange={(event) => setPlanPriority(event.target.value)}
                                         className={selectClass}
                                     >
-                                        <option value="P1">P1 · Kritiek</option>
-                                        <option value="P2">P2 · Dringend</option>
-                                        <option value="P3">P3 · Beplan</option>
-                                        <option value="P4">P4 · Verbetering</option>
+                                        <option value="P1">Critical</option>
+                                        <option value="P2">High</option>
+                                        <option value="P3">Medium</option>
+                                        <option value="P4">Low</option>
                                     </select>
                                 </label>
                             </div>
