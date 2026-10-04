@@ -377,3 +377,107 @@
 .q4-home :focus-visible, .q4-logistics :focus-visible { outline: 2px solid #e7b42b; outline-offset: 4px; }
 .q4-logistics section[id] { scroll-margin-top: 5rem; }
 @media (prefers-reduced-motion: reduce) { .q4-module { transition: none; } .q4-module:hover { transform: none; } }
+
+/* NKRN FINAL PREMIUM LOGISTICS */
+.q4-logistics {
+  background:
+    radial-gradient(circle at 82% 4%, rgba(215,163,31,.075), transparent 27%),
+    radial-gradient(circle at 12% 32%, rgba(255,255,255,.025), transparent 22%),
+    #060708 !important;
+}
+
+.q4-logistics .nkrn-panel {
+  border-color: rgba(255,255,255,.105) !important;
+  box-shadow:
+    0 28px 90px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+.q4-logistics .nkrn-panel:hover {
+  border-color: rgba(215,163,31,.20) !important;
+  box-shadow:
+    0 34px 100px rgba(0,0,0,.38),
+    0 0 0 1px rgba(215,163,31,.025),
+    inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+
+.q4-logistics header.nkrn-panel {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.025) 50%, rgba(215,163,31,.025)),
+    rgba(8,9,11,.82) !important;
+}
+
+.q4-logistics nav button {
+  min-height: 40px;
+}
+
+.q4-logistics button[class*="bg-[#d7a31f]"],
+.q4-logistics button[class*="border-[#d7a31f]"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 10px 30px rgba(215,163,31,.06);
+}
+
+.q4-logistics .nkrn-input,
+.q4-logistics .nkrn-select,
+.q4-logistics textarea {
+  background: rgba(5,6,8,.72) !important;
+}
+
+.q4-logistics .nkrn-input:focus,
+.q4-logistics .nkrn-select:focus,
+.q4-logistics textarea:focus {
+  box-shadow:
+    0 0 0 3px rgba(215,163,31,.09),
+    0 14px 36px rgba(0,0,0,.18) !important;
+}
+
+@media (max-width: 640px) {
+  .q4-logistics .nkrn-panel {
+    border-radius: 22px !important;
+  }
+
+  .q4-logistics button {
+    min-height: 44px;
+  }
+}
+/* NKRN RELEASE FINAL PREMIUM */
+.nkrn-control {
+  background:
+    radial-gradient(circle at 88% 3%, rgba(215,163,31,.055), transparent 26%),
+    radial-gradient(circle at 8% 38%, rgba(255,255,255,.022), transparent 22%),
+    #060708;
+}
+
+.nkrn-control .nkrn-panel {
+  border-color: rgba(255,255,255,.105) !important;
+  box-shadow:
+    0 28px 90px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.055);
+}
+
+.nkrn-control button,
+.nkrn-control a {
+  transition-duration: 160ms;
+}
+
+.nkrn-control button:focus-visible,
+.nkrn-control a:focus-visible,
+.nkrn-control input:focus-visible,
+.nkrn-control textarea:focus-visible,
+.nkrn-control select:focus-visible {
+  outline: 2px solid rgba(231,180,43,.65);
+  outline-offset: 2px;
+}
+
+.nkrn-control .nkrn-input,
+.nkrn-control .nkrn-select,
+.nkrn-control textarea {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+@media (max-width: 640px) {
+  .nkrn-control button {
+    min-height: 44px;
+  }
+}

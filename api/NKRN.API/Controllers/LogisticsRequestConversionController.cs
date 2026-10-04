@@ -21,10 +21,10 @@ namespace NKRN.API.Controllers
         private static readonly HashSet<string> AllowedPriorities =
             new(StringComparer.OrdinalIgnoreCase)
             {
-                "P1",
-                "P2",
-                "P3",
-                "P4"
+                "Low",
+                "Medium",
+                "High",
+                "Critical"
             };
 
         private static readonly HashSet<string> FinalRequestStatuses =
@@ -32,6 +32,7 @@ namespace NKRN.API.Controllers
             {
                 "Converted",
                 "Completed",
+                "Done",
                 "Cancelled",
                 "Declined"
             };
@@ -77,7 +78,7 @@ namespace NKRN.API.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Priority must be P1, P2, P3 or P4."
+                    message = "Prioriteit moet Low, Medium, High of Critical wees."
                 });
             }
 
@@ -172,7 +173,7 @@ namespace NKRN.API.Controllers
                         sourceRequest.RequestedByUserID,
 
                     Priority =
-                        priority,
+                        NkrnRequestRules.ToLegacyTaskPriority(priority),
 
                     ResponsibleUserID =
                         null,
@@ -250,7 +251,8 @@ namespace NKRN.API.Controllers
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
                         UPDATE dbo.LogisticsRequests
                         SET
-                            Status = 'Converted',
+                            Status = 'Busy',
+                            Priority = {priority},
                             ManagerNotes = {managerNotes},
                             ReviewedByUserID = {userID.Value},
                             ReviewedDate = SYSDATETIME(),

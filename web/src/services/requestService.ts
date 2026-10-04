@@ -24,11 +24,13 @@ export interface RequesterOption {
 }
 
 export interface CreateRequestInput {
-    title: string;
+    title?: string;
     description: string;
     priority: string;
     categoryID: number;
     requestedForUserID?: number;
+    useAi?: boolean;
+    aiSessionID?: string | null;
 }
 
 export class RequestSubmissionError extends Error {

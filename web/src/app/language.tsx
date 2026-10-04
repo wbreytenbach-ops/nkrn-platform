@@ -149,7 +149,7 @@ const translations: readonly TranslationEntry[] = [
     { en: "Coordination", af: "Koördinering" },
     { en: "Transport", af: "Vervoer" },
     { en: "Curriculum", af: "Kurrikulum" },
-    { en: "Funksieversorging", af: "Funksieversorging" },
+    { en: "Event Support", af: "Funksieversorging" },
     { en: "Logistics", af: "Logistiek" },
     { en: "Logistics module", af: "Logistiekmodule" },
     { en: "Logistics is ready for operational work.", af: "Logistiek is gereed vir operasionele werk." },
@@ -170,6 +170,145 @@ const translations: readonly TranslationEntry[] = [
     { en: "IT Desk and Logistics are live. Additional modules will appear here as they are released.", af: "IT-ondersteuning en Logistiek is aktief. Verdere modules sal hier verskyn soos dit vrygestel word." },
     { en: "Laerskool Tygerpoort's secure school operations platform for IT support, logistics and administration.", af: "Laerskool Tygerpoort se veilige skoolbedryfsplatform vir IT-ondersteuning, logistiek en administrasie." },
 
+    // FINAL RELEASE: Home + Event Support
+    // Complete-phrase translations only. No arbitrary word substitution.
+    { en: "Main navigation", af: "Hoofnavigasie" },
+    { en: "Your school. Your workspace.", af: "Jou skool. Jou werksruimte." },
+    { en: "Every day's work,", af: "Elke dag se werk," },
+    { en: "in one place.", af: "op een plek." },
+    { en: "Welcome,", af: "Welkom," },
+    { en: ". Choose a module to get started.", af: ". Kies ’n module om aan die gang te kom." },
+    { en: "3 active modules · 2 future modules", af: "3 aktiewe modules · 2 toekomstige modules" },
+    { en: "In operation", af: "In werking" },
+    { en: "Support", af: "Ondersteuning" },
+    { en: "School operations", af: "Skoolbedryf" },
+    { en: "Event preparation", af: "Funksievoorbereiding" },
+    { en: "Future module", af: "Toekomstige module" },
+    { en: "Report technical problems and track your support requests.", af: "Meld tegniese probleme aan en volg jou ondersteuningsversoeke." },
+    { en: "Requests, activities, maintenance, venues and the daily work plan.", af: "Versoeke, aktiwiteite, instandhouding, lokale en die daaglikse werkplan." },
+    { en: "Prepare events: catering, table setting and supplies.", af: "Berei funksies voor: versorging, tafeldekking en benodigdhede." },
+    { en: "Transport and travel planning.", af: "Vervoer en reisbeplanning." },
+    { en: "Curriculum and teaching planning.", af: "Kurrikulum en onderrigbeplanning." },
+    { en: "Open →", af: "Maak oop →" },
+    { en: "Future modules", af: "Toekomstige modules" },
+    { en: "Staff member", af: "Personeellid" },
+    { en: "Administrator", af: "Administrateur" },
+    { en: "Technician", af: "Tegnikus" },
+
+    // Event Support - navigation and page shell
+    { en: "Event Support", af: "Funksieversorging" },
+    { en: "NKRN · In operation", af: "NKRN · In werking" },
+    { en: "Arrange supplies for an event quickly and simply. NKRN uses your profile automatically.", af: "Reël voorraad vir ’n funksie vinnig en eenvoudig. NKRN gebruik jou profiel outomaties." },
+    { en: "Supplies must be requested at least three working days before the event. Borrowed items must be cleaned and returned, and damage or breakages must be reported.", af: "Voorraad moet minstens drie werksdae voor die funksie aangevra word. Geleende items moet skoongemaak en terugbesorg word, en skade of breuke moet aangemeld word." },
+    { en: "Event", af: "Funksie" },
+    { en: "Supplies", af: "Voorraad" },
+    { en: "Confirm", af: "Bevestig" },
+    { en: "Step 1", af: "Stap 1" },
+    { en: "Step 2", af: "Stap 2" },
+    { en: "Step 3", af: "Stap 3" },
+    { en: "Event details", af: "Funksiebesonderhede" },
+    { en: "We only ask for what NKRN does not already know about you.", af: "Ons vra net wat NKRN nie reeds van jou weet nie." },
+    { en: "Date required", af: "Datum benodig" },
+    { en: "Venue", af: "Lokaal" },
+    { en: "Choose a venue", af: "Kies ’n lokaal" },
+    { en: "e.g. Grade 7 farewell", af: "bv. Graad 7-afskeid" },
+    { en: "Number of people", af: "Aantal persone" },
+    { en: "e.g. 120", af: "bv. 120" },
+    { en: "Other venue", af: "Ander lokaal" },
+    { en: "Specify the venue", af: "Spesifiseer die lokaal" },
+    { en: "This date is within three working days. The request can still be submitted for administrative confirmation.", af: "Hierdie datum is binne drie werksdae. Die versoek kan steeds ingedien word vir administratiewe bevestiging." },
+    { en: "What do you need?", af: "Wat benodig jy?" },
+    { en: "Choose a section. Only those supplies are shown on screen.", af: "Kies ’n afdeling. Net daardie voorraad word op die skerm gewys." },
+    { en: "Tablecloths", af: "Tafeldoeke" },
+    { en: "Tablecloths & decor", af: "Tafeldoeke & versiering" },
+    { en: "Tableware", af: "Eetgerei" },
+    { en: "Crockery & cutlery", af: "Breekware & eetgerei" },
+    { en: "Serving", af: "Opdien" },
+    { en: "Serving supplies", af: "Opdieningsvoorraad" },
+    { en: "Other item", af: "Ander item" },
+    { en: "No supplies selected yet.", af: "Nog geen voorraad gekies nie." },
+    { en: "More than the recorded stock for one or more items.", af: "Meer as aangetekende voorraad by een of meer items." },
+    { en: "Review request", af: "Kontroleer versoek" },
+    { en: "Review only the information that will be sent.", af: "Kontroleer net die inligting wat gestuur gaan word." },
+    { en: "Submitted by", af: "Ingedien deur" },
+    { en: "Profile", af: "Profiel" },
+    { en: "Name and email are automatically linked to the request.", af: "Naam en e-pos word outomaties aan die versoek gekoppel." },
+    { en: "Selected supplies", af: "Gekose voorraad" },
+    { en: "Anything else? (optional)", af: "Enigiets anders? (opsioneel)" },
+    { en: "Only if there is something the administrator should know.", af: "Slegs indien daar iets is wat die administrateur moet weet." },
+    { en: "I confirm that borrowed supplies will be cleaned and returned as agreed, and that any damage or breakages will be reported.", af: "Ek bevestig dat die geleende voorraad skoongemaak en volgens afspraak terugbesorg sal word, en dat enige skade of breuke aangemeld sal word." },
+    { en: "Submit request", af: "Dien versoek in" },
+    { en: "Submitting…", af: "Besig om in te dien…" },
+    { en: "History", af: "Geskiedenis" },
+    { en: "Hide", af: "Versteek" },
+    { en: "Show", af: "Wys" },
+    { en: "No requests yet.", af: "Nog geen versoeke nie." },
+    { en: "Module administration", af: "Module-administrasie" },
+    { en: "All Event Support requests", af: "Alle Funksieversorging-versoeke" },
+    { en: "No requests to show.", af: "Geen versoeke om te wys nie." },
+    { en: "Laerskool Tygerpoort · Event Support", af: "Laerskool Tygerpoort · Funksieversorging" },
+    { en: "Quantity will be confirmed", af: "Hoeveelheid word bevestig" },
+    { en: "Quantity is automatically determined by the number of people attending the event.", af: "Hoeveelheid word outomaties bepaal deur die persone wat die funksie bywoon." },
+    { en: "Submitted within three working days.", af: "Binne drie werksdae ingedien." },
+    { en: "Notification:", af: "Kennisgewing:" },
+    { en: "Needed", af: "Benodig" },
+    { en: "Recorded", af: "Aangeteken" },
+    { en: "People", af: "Persone" },
+    { en: "In review", af: "Word hanteer" },
+    { en: "Not approved", af: "Nie goedgekeur nie" },
+
+    // Event Support validation / feedback
+    { en: "Please complete the date, event, venue and number of people.", af: "Voltooi asseblief die datum, funksie, lokaal en aantal persone." },
+    { en: "Please specify the other venue.", af: "Spesifiseer asseblief die ander lokaal." },
+    { en: "Select at least one supply item.", af: "Kies minstens een voorraaditem." },
+    { en: "Please confirm the return conditions.", af: "Bevestig asseblief die terugbesorgingsvoorwaardes." },
+    { en: "The request could not be submitted.", af: "Versoek kon nie ingedien word nie." },
+
+    // Event Support venues
+    { en: "Hall", af: "Saal" },
+    { en: "Panthera (upper lounge)", af: "Panthera (losie bo)" },
+    { en: "Panthera (lower level)", af: "Panthera (onder)" },
+    { en: "Classrooms", af: "Klaskamers" },
+    { en: "Staff room", af: "Personeelkamer" },
+    { en: "Other", af: "Ander" },
+
+    // Event Support stock items
+    { en: "Black tablecloths", af: "Swart tafeldoeke" },
+    { en: "Tygerpoort tablecloths", af: "Tygerpoort tafeldoeke" },
+    { en: "Black stretch tablecloths (marketing)", af: "Swart spantafeldoeke (bemarking)" },
+    { en: "Red-and-white striped tablecloths (marketing)", af: "Rooi-en-wit gestreepte tafeldoeke (bemarking)" },
+    { en: "Large plates - grey", af: "Groot borde - grys" },
+    { en: "Small plates - grey", af: "Kleinbordjies - grys" },
+    { en: "Soup/dessert bowls - grey", af: "Sop-/poedingbakkies - grys" },
+    { en: "Large plates - white", af: "Groot borde - wit" },
+    { en: "Small plates - white", af: "Kleinbordjies - wit" },
+    { en: "Soup/dessert bowls - white", af: "Sop-/poedingbakkies - wit" },
+    { en: "Glasses - gin", af: "Glase - gin" },
+    { en: "Glasses - soft drink", af: "Glase - koeldrank" },
+    { en: "Glasses - wine", af: "Glase - wyn" },
+    { en: "Saucers - white", af: "Pierings - wit" },
+    { en: "Cups - white", af: "Koppies - wit" },
+    { en: "Coffee mugs - white", af: "Koffiebekers - wit" },
+    { en: "Coffee mugs with crest - white", af: "Koffiebekers met wapen - wit" },
+    { en: "Coffee mugs - grey", af: "Koffiebekers - grys" },
+    { en: "Knives - silver", af: "Messe - silwer" },
+    { en: "Forks - silver", af: "Vurke - silwer" },
+    { en: "Dessert spoons - silver", af: "Nagereglepels - silwer" },
+    { en: "Teaspoons - silver", af: "Teelepels - silwer" },
+    { en: "Cups - without crest", af: "Bekers - sonder wapen" },
+    { en: "Large flasks - hot", af: "Drukflesse groot - warm" },
+    { en: "Small flasks - hot", af: "Drukflesse klein - warm" },
+    { en: "Wooden boards - serving", af: "Houtborde - uitpak" },
+    { en: "Serving dishes - silver", af: "Opskepbakke - silwer" },
+    { en: "Serving dishes - white", af: "Opskepbakke - wit" },
+    { en: "Serving spoons - silver", af: "Opskeplepels - silwer" },
+    { en: "Sugar bowls - white", af: "Suikerpotte - wit" },
+    { en: "Kettles - steel", af: "Teeketels - staal" },
+    { en: "Urn - hot", af: "Urn - warm" },
+    { en: "Urn - cold", af: "Urn - koud" },
+    { en: "Hot trays", af: "Warmskinkborde / hot trays" },
+    { en: "Ice buckets / ice trays", af: "Yshouers / ysbakke" },
+    { en: "Flower pots (school use only)", af: "Blompotte (slegs vir skoolgebruik)" },
     // IT requests, Admin and Tech
     { en: "IT Request", af: "IT-versoek" },
     { en: "IT support", af: "IT-ondersteuning" },
@@ -396,7 +535,6 @@ const translations: readonly TranslationEntry[] = [
     { en: "Tasks & Maintenance", af: "Take en instandhouding" },
     { en: "Operational Task Register", af: "Operasionele taakregister" },
     { en: "Showing", af: "Wys" },
-    { en: "of", af: "van" },
     { en: "tasks", af: "take" },
     { en: "All departments", af: "Alle departemente" },
     { en: "All priorities", af: "Alle prioriteite" },
@@ -634,6 +772,364 @@ const translations: readonly TranslationEntry[] = [
     { en: "Add the important details. Keep it short and clear.", af: "Voeg die belangrike besonderhede by. Hou dit kort en duidelik." },
     { en: "Back to NKRN", af: "Terug na NKRN" },
     { en: "Your workspace is opening…", af: "Jou werkruimte word oopgemaak…" },
+
+    { en: "Sending / confirmation required", af: "Besig om te stuur / bevestiging nodig" },
+    { en: "Failed - review and try again", af: "Misluk - hersien en probeer weer" },
+    // NKRN FINAL PREMIUM LOGISTICS COPY
+    { en: "NKRN \u00b7 Logistics", af: "NKRN \u00b7 Logistiek" },
+    { en: "Laerskool Tygerpoort \u00b7 Logistics", af: "Laerskool Tygerpoort \u00b7 Logistiek" },
+    { en: "Your Logistics portal is loading...", af: "Jou Logistics-portaal laai\u2026" },
+    { en: "Your workspace is opening...", af: "Jou werkruimte word oopgemaak\u2026" },
+    { en: "Staff portal", af: "Personeelportaal" },
+    { en: "Welcome,", af: "Welkom," },
+    { en: ". Request assistance, check venues and track progress.", af: ". Versoek hulp, kontroleer lokale en volg vordering." },
+    { en: "Home", af: "Tuis" },
+    { en: "Log out", af: "Meld af" },
+    { en: "Overview", af: "Oorsig" },
+    { en: "My requests", af: "My versoeke" },
+    { en: "Venue bookings", af: "Lokaalbesprekings" },
+    { en: "School map", af: "Skoolkaart" },
+    { en: "Logistics: requests and feedback", af: "Logistiek: Versoeke en terugvoer" },
+    { en: "How can the Logistics team help you?", af: "Waarmee kan die Logistics-span jou help?" },
+    { en: "Submit one short request and NKRN will keep the request, venue information and progress together.", af: "Dien een kort versoek in. NKRN hou die versoek, lokaal-inligting en vordering bymekaar." },
+    { en: "New request", af: "Nuwe versoek" },
+    { en: "Request support", af: "Versoek ondersteuning" },
+    { en: "Event / Activity", af: "Funksie / Aktiwiteit" },
+    { en: "Event support", af: "Funksieondersteuning" },
+    { en: "Venues, tables, chairs, gazebos and other setup.", af: "Lokale, tafels, stoele, gazebo\u2019s en ander opstelling." },
+    { en: "Maintenance", af: "Instandhouding" },
+    { en: "Report a problem", af: "Meld \u2019n probleem aan" },
+    { en: "Repair, replacement, furniture or facility issues.", af: "Herstel, vervanging, meubels of fasiliteitsprobleme." },
+    { en: "General", af: "Algemeen" },
+    { en: "Other support", af: "Ander ondersteuning" },
+    { en: "Any other operational support.", af: "Enige ander bedryfsondersteuning." },
+    { en: "Active requests", af: "Aktiewe versoeke" },
+    { en: "You have no active Logistics requests.", af: "Jy het geen aktiewe Logistics-versoeke nie." },
+    { en: "Facilities", af: "Fasiliteite" },
+    { en: "Upcoming venue bookings", af: "Komende lokaalbesprekings" },
+    { en: "See all", af: "Sien alles" },
+    { en: "No upcoming venue bookings.", af: "Geen komende lokaalbesprekings nie." },
+    { en: "My Logistics requests", af: "My Logistics-versoeke" },
+    { en: "Request history", af: "Versoekgeskiedenis" },
+    { en: "Logistics team", af: "Logistics-span" },
+    { en: "Cancel request", af: "Kanselleer versoek" },
+    { en: "No Logistics requests have been submitted yet.", af: "Nog geen Logistics-versoeke ingedien nie." },
+    { en: "Venue availability", af: "Lokaalbeskikbaarheid" },
+    { en: "Upcoming bookings", af: "Komende besprekings" },
+    { en: "Teachers can see confirmed and pending venue use before submitting an event request.", af: "Onderwysers kan bevestigde en hangende lokaalgebruik sien voordat \u2019n geleentheidsversoek ingedien word." },
+    { en: "No venue bookings recorded.", af: "Geen lokaalbesprekings aangeteken nie." },
+    { en: "Locations and venues", af: "Ligging en lokale" },
+    { en: "Select a confirmed NKRN location to see its bookings. The detailed campus SVG can later plug into these same Location IDs.", af: "Kies \u2019n bevestigde NKRN-ligging om die besprekings te sien. Die gedetailleerde kampus-SVG kan later aan dieselfde Ligging-ID\u2019s gekoppel word." },
+    { en: "Bookable venue", af: "Bespreekbare lokaal" },
+    { en: "School location", af: "Skoolligging" },
+    { en: "Selected location", af: "Gekose ligging" },
+    { en: "No upcoming bookings.", af: "Geen komende besprekings nie." },
+    { en: "Request this venue", af: "Versoek hierdie lokaal" },
+    { en: "Report an issue here", af: "Meld \u2019n probleem hier aan" },
+    { en: "Choose a location on the left to see details.", af: "Kies \u2019n ligging links om besonderhede te sien." },
+    { en: "New Logistics request", af: "Nuwe Logistics-versoek" },
+    { en: "How can we help?", af: "Hoe kan ons help?" },
+    { en: "Request steps", af: "Versoekstappe" },
+    { en: "Request type", af: "Soort versoek" },
+    { en: "Details", af: "Besonderhede" },
+    { en: "Confirm", af: "Bevestig" },
+    { en: "How can Logistics help?", af: "Waarmee kan Logistics help?" },
+    { en: "Venue, time and equipment", af: "Lokaal, tyd en toerusting" },
+    { en: "Something needs to be repaired or replaced", af: "Iets moet herstel of vervang word" },
+    { en: "Any other logistics support", af: "Enige ander logistieke ondersteuning" },
+    { en: "Event or activity details", af: "Funksie- of aktiwiteitsbesonderhede" },
+    { en: "What needs attention?", af: "Wat benodig aandag?" },
+    { en: "What do you need?", af: "Wat benodig jy?" },
+    { en: "Your name, email, submission date, internal status and priority are handled automatically by NKRN.", af: "Jou naam, e-pos, datum van indiening, interne status en prioriteit word outomaties deur NKRN hanteer." },
+    { en: "Activity category", af: "Aktiwiteitskategorie" },
+    { en: "What are you arranging and what should Logistics know?", af: "Wat re\u00ebl jy en wat moet Logistics weet?" },
+    { en: "What is wrong or what needs to be done?", af: "Wat is fout of wat moet gedoen word?" },
+    { en: "e.g. Grade 5 parent evening. We need the hall ready before 17:30.", af: "bv. Graad 5-oueraand. Ons benodig die saal gereed voor 17:30." },
+    { en: "e.g. The window in Grade 5A does not close and needs to be checked.", af: "bv. Die venster in Graad 5A sluit nie en moet nagegaan word." },
+    { en: "Briefly describe what you need.", af: "Beskryf kortliks wat jy benodig." },
+    { en: "Venue / location", af: "Lokaal / ligging" },
+    { en: "(if applicable)", af: "(indien van toepassing)" },
+    { en: "Select a location...", af: "Kies \u2019n ligging\u2026" },
+    { en: "Or type a classroom / area not listed above", af: "Of tik \u2019n klaskamer / gebied wat nie op die lys is nie" },
+    { en: "Date", af: "Datum" },
+    { en: "Start time", af: "Begintyd" },
+    { en: "End time", af: "Eindtyd" },
+    { en: "NKRN can check the venue against existing bookings.", af: "NKRN kan die lokaal teen bestaande besprekings kontroleer." },
+    { en: "Checking...", af: "Besig om te kontroleer\u2026" },
+    { en: "Check", af: "Kontroleer" },
+    { en: "Cleanup is required the next morning", af: "Opruiming word die volgende oggend benodig" },
+    { en: "Required equipment", af: "Benodigde toerusting" },
+    { en: "(optional)", af: "(opsioneel)" },
+    { en: "Select an item...", af: "Kies \u2019n item\u2026" },
+    { en: "What should happen?", af: "Wat moet gebeur?" },
+    { en: "Repair", af: "Herstel" },
+    { en: "Replace", af: "Vervang" },
+    { en: "Unsure", af: "Onseker" },
+    { en: "Review request", af: "Kontroleer versoek" },
+    { en: "Review your request", af: "Kontroleer jou versoek" },
+    { en: "Location:", af: "Ligging:" },
+    { en: "Category:", af: "Kategorie:" },
+    { en: "When:", af: "Wanneer:" },
+    { en: "Cleanup next morning:", af: "Opruiming volgende oggend:" },
+    { en: "Yes", af: "Ja" },
+    { en: "No", af: "Nee" },
+    { en: "Equipment:", af: "Toerusting:" },
+    { en: "Attention:", af: "Aandag:" },
+    { en: "Not selected", af: "Nie gekies nie" },
+    { en: "Submitted by", af: "Ingedien deur" },
+    { en: "NKRN automatically links your identity and submission time. The Logistics team determines internal priority, status and assignment.", af: "NKRN koppel jou identiteit en die indieningstyd outomaties. Die Logistics-span bepaal interne prioriteit, status en toewysing." },
+    { en: "Edit", af: "Wysig" },
+    { en: "Submitting...", af: "Besig om in te dien\u2026" },
+    { en: "Submit Logistics request", af: "Dien Logistics-versoek in" },
+    { en: "Select a venue, date, start time and end time first.", af: "Kies eers \u2019n lokaal, datum, begintyd en eindtyd." },
+    { en: "Venue availability could not be checked.", af: "Lokaalbeskikbaarheid kon nie nagegaan word nie." },
+    { en: "The venue is available for this time.", af: "Die lokaal is beskikbaar vir hierdie tyd." },
+    { en: "The venue is already booked for this time.", af: "Die lokaal is reeds vir hierdie tyd bespreek." },
+    { en: "Briefly describe what is wrong or what needs attention.", af: "Beskryf kortliks wat fout is of wat aandag benodig." },
+    { en: "Briefly describe the event or activity and what is needed.", af: "Beskryf kortliks die funksie of aktiwiteit en wat benodig word." },
+    { en: "Briefly describe how Logistics can help.", af: "Beskryf kortliks waarmee Logistics kan help." },
+    { en: "Enter the activity date, start and end time.", af: "Vul die aktiwiteitsdatum, begin- en eindtyd in." },
+    { en: "The end time must be after the start time.", af: "Die eindtyd moet n\u00e1 die begintyd wees." },
+    { en: "Select what needs attention.", af: "Kies wat aandag benodig." },
+    { en: "The Logistics request could not be submitted.", af: "Die Logistics-versoek kon nie ingedien word nie." },
+    { en: "No location", af: "Geen ligging" },
+    { en: "No location supplied", af: "Geen ligging verskaf nie" },
+    { en: "Unassigned", af: "Nie toegeken nie" },
+    { en: "Staff Requests", af: "Personeelversoeke" },
+    { en: "Logistics Request Inbox", af: "Logistiekversoek-inkassie" },
+    { en: "Review staff submissions before turning approved work into operational tasks.", af: "Hersien personeelindienings voordat goedgekeurde werk in operasionele take omskep word." },
+    { en: "Open requests", af: "Oop versoeke" },
+    { en: "Loading Logistics requests...", af: "Logistiekversoeke laai..." },
+    { en: "No Logistics requests match the current filter.", af: "Geen Logistiekversoeke pas by die huidige filter nie." },
+    { en: "All requests", af: "Alle versoeke" },
+    { en: "Refresh Requests", af: "Verfris versoeke" },
+    { en: "Review", af: "Hersien" },
+    { en: "Manager notes", af: "Bestuursnotas" },
+    { en: "Optional review notes", af: "Opsionele hersieningsnotas" },
+    { en: "Assign work", af: "Ken werk toe" },
+    { en: "Optional work assignment", af: "Opsionele werktoewysing" },
+    { en: "Work plan", af: "Werkplan" },
+    { en: "Job cards", af: "Werkskaarte" },
+    { en: "Workers", af: "Werkers" },
+    { en: "Tasks", af: "Take" },
+    { en: "Daily work plan", af: "Daaglikse werkplan" },
+    { en: "Generate job card", af: "Genereer werkkaart" },
+    { en: "Send job card", af: "Stuur werkkaart" },
+    { en: "Job card history", af: "Werkkaartgeskiedenis" },
+    { en: "Worker management", af: "Werkerbestuur" },
+    { en: "Add worker", af: "Voeg werker by" },
+    { en: "Edit worker", af: "Wysig werker" },
+    { en: "Save worker", af: "Stoor werker" },
+    { en: "Deactivate", af: "Deaktiveer" },
+    { en: "Search tasks...", af: "Soek take..." },
+    { en: "Department", af: "Departement" },
+    { en: "Priority", af: "Prioriteit" },
+    { en: "Responsible", af: "Verantwoordelik" },
+    { en: "Due date", af: "Sperdatum" },
+    { en: "Next action", af: "Volgende aksie" },
+    { en: "Materials required", af: "Benodigde materiaal" },
+    { en: "Manager note", af: "Bestuursnota" },
+    { en: "Include on job card", af: "Sluit op werkkaart in" },
+    { en: "Planned start", af: "Beplande begin" },
+    { en: "Planned end", af: "Beplande einde" },
+    { en: "Area", af: "Gebied" },
+    { en: "Task description", af: "Taakbeskrywing" },
+    { en: "Save changes", af: "Stoor veranderinge" },
+    { en: "Close", af: "Sluit" },
+    { en: "Loading...", af: "Laai..." },
+    { en: "Loading Logistics...", af: "Logistiek laai..." },
+    { en: "Back to NKRN", af: "Terug na NKRN" },
+    // NKRN RELEASE FINAL EXACT COPY
+    { en: "Submit one short request. NKRN keeps the details, venue information and progress in one place.", af: "Dien een kort versoek in. NKRN hou die besonderhede, lokaal-inligting en vordering op een plek." },
+    { en: "Request support", af: "Versoek ondersteuning" },
+    { en: "Event / Activity", af: "Funksie / Aktiwiteit" },
+    { en: "Event support", af: "Funksieondersteuning" },
+    { en: "Venues, tables, chairs, gazebos and other setup.", af: "Lokale, tafels, stoele, gazebo\u2019s en ander opstelling." },
+    { en: "Maintenance", af: "Instandhouding" },
+    { en: "Report a problem", af: "Meld \u2019n probleem aan" },
+    { en: "Repair, replacement, furniture or facility issues.", af: "Herstel, vervanging, meubels of fasiliteitsprobleme." },
+    { en: "General", af: "Algemeen" },
+    { en: "Other support", af: "Ander ondersteuning" },
+    { en: "Any other operational support.", af: "Enige ander bedryfsondersteuning." },
+    { en: "See all", af: "Sien alles" },
+    { en: "No upcoming venue bookings.", af: "Geen komende lokaalbesprekings nie." },
+    { en: "You have no active Logistics requests.", af: "Jy het geen aktiewe Logistics-versoeke nie." },
+    { en: "Logistics: requests and feedback", af: "Logistiek: Versoeke en terugvoer" },
+    { en: "How can the Logistics team help you?", af: "Waarmee kan die Logistics-span jou help?" },
+    { en: "New request", af: "Nuwe versoek" },
+    { en: "My Requests", af: "My versoeke" },
+    { en: "Active requests", af: "Aktiewe versoeke" },
+    { en: "Facilities", af: "Fasiliteite" },
+    { en: "Upcoming venue bookings", af: "Komende lokaalbesprekings" },
+    { en: "Request history", af: "Versoekgeskiedenis" },
+    { en: "Venue bookings", af: "Lokaalbesprekings" },
+    { en: "School map", af: "Skoolkaart" },
+    { en: "Overview", af: "Oorsig" },
+    { en: "Staff portal", af: "Personeelportaal" },
+    { en: "Log out", af: "Meld af" },
+    { en: "Cancel request", af: "Kanselleer versoek" },
+    { en: "Venue availability", af: "Lokaalbeskikbaarheid" },
+    { en: "Upcoming bookings", af: "Komende besprekings" },
+    { en: "Locations and venues", af: "Ligging en lokale" },
+    { en: "Selected location", af: "Gekose ligging" },
+    { en: "Bookable venue", af: "Bespreekbare lokaal" },
+    { en: "School location", af: "Skoolligging" },
+    { en: "New Logistics request", af: "Nuwe Logistics-versoek" },
+    { en: "How can we help?", af: "Hoe kan ons help?" },
+    { en: "Request type", af: "Soort versoek" },
+    { en: "Details", af: "Besonderhede" },
+    { en: "How can Logistics help?", af: "Waarmee kan Logistics help?" },
+    { en: "Venue, time and equipment", af: "Lokaal, tyd en toerusting" },
+    { en: "Something needs to be repaired or replaced", af: "Iets moet herstel of vervang word" },
+    { en: "Any other logistics support", af: "Enige ander logistieke ondersteuning" },
+    { en: "Event or activity details", af: "Funksie- of aktiwiteitsbesonderhede" },
+    { en: "What needs attention?", af: "Wat benodig aandag?" },
+    { en: "What do you need?", af: "Wat benodig jy?" },
+    { en: "Activity category", af: "Aktiwiteitskategorie" },
+    { en: "What are you arranging and what should Logistics know?", af: "Wat re\u00ebl jy en wat moet Logistics weet?" },
+    { en: "What is wrong or what needs to be done?", af: "Wat is fout of wat moet gedoen word?" },
+    { en: "Briefly describe what you need.", af: "Beskryf kortliks wat jy benodig." },
+    { en: "Venue / location", af: "Lokaal / ligging" },
+    { en: "Select a location...", af: "Kies \u2019n ligging\u2026" },
+    { en: "Or type a classroom / area not listed above", af: "Of tik \u2019n klaskamer / gebied wat nie op die lys is nie" },
+    { en: "Start time", af: "Begintyd" },
+    { en: "End time", af: "Eindtyd" },
+    { en: "Cleanup is required the next morning", af: "Opruiming word die volgende oggend benodig" },
+    { en: "Required equipment", af: "Benodigde toerusting" },
+    { en: "Select an item...", af: "Kies \u2019n item\u2026" },
+    { en: "What should happen?", af: "Wat moet gebeur?" },
+    { en: "Review request", af: "Kontroleer versoek" },
+    { en: "Review your request", af: "Kontroleer jou versoek" },
+    { en: "Cleanup next morning:", af: "Opruiming volgende oggend:" },
+    { en: "Equipment:", af: "Toerusting:" },
+    { en: "Attention:", af: "Aandag:" },
+    { en: "Not selected", af: "Nie gekies nie" },
+    { en: "Submitted by", af: "Ingedien deur" },
+    { en: "Submit Logistics request", af: "Dien Logistics-versoek in" },
+    { en: "Staff Requests", af: "Personeelversoeke" },
+    { en: "Logistics Request Inbox", af: "Logistiekversoek-inkassie" },
+    { en: "Open requests", af: "Oop versoeke" },
+    { en: "All requests", af: "Alle versoeke" },
+    { en: "Refresh Requests", af: "Verfris versoeke" },
+    { en: "Manager notes", af: "Bestuursnotas" },
+    { en: "Optional review notes", af: "Opsionele hersieningsnotas" },
+    { en: "Assign work", af: "Ken werk toe" },
+    { en: "Optional work assignment", af: "Opsionele werktoewysing" },
+    { en: "Work plan", af: "Werkplan" },
+    { en: "Job cards", af: "Werkskaarte" },
+    { en: "Workers", af: "Werkers" },
+    { en: "Tasks", af: "Take" },
+    { en: "Daily work plan", af: "Daaglikse werkplan" },
+    { en: "Generate job card", af: "Genereer werkkaart" },
+    { en: "Send job card", af: "Stuur werkkaart" },
+    { en: "Job card history", af: "Werkkaartgeskiedenis" },
+    { en: "Worker management", af: "Werkerbestuur" },
+    { en: "Add worker", af: "Voeg werker by" },
+    { en: "Edit worker", af: "Wysig werker" },
+    { en: "Save worker", af: "Stoor werker" },
+    { en: "Search tasks...", af: "Soek take..." },
+    { en: "Department", af: "Departement" },
+    { en: "Responsible", af: "Verantwoordelik" },
+    { en: "Due date", af: "Sperdatum" },
+    { en: "Next action", af: "Volgende aksie" },
+    { en: "Materials required", af: "Benodigde materiaal" },
+    { en: "Manager note", af: "Bestuursnota" },
+    { en: "Include on job card", af: "Sluit op werkkaart in" },
+    { en: "Planned start", af: "Beplande begin" },
+    { en: "Planned end", af: "Beplande einde" },
+    { en: "Area", af: "Gebied" },
+    { en: "Task description", af: "Taakbeskrywing" },
+    { en: "Administrator", af: "Administrateur" },
+    { en: "IT Control Centre", af: "IT-beheersentrum" },
+    { en: "User management", af: "Gebruikersbestuur" },
+    { en: "Users", af: "Gebruikers" },
+    { en: "Add user", af: "Voeg gebruiker by" },
+    { en: "New user", af: "Nuwe gebruiker" },
+    { en: "Cancel new user", af: "Kanselleer nuwe gebruiker" },
+    { en: "First name", af: "Voornaam" },
+    { en: "Last name", af: "Van" },
+    { en: "Email address", af: "E-posadres" },
+    { en: "Role", af: "Rol" },
+    { en: "Staff member", af: "Personeellid" },
+    { en: "Technician", af: "Tegnikus" },
+    { en: "Technicians", af: "Tegnici" },
+    { en: "Administrators", af: "Administrateurs" },
+    { en: "Edit user", af: "Wysig gebruiker" },
+    { en: "Save user", af: "Stoor gebruiker" },
+    { en: "Deactivate user", af: "Deaktiveer gebruiker" },
+    { en: "All IT requests", af: "Alle IT-versoeke" },
+    { en: "Show completed", af: "Wys afgehandel" },
+    { en: "Hide completed", af: "Versteek afgehandel" },
+    { en: "Export all IT requests", af: "Voer alle IT-versoeke uit" },
+    { en: "Assigned to", af: "Toegeken aan" },
+    { en: "Submitted for", af: "Ingedien vir" },
+    { en: "Created by", af: "Geskep deur" },
+    { en: "Category", af: "Kategorie" },
+    { en: "Comments", af: "Kommentaar" },
+    { en: "Add comment", af: "Voeg kommentaar by" },
+    { en: "Type your comment", af: "Tik jou kommentaar" },
+    { en: "Schedule", af: "Skedule" },
+    { en: "Scheduled start", af: "Beplande begin" },
+    { en: "Scheduled end", af: "Beplande einde" },
+    { en: "Not scheduled yet", af: "Nog nie beplan nie" },
+    { en: "Invalid date", af: "Ongeldige datum" },
+    { en: "There are no requests to export.", af: "Daar is geen versoeke om uit te voer nie." },
+    { en: "First name, last name and email address are required.", af: "Voornaam, van en e-posadres is verpligtend." },
+    { en: "Only @tygies.co.za email addresses are allowed.", af: "Slegs @tygies.co.za-e-posadresse word toegelaat." },
+    { en: "Invalid user role.", af: "Ongeldige gebruikersrol." },
+    { en: "You cannot deactivate your own account.", af: "Jy kan nie jou eie rekening deaktiveer nie." },
+    { en: "Enter your comment first.", af: "Tik eers jou kommentaar in." },
+    { en: "All IT requests have been exported.", af: "Alle IT-versoeke is uitgevoer." },
+    { en: "IT information could not be loaded.", af: "Die IT-inligting kon nie gelaai word nie." },
+    { en: "The requests could not be loaded.", af: "Die versoeke kon nie gelaai word nie." },
+    { en: "The user could not be added.", af: "Die gebruiker kon nie bygevoeg word nie." },
+    { en: "The user could not be deactivated.", af: "Die gebruiker kon nie gedeaktiveer word nie." },
+    { en: "The comment could not be added.", af: "Die kommentaar kon nie bygevoeg word nie." },
+    { en: "Laerskool Tygerpoort \u00b7 IT Report \u00b7 Administrator", af: "Laerskool Tygerpoort \u00b7 IT Report \u00b7 Administrateur" },
+    { en: "Technician Portal", af: "Tegnikusportaal" },
+    { en: "Technician dashboard", af: "Tegnikusportaal" },
+    { en: "The technician portal could not be loaded.", af: "Die tegnikusportaal kon nie gelaai word nie." },
+    { en: "Search requests...", af: "Soek versoeke..." },
+    { en: "All statuses", af: "Alle statusse" },
+    { en: "All priorities", af: "Alle prioriteite" },
+    { en: "Request details", af: "Versoekbesonderhede" },
+    { en: "Save request", af: "Stoor versoek" },
+    { en: "Saving...", af: "Besig om te stoor..." },
+    { en: "Comment", af: "Kommentaar" },
+    { en: "Add Comment", af: "Voeg kommentaar by" },
+    { en: "Loading comments...", af: "Kommentaar laai..." },
+    { en: "No comments yet.", af: "Nog geen kommentaar nie." },
+    { en: "Unknown", af: "Onbekend" },
+    { en: "Unassigned", af: "Nie toegeken nie" },
+    { en: "The request could not be updated. Please try again.", af: "Die versoek kon nie opgedateer word nie. Probeer asseblief weer." },
+    { en: "The comment could not be added.", af: "Die kommentaar kon nie bygevoeg word nie." },
+    { en: "AI Help", af: "AI Hulp" },
+    { en: "AI assistant", af: "AI-assistent" },
+    { en: "Describe the problem", af: "Beskryf die probleem" },
+    { en: "Describe your IT problem", af: "Beskryf jou IT-probleem" },
+    { en: "Tell AI what is happening", af: "Vertel vir AI wat gebeur" },
+    { en: "What is happening?", af: "Wat gebeur?" },
+    { en: "Ask AI", af: "Vra AI" },
+    { en: "Get AI help", af: "Kry AI-hulp" },
+    { en: "Analyse", af: "Ontleed" },
+    { en: "Analyze", af: "Ontleed" },
+    { en: "Analysing...", af: "Besig om te ontleed..." },
+    { en: "Analyzing...", af: "Besig om te ontleed..." },
+    { en: "Thinking...", af: "Dink..." },
+    { en: "Suggested fix", af: "Voorgestelde oplossing" },
+    { en: "Suggested category", af: "Voorgestelde kategorie" },
+    { en: "Suggested priority", af: "Voorgestelde prioriteit" },
+    { en: "Suggested technician", af: "Voorgestelde tegnikus" },
+    { en: "AI recommendation", af: "AI-aanbeveling" },
+    { en: "Try this first", af: "Probeer dit eers" },
+    { en: "Create request", af: "Skep versoek" },
+    { en: "Use suggestion", af: "Gebruik voorstel" },
+    { en: "Clear", af: "Maak skoon" },
+    { en: "Start again", af: "Begin weer" },
+    { en: "AI Help is unavailable right now.", af: "AI Hulp is tans nie beskikbaar nie." },
+    { en: "Unable to get AI help.", af: "Kon nie AI-hulp kry nie." },
+    { en: "You can still submit the request manually.", af: "Jy kan steeds die versoek handmatig indien." },
+    { en: "AI suggestions are advisory. You remain in control of the request.", af: "AI-voorstelle is adviserend. Jy bly in beheer van die versoek." },
 ];
 
 function normalizeKey(value: string): string {
@@ -656,16 +1152,88 @@ for (const entry of allTranslationEntries) {
     afrikaansToEnglish.set(normalizeKey(entry.af), entry.en);
 }
 
-function escapeRegExp(value: string): string {
+/** Translate one complete UI text value while retaining its surrounding whitespace.
+ *
+ * NKRN deliberately uses exact-string translation rather than automatic word or
+ * phrase substitution. Translating fragments inside arbitrary sentences can
+ * produce grammatically incorrect Afrikaans/English and makes the interface feel
+ * machine-translated.
+ *
+ * Dynamic UI sentences should be authored as complete language-specific templates
+ * at the component level.
+ */
+function translateDynamicText(value: string, language: Language): string {
+    const leading = value.match(/^\s*/)?.[0] ?? "";
+    const trailing = value.match(/\s*$/)?.[0] ?? "";
+    const core = value.trim();
+
+    if (!core) return value;
+
+    const apply = (translated: string) => `${leading}${translated}${trailing}`;
+
+    if (language === "en") {
+        let match = core.match(/^Versoek #(\d+) is suksesvol ingedien\.$/i);
+        if (match) return apply(`Request #${match[1]} was submitted successfully.`);
+
+        match = core.match(/^(\d+) item gekies\.$/i);
+        if (match) return apply(`${match[1]} item selected.`);
+
+        match = core.match(/^(\d+) items gekies\.$/i);
+        if (match) return apply(`${match[1]} items selected.`);
+
+        match = core.match(/^(\d+) beskikbaar$/i);
+        if (match) return apply(`${match[1]} available`);
+
+        match = core.match(/^(\d+) benodig$/i);
+        if (match) return apply(`${match[1]} needed`);
+
+        match = core.match(/^(\d+) benodig ·$/i);
+        if (match) return apply(`${match[1]} needed ·`);
+
+        match = core.match(/^·\s*(\d+) aangeteken$/i);
+        if (match) return apply(`· ${match[1]} recorded`);
+
+        match = core.match(/^(\d+) aangeteken$/i);
+        if (match) return apply(`${match[1]} recorded`);
+
+        match = core.match(/^(\d+) persone$/i);
+        if (match) return apply(`${match[1]} people`);
+    } else {
+        let match = core.match(/^Request #(\d+) was submitted successfully\.$/i);
+        if (match) return apply(`Versoek #${match[1]} is suksesvol ingedien.`);
+
+        match = core.match(/^(\d+) item selected\.$/i);
+        if (match) return apply(`${match[1]} item gekies.`);
+
+        match = core.match(/^(\d+) items selected\.$/i);
+        if (match) return apply(`${match[1]} items gekies.`);
+
+        match = core.match(/^(\d+) available$/i);
+        if (match) return apply(`${match[1]} beskikbaar`);
+
+        match = core.match(/^(\d+) needed$/i);
+        if (match) return apply(`${match[1]} benodig`);
+
+        match = core.match(/^(\d+) needed ·$/i);
+        if (match) return apply(`${match[1]} benodig ·`);
+
+        match = core.match(/^·\s*(\d+) recorded$/i);
+        if (match) return apply(`· ${match[1]} aangeteken`);
+
+        match = core.match(/^(\d+) recorded$/i);
+        if (match) return apply(`${match[1]} aangeteken`);
+
+        match = core.match(/^(\d+) people$/i);
+        if (match) return apply(`${match[1]} persone`);
+    }
+
+    return value;
+}
+function escapeKnownPhrase(value: string): string {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/**
- * Build a case-insensitive phrase matcher. The DOM contains both straight
- * and curly punctuation depending on which page produced the text, so the
- * matcher accepts both forms while keeping word boundaries intact.
- */
-function phrasePattern(value: string): RegExp {
+function knownPhrasePattern(value: string): RegExp {
     const source = normalizeKey(value);
     let pattern = "";
 
@@ -674,24 +1242,32 @@ function phrasePattern(value: string): RegExp {
 
         if (/\s/.test(character)) {
             pattern += "\\s+";
-            while (index + 1 < source.length && /\s/.test(source[index + 1])) {
+
+            while (
+                index + 1 < source.length &&
+                /\s/.test(source[index + 1])
+            ) {
                 index += 1;
             }
+
             continue;
         }
 
         if (character === "'") {
-            pattern += "[’‘']";
+            pattern += "[\u2019\u2018']";
             continue;
         }
 
         if (character === '"') {
-            pattern += '[“”"]';
+            pattern += '[\u201c\u201d"]';
             continue;
         }
 
-        if (character === "." && source.slice(index, index + 3) === "...") {
-            pattern += "(?:\\.\\.\\.|…)";
+        if (
+            character === "." &&
+            source.slice(index, index + 3) === "..."
+        ) {
+            pattern += "(?:\\.\\.\\.|\\u2026)";
             index += 2;
             continue;
         }
@@ -701,65 +1277,679 @@ function phrasePattern(value: string): RegExp {
             continue;
         }
 
-        pattern += escapeRegExp(character);
+        pattern += escapeKnownPhrase(character);
     }
 
-    // Prefix/suffix groups preserve punctuation immediately before a phrase
-    // when String.replace invokes the callback.
-    return new RegExp(`(^|[^\\p{L}\\p{N}])(${pattern})(?=$|[^\\p{L}\\p{N}])`, "giu");
+    return new RegExp(
+        `(^|[^\\p{L}\\p{N}])(${pattern})(?=$|[^\\p{L}\\p{N}])`,
+        "giu"
+    );
 }
 
-type CompiledTranslation = {
+type KnownPhrase = {
     pattern: RegExp;
     target: string;
 };
 
-function compilePartialTranslations(sourceLanguage: Language): CompiledTranslation[] {
-    const entries = sourceLanguage === "en"
-        ? allTranslationEntries.map((entry) => ({ source: entry.en, target: entry.af }))
-        : allTranslationEntries.map((entry) => ({ source: entry.af, target: entry.en }));
+function compileKnownPhrases(
+    sourceLanguage: Language
+): KnownPhrase[] {
+    const entries =
+        sourceLanguage === "en"
+            ? allTranslationEntries.map((entry) => ({
+                  source: entry.en,
+                  target: entry.af,
+              }))
+            : allTranslationEntries.map((entry) => ({
+                  source: entry.af,
+                  target: entry.en,
+              }));
 
     const seen = new Set<string>();
+
     return entries
         .filter(({ source, target }) => {
-            const key = `${normalizeKey(source)}\u0000${target}`;
-            if (!source.trim() || normalizeKey(source) === normalizeKey(target) || seen.has(key)) {
+            const normalized = normalizeKey(source);
+            if (!normalized) return false;
+            if (normalized === normalizeKey(target)) return false;
+
+            const words = normalized
+                .split(/\s+/)
+                .filter(Boolean);
+
+            const safeSingleWord =
+                words.length === 1 &&
+                normalized.length >= 4;
+
+            const safePhrase =
+                words.length >= 2;
+
+            if (!safeSingleWord && !safePhrase) {
                 return false;
             }
+
+            const key = `${normalized}\u0000${target}`;
+
+            if (seen.has(key)) {
+                return false;
+            }
+
             seen.add(key);
             return true;
         })
-        .sort((left, right) => normalizeKey(right.source).length - normalizeKey(left.source).length)
-        .map(({ source, target }) => ({ pattern: phrasePattern(source), target }));
+        .sort(
+            (left, right) =>
+                normalizeKey(right.source).length -
+                normalizeKey(left.source).length
+        )
+        .map(({ source, target }) => ({
+            pattern: knownPhrasePattern(source),
+            target,
+        }));
 }
 
-const partialEnglishToAfrikaans = compilePartialTranslations("en");
-const partialAfrikaansToEnglish = compilePartialTranslations("af");
+const knownEnglishToAfrikaans =
+    compileKnownPhrases("en");
 
-/** Translate one complete text value while retaining its surrounding whitespace. */
-export function translateText(value: string, language: Language): string {
+const knownAfrikaansToEnglish =
+    compileKnownPhrases("af");
+
+function translateKnownPhrases(
+    value: string,
+    language: Language
+): string {
+    void language;
+    return value;
+}
+void knownEnglishToAfrikaans;
+void knownAfrikaansToEnglish;
+void translateKnownPhrases;
+
+// NKRN PLATFORM FINAL I18N BEGIN
+const platformFinalTranslations = [
+    { en: "Home", af: "Tuis" },
+    { en: "Back", af: "Terug" },
+    { en: "Close", af: "Sluit" },
+    { en: "Cancel", af: "Kanselleer" },
+    { en: "Save", af: "Stoor" },
+    { en: "Save changes", af: "Stoor veranderinge" },
+    { en: "Edit", af: "Wysig" },
+    { en: "Delete", af: "Verwyder" },
+    { en: "Deactivate", af: "Deaktiveer" },
+    { en: "Refresh", af: "Verfris" },
+    { en: "Continue", af: "Gaan voort" },
+    { en: "Confirm", af: "Bevestig" },
+    { en: "Review", af: "Hersien" },
+    { en: "Submit", af: "Dien in" },
+    { en: "Search", af: "Soek" },
+    { en: "Show", af: "Wys" },
+    { en: "Hide", af: "Versteek" },
+    { en: "All", af: "Alles" },
+    { en: "None", af: "Geen" },
+    { en: "Optional", af: "Opsioneel" },
+    { en: "Required", af: "Verpligtend" },
+    { en: "Yes", af: "Ja" },
+    { en: "No", af: "Nee" },
+    { en: "Loading...", af: "Laai..." },
+    { en: "Loading\u2026", af: "Laai\u2026" },
+    { en: "Saving...", af: "Besig om te stoor..." },
+    { en: "Saving\u2026", af: "Besig om te stoor\u2026" },
+    { en: "Submitting...", af: "Besig om in te dien..." },
+    { en: "Submitting\u2026", af: "Besig om in te dien\u2026" },
+    { en: "Log out", af: "Meld af" },
+    { en: "Signed in", af: "Aangemeld" },
+    { en: "English", af: "Engels" },
+    { en: "Afrikaans", af: "Afrikaans" },
+    { en: "Language", af: "Taal" },
+    { en: "Name", af: "Naam" },
+    { en: "First name", af: "Voornaam" },
+    { en: "Last name", af: "Van" },
+    { en: "Email", af: "E-pos" },
+    { en: "Email address", af: "E-posadres" },
+    { en: "Role", af: "Rol" },
+    { en: "Actions", af: "Aksies" },
+    { en: "Status", af: "Status" },
+    { en: "Priority", af: "Prioriteit" },
+    { en: "Category", af: "Kategorie" },
+    { en: "Date", af: "Datum" },
+    { en: "Time", af: "Tyd" },
+    { en: "Description", af: "Beskrywing" },
+    { en: "Title", af: "Titel" },
+    { en: "Comments", af: "Kommentaar" },
+    { en: "Comment", af: "Kommentaar" },
+    { en: "User", af: "Gebruiker" },
+    { en: "Users", af: "Gebruikers" },
+    { en: "Unknown", af: "Onbekend" },
+    { en: "Unassigned", af: "Nie toegeken nie" },
+    { en: "Logged", af: "Aangemeld" },
+    { en: "Busy", af: "Besig" },
+    { en: "Done", af: "Afgehandel" },
+    { en: "Completed", af: "Afgehandel" },
+    { en: "Low", af: "Laag" },
+    { en: "Medium", af: "Medium" },
+    { en: "High", af: "Hoog" },
+    { en: "Critical", af: "Kritiek" },
+    { en: "Pending", af: "Hangende" },
+    { en: "Open", af: "Oop" },
+    { en: "Request", af: "Versoek" },
+    { en: "Requests", af: "Versoeke" },
+    { en: "requests", af: "versoeke" },
+    { en: "Technician", af: "Tegnikus" },
+    { en: "Technicians", af: "Tegnici" },
+    { en: "technicians", af: "tegnici" },
+    { en: "Administrator", af: "Administrateur" },
+    { en: "Administrators", af: "Administrateurs" },
+    { en: "administrators", af: "administrateurs" },
+    { en: "Staff member", af: "Personeellid" },
+    { en: "Staff", af: "Personeel" },
+    { en: "Showing", af: "Wys" },
+    { en: "of", af: "van" },
+    { en: "total users", af: "totale gebruikers" },
+    { en: "request", af: "versoek" },
+    { en: "comment", af: "kommentaar" },
+    { en: "comments", af: "kommentaar" },
+    { en: "Request #", af: "Versoek #" },
+    { en: "User #", af: "Gebruiker #" },
+    { en: "Your school. Your workspace.", af: "Jou skool. Jou werksruimte." },
+    { en: "Every day's work, in one place.", af: "Elke dag se werk, op een plek." },
+    { en: "Choose a module to get started.", af: "Kies \u2019n module om aan die gang te kom." },
+    { en: "3 active modules \u00b7 2 future modules", af: "3 aktiewe modules \u00b7 2 toekomstige modules" },
+    { en: "Active modules", af: "Aktiewe modules" },
+    { en: "Future modules", af: "Toekomstige modules" },
+    { en: "In operation", af: "In werking" },
+    { en: "Coming soon", af: "Binnekort" },
+    { en: "Open module", af: "Maak oop" },
+    { en: "Support", af: "Ondersteuning" },
+    { en: "School operations", af: "Skoolbedryf" },
+    { en: "Future module", af: "Toekomstige module" },
+    { en: "Event Support", af: "Funksieversorging" },
+    { en: "Transport", af: "Vervoer" },
+    { en: "Curriculum", af: "Kurrikulum" },
+    { en: "Technical support requests and request tracking.", af: "Meld tegniese probleme aan en volg jou ondersteuningsversoeke." },
+    { en: "Requests, activities, maintenance, venues and the daily work plan.", af: "Versoeke, aktiwiteite, instandhouding, lokale en die daaglikse werkplan." },
+    { en: "Prepare events: catering, table setup and supplies.", af: "Berei funksies voor: versorging, tafeldekking en benodigdhede." },
+    { en: "Transport and travel planning.", af: "Vervoer en reisbeplanning." },
+    { en: "Curriculum and teaching planning.", af: "Kurrikulum en onderrigbeplanning." },
+    { en: "Workspace loading...", af: "Werksruimte laai..." },
+    { en: "Workspace loading\u2026", af: "Werksruimte laai\u2026" },
+    { en: "School operations platform", af: "Skoolbedryfsplatform" },
+    { en: "Welcome to NKRN", af: "Welkom by NKRN" },
+    { en: "Sign in", af: "Meld aan" },
+    { en: "Continue to NKRN", af: "Gaan voort na NKRN" },
+    { en: "Staff email", af: "Personeel-e-pos" },
+    { en: "Enter your email address", af: "Voer jou e-posadres in" },
+    { en: "Use your @tygies.co.za email address.", af: "Gebruik jou @tygies.co.za-e-posadres." },
+    { en: "Signing in...", af: "Besig om aan te meld..." },
+    { en: "Signing in\u2026", af: "Besig om aan te meld\u2026" },
+    { en: "Unable to sign in.", af: "Kon nie aanmeld nie." },
+    { en: "IT Request", af: "IT-versoek" },
+    { en: "IT requests", af: "IT-versoeke" },
+    { en: "IT Requests", af: "IT-versoeke" },
+    { en: "IT support", af: "IT-ondersteuning" },
+    { en: "Technician portal", af: "Tegnikusportaal" },
+    { en: "Administration", af: "Administrasie" },
+    { en: "My requests", af: "My versoeke" },
+    { en: "Submit a technical support request.", af: "Dien \u2019n tegniese ondersteuningsversoek in." },
+    { en: "Your account is loading...", af: "Jou rekening laai\u2026" },
+    { en: "Your account is loading\u2026", af: "Jou rekening laai\u2026" },
+    { en: "Your requests could not be loaded.", af: "Jou versoeke kon nie gelaai word nie." },
+    { en: "The request categories could not be loaded.", af: "Die versoekkategorie\u00eb kon nie gelaai word nie." },
+    { en: "Choose a category before submitting the request.", af: "Kies \u2019n kategorie voordat jy die versoek indien." },
+    { en: "Please select an active requester.", af: "Kies asseblief \u2019n aktiewe versoeker." },
+    { en: "Request submitted successfully.", af: "Versoek suksesvol ingedien." },
+    { en: "Request submitted for", af: "Versoek ingedien vir" },
+    { en: "Only admins may log requests for another person.", af: "Slegs administrateurs mag versoeke namens \u2019n ander persoon aanmeld." },
+    { en: "Check the request details and select an active requester with a valid email address.", af: "Kontroleer die versoekbesonderhede en kies \u2019n aktiewe versoeker met \u2019n geldige e-posadres." },
+    { en: "Something went wrong submitting your request.", af: "Iets het verkeerd geloop met die indiening van jou versoek." },
+    { en: "Awaiting IT support", af: "Wag op IT-ondersteuning" },
+    { en: "Pending IT Desk", af: "Wag op IT-ondersteuning" },
+    { en: "Requester", af: "Versoeker" },
+    { en: "Logged by", af: "Aangemeld deur" },
+    { en: "Submitted for", af: "Ingedien vir" },
+    { en: "Created by", af: "Geskep deur" },
+    { en: "Submitted", af: "Ingedien" },
+    { en: "Submitted on", af: "Aangemeld op" },
+    { en: "Assigned to", af: "Toegewys aan" },
+    { en: "No category", af: "Geen kategorie" },
+    { en: "No active requests.", af: "Geen aktiewe versoeke nie." },
+    { en: "Show completed requests", af: "Wys afgehandelde versoeke" },
+    { en: "Hide completed requests", af: "Versteek afgehandelde versoeke" },
+    { en: "Administration portal is loading...", af: "Administrasieportaal laai\u2026" },
+    { en: "Administration portal is loading\u2026", af: "Administrasieportaal laai\u2026" },
+    { en: "IT Control Centre", af: "IT-beheersentrum" },
+    { en: "Awaiting attention", af: "Wag op aandag" },
+    { en: "Currently being handled", af: "Word tans hanteer" },
+    { en: "Completed requests", af: "Afgehandelde versoeke" },
+    { en: "High-priority requests", af: "Ho\u00ebprioriteitsversoeke" },
+    { en: "Scheduled", af: "Beplan" },
+    { en: "Calendar appointments", af: "Kalenderafsprake" },
+    { en: "System overview", af: "Stelseloorsig" },
+    { en: "Add user", af: "Voeg gebruiker by" },
+    { en: "+ Add user", af: "+ Voeg gebruiker by" },
+    { en: "Cancel new user", af: "Kanselleer nuwe gebruiker" },
+    { en: "Show users", af: "Wys gebruikers" },
+    { en: "Hide users", af: "Versteek gebruikers" },
+    { en: "User administration", af: "Gebruikersadministrasie" },
+    { en: "Add NKRN user", af: "Voeg NKRN-gebruiker by" },
+    { en: "Create a new active NKRN account using the staff member's @tygies.co.za email address.", af: "Skep \u2019n nuwe aktiewe NKRN-rekening met die personeellid se @tygies.co.za-e-posadres." },
+    { en: "Create user", af: "Skep gebruiker" },
+    { en: "Creating user...", af: "Gebruiker word geskep\u2026" },
+    { en: "Creating user\u2026", af: "Gebruiker word geskep\u2026" },
+    { en: "Save user", af: "Stoor gebruiker" },
+    { en: "Edit user", af: "Wysig gebruiker" },
+    { en: "Deactivate user", af: "Deaktiveer gebruiker" },
+    { en: "Deactivating...", af: "Besig om te deaktiveer\u2026" },
+    { en: "Deactivating\u2026", af: "Besig om te deaktiveer\u2026" },
+    { en: "Export CSV", af: "Voer CSV uit" },
+    { en: "Export all IT requests", af: "Voer alle IT-versoeke uit" },
+    { en: "All IT requests have been exported.", af: "Alle IT-versoeke is uitgevoer." },
+    { en: "There are no requests to export.", af: "Daar is geen versoeke om uit te voer nie." },
+    { en: "First name, last name and email address are required.", af: "Voornaam, van en e-posadres is verpligtend." },
+    { en: "Only @tygies.co.za email addresses are allowed.", af: "Slegs @tygies.co.za-e-posadresse word toegelaat." },
+    { en: "Invalid user role.", af: "Ongeldige gebruikersrol." },
+    { en: "You do not have permission to add users.", af: "Jy het nie toestemming om gebruikers by te voeg nie." },
+    { en: "You do not have permission to manage users.", af: "Jy het nie toestemming om gebruikers te bestuur nie." },
+    { en: "You do not have permission to deactivate users.", af: "Jy het nie toestemming om gebruikers te deaktiveer nie." },
+    { en: "A user with this email address already exists.", af: "Daar is reeds \u2019n gebruiker met hierdie e-posadres." },
+    { en: "The user could not be added.", af: "Die gebruiker kon nie bygevoeg word nie." },
+    { en: "The user could not be updated.", af: "Die gebruiker kon nie opgedateer word nie." },
+    { en: "The user could not be deactivated.", af: "Die gebruiker kon nie gedeaktiveer word nie." },
+    { en: "You cannot deactivate your own account.", af: "Jy kan nie jou eie rekening deaktiveer nie." },
+    { en: "Do you want to deactivate this account?", af: "Wil jy hierdie rekening deaktiveer?" },
+    { en: "The user will no longer be able to sign in.", af: "Die gebruiker sal nie meer kan aanmeld nie." },
+    { en: "The IT information could not be loaded.", af: "Die IT-inligting kon nie gelaai word nie." },
+    { en: "The requests could not be loaded.", af: "Die versoeke kon nie gelaai word nie." },
+    { en: "Manage request", af: "Bestuur versoek" },
+    { en: "Assign to", af: "Ken toe aan" },
+    { en: "Scheduled start", af: "Beplande begintyd" },
+    { en: "Scheduled end", af: "Beplande eindtyd" },
+    { en: "Not scheduled yet", af: "Nog nie beplan nie" },
+    { en: "Invalid date", af: "Ongeldige datum" },
+    { en: "No appointment scheduled", af: "Geen afspraak beplan nie" },
+    { en: "Calendar appointment linked", af: "Kalenderafspraak gekoppel" },
+    { en: "Google Calendar appointment linked", af: "Google Calendar-afspraak gekoppel" },
+    { en: "The planned end time must be after the start time.", af: "Die beplande eindtyd moet n\u00e1 die begintyd wees." },
+    { en: "You do not have permission to update this request.", af: "Jy het nie toestemming om hierdie versoek op te dateer nie." },
+    { en: "The request could not be updated.", af: "Die versoek kon nie opgedateer word nie." },
+    { en: "The request could not be updated. Please try again.", af: "Die versoek kon nie opgedateer word nie. Probeer asseblief weer." },
+    { en: "Communication", af: "Kommunikasie" },
+    { en: "Comments and progress", af: "Kommentaar en vordering" },
+    { en: "There are no comments on this request yet.", af: "Daar is nog geen kommentaar op hierdie versoek nie." },
+    { en: "Add a progress note", af: "Voeg \u2019n vorderingsnota by" },
+    { en: "Add a progress note...", af: "Voeg \u2019n vorderingsnota by\u2026" },
+    { en: "Add a progress note\u2026", af: "Voeg \u2019n vorderingsnota by\u2026" },
+    { en: "Adding...", af: "Besig om by te voeg\u2026" },
+    { en: "Adding\u2026", af: "Besig om by te voeg\u2026" },
+    { en: "Add comment", af: "Voeg kommentaar by" },
+    { en: "Enter your comment first.", af: "Tik eers jou kommentaar in." },
+    { en: "The comment could not be added.", af: "Die kommentaar kon nie bygevoeg word nie." },
+    { en: "Laerskool Tygerpoort \u00b7 IT Report \u00b7 Administrator", af: "Laerskool Tygerpoort \u00b7 IT Report \u00b7 Administrateur" },
+    { en: "requests \u00b7", af: "versoeke \u00b7" },
+    { en: "technicians \u00b7", af: "tegnici \u00b7" },
+    { en: "administrators \u00b7", af: "administrateurs \u00b7" },
+    { en: "Technician Portal", af: "Tegnikusportaal" },
+    { en: "Technician dashboard", af: "Tegnikusportaal" },
+    { en: "The technician portal could not be loaded.", af: "Die tegnikusportaal kon nie gelaai word nie." },
+    { en: "Search requests...", af: "Soek versoeke..." },
+    { en: "Search requests\u2026", af: "Soek versoeke\u2026" },
+    { en: "All statuses", af: "Alle statusse" },
+    { en: "All priorities", af: "Alle prioriteite" },
+    { en: "Request details", af: "Versoekbesonderhede" },
+    { en: "Save request", af: "Stoor versoek" },
+    { en: "Loading comments...", af: "Kommentaar laai..." },
+    { en: "Loading comments\u2026", af: "Kommentaar laai\u2026" },
+    { en: "No comments yet.", af: "Nog geen kommentaar nie." },
+    { en: "The comment could not be added.", af: "Die kommentaar kon nie bygevoeg word nie." },
+    { en: "Total requests", af: "Totale versoeke" },
+    { en: "Logged requests", af: "Aangemelde versoeke" },
+    { en: "Busy requests", af: "Besige versoeke" },
+    { en: "Completed requests", af: "Afgehandelde versoeke" },
+    { en: "Select a request to view details.", af: "Kies \u2019n versoek om besonderhede te sien." },
+    { en: "No requests match the current filters.", af: "Geen versoeke pas by die huidige filters nie." },
+    { en: "Logistics", af: "Logistiek" },
+    { en: "Staff portal", af: "Personeelportaal" },
+    { en: "Your Logistics portal is loading...", af: "Jou Logistics-portaal laai\u2026" },
+    { en: "Your Logistics portal is loading\u2026", af: "Jou Logistics-portaal laai\u2026" },
+    { en: "Logistics: requests and feedback", af: "Logistiek: Versoeke en terugvoer" },
+    { en: "How can the Logistics team help you?", af: "Waarmee kan die Logistics-span jou help?" },
+    { en: "What can the Logistics team help you with?", af: "Waarmee kan die Logistics-span jou help?" },
+    { en: "Submit one short request. NKRN keeps the details, venue information and progress in one place.", af: "Dien een kort versoek in. NKRN hou die besonderhede, lokaal-inligting en vordering op een plek." },
+    { en: "Submit one short request and NKRN will keep the request, venue information and progress together.", af: "Dien een kort versoek in. NKRN hou die versoek, lokaal-inligting en vordering bymekaar." },
+    { en: "New request", af: "Nuwe versoek" },
+    { en: "+ New request", af: "+ Nuwe versoek" },
+    { en: "Request support", af: "Versoek ondersteuning" },
+    { en: "+ Request support", af: "+ Versoek ondersteuning" },
+    { en: "Event / Activity", af: "Funksie / Aktiwiteit" },
+    { en: "Event support", af: "Funksieondersteuning" },
+    { en: "Venues, tables, chairs, gazebos and other setup.", af: "Lokale, tafels, stoele, gazebo\u2019s en ander opstelling." },
+    { en: "Maintenance", af: "Instandhouding" },
+    { en: "Report a problem", af: "Meld \u2019n probleem aan" },
+    { en: "Repair, replacement, furniture or facility issues.", af: "Herstel, vervanging, meubels of fasiliteitsprobleme." },
+    { en: "General", af: "Algemeen" },
+    { en: "Other support", af: "Ander ondersteuning" },
+    { en: "Any other operational support.", af: "Enige ander bedryfsondersteuning." },
+    { en: "Active requests", af: "Aktiewe versoeke" },
+    { en: "You have no active Logistics requests.", af: "Jy het geen aktiewe Logistics-versoeke nie." },
+    { en: "Facilities", af: "Fasiliteite" },
+    { en: "Upcoming venue bookings", af: "Komende lokaalbesprekings" },
+    { en: "See all", af: "Sien alles" },
+    { en: "No upcoming venue bookings.", af: "Geen komende lokaalbesprekings nie." },
+    { en: "My Logistics requests", af: "My Logistics-versoeke" },
+    { en: "Request history", af: "Versoekgeskiedenis" },
+    { en: "Logistics team", af: "Logistics-span" },
+    { en: "Cancel request", af: "Kanselleer versoek" },
+    { en: "No Logistics requests have been submitted yet.", af: "Nog geen Logistics-versoeke ingedien nie." },
+    { en: "Venue availability", af: "Lokaalbeskikbaarheid" },
+    { en: "Upcoming bookings", af: "Komende besprekings" },
+    { en: "No venue bookings recorded.", af: "Geen lokaalbesprekings aangeteken nie." },
+    { en: "Locations and venues", af: "Ligging en lokale" },
+    { en: "Locations & venues", af: "Ligging en lokale" },
+    { en: "Bookable venue", af: "Bespreekbare lokaal" },
+    { en: "School location", af: "Skoolligging" },
+    { en: "Selected location", af: "Gekose ligging" },
+    { en: "No upcoming bookings.", af: "Geen komende besprekings nie." },
+    { en: "Request this venue", af: "Versoek hierdie lokaal" },
+    { en: "Report an issue here", af: "Meld \u2019n probleem hier aan" },
+    { en: "Choose a location on the left to see details.", af: "Kies \u2019n ligging links om besonderhede te sien." },
+    { en: "New Logistics request", af: "Nuwe Logistics-versoek" },
+    { en: "How can we help?", af: "Hoe kan ons help?" },
+    { en: "Request steps", af: "Versoekstappe" },
+    { en: "Request type", af: "Soort versoek" },
+    { en: "Details", af: "Besonderhede" },
+    { en: "How can Logistics help?", af: "Waarmee kan Logistics help?" },
+    { en: "Venue, time and equipment", af: "Lokaal, tyd en toerusting" },
+    { en: "Something needs to be repaired or replaced", af: "Iets moet herstel of vervang word" },
+    { en: "Any other logistics support", af: "Enige ander logistieke ondersteuning" },
+    { en: "Event or activity details", af: "Funksie- of aktiwiteitsbesonderhede" },
+    { en: "What needs attention?", af: "Wat benodig aandag?" },
+    { en: "What do you need?", af: "Wat benodig jy?" },
+    { en: "Activity category", af: "Aktiwiteitskategorie" },
+    { en: "What are you arranging and what should Logistics know?", af: "Wat re\u00ebl jy en wat moet Logistics weet?" },
+    { en: "What is wrong or what needs to be done?", af: "Wat is fout of wat moet gedoen word?" },
+    { en: "Briefly describe how Logistics can help.", af: "Beskryf kortliks waarmee Logistics kan help." },
+    { en: "Briefly describe what you need.", af: "Beskryf kortliks wat jy benodig." },
+    { en: "Venue / location", af: "Lokaal / ligging" },
+    { en: "(if applicable)", af: "(indien van toepassing)" },
+    { en: "Select a location...", af: "Kies \u2019n ligging\u2026" },
+    { en: "Select a location\u2026", af: "Kies \u2019n ligging\u2026" },
+    { en: "Or type a classroom / area not listed above", af: "Of tik \u2019n klaskamer / gebied wat nie op die lys is nie" },
+    { en: "Start time", af: "Begintyd" },
+    { en: "End time", af: "Eindtyd" },
+    { en: "NKRN can check the venue against existing bookings.", af: "NKRN kan die lokaal teen bestaande besprekings kontroleer." },
+    { en: "Checking...", af: "Besig om te kontroleer\u2026" },
+    { en: "Checking\u2026", af: "Besig om te kontroleer\u2026" },
+    { en: "Check", af: "Kontroleer" },
+    { en: "Cleanup is required the next morning", af: "Opruiming word die volgende oggend benodig" },
+    { en: "Required equipment", af: "Benodigde toerusting" },
+    { en: "Select an item...", af: "Kies \u2019n item\u2026" },
+    { en: "Select an item\u2026", af: "Kies \u2019n item\u2026" },
+    { en: "What should happen?", af: "Wat moet gebeur?" },
+    { en: "Repair", af: "Herstel" },
+    { en: "Replace", af: "Vervang" },
+    { en: "Unsure", af: "Onseker" },
+    { en: "Review request", af: "Kontroleer versoek" },
+    { en: "Review your request", af: "Kontroleer jou versoek" },
+    { en: "Location:", af: "Ligging:" },
+    { en: "Category:", af: "Kategorie:" },
+    { en: "When:", af: "Wanneer:" },
+    { en: "Cleanup next morning:", af: "Opruiming volgende oggend:" },
+    { en: "Equipment:", af: "Toerusting:" },
+    { en: "Attention:", af: "Aandag:" },
+    { en: "Not selected", af: "Nie gekies nie" },
+    { en: "Submitted by", af: "Ingedien deur" },
+    { en: "Submit Logistics request", af: "Dien Logistics-versoek in" },
+    { en: "Select a venue, date, start time and end time first.", af: "Kies eers \u2019n lokaal, datum, begintyd en eindtyd." },
+    { en: "Venue availability could not be checked.", af: "Lokaalbeskikbaarheid kon nie nagegaan word nie." },
+    { en: "The venue is available for this time.", af: "Die lokaal is beskikbaar vir hierdie tyd." },
+    { en: "The venue is already booked for this time.", af: "Die lokaal is reeds vir hierdie tyd bespreek." },
+    { en: "Enter the activity date, start and end time.", af: "Vul die aktiwiteitsdatum, begin- en eindtyd in." },
+    { en: "The end time must be after the start time.", af: "Die eindtyd moet n\u00e1 die begintyd wees." },
+    { en: "Select what needs attention.", af: "Kies wat aandag benodig." },
+    { en: "The Logistics request could not be submitted.", af: "Die Logistics-versoek kon nie ingedien word nie." },
+    { en: "Staff Requests", af: "Personeelversoeke" },
+    { en: "Logistics Request Inbox", af: "Logistiekversoek-inkassie" },
+    { en: "Review staff submissions before turning approved work into operational tasks.", af: "Hersien personeelindienings voordat goedgekeurde werk in operasionele take omskep word." },
+    { en: "Open requests", af: "Oop versoeke" },
+    { en: "All requests", af: "Alle versoeke" },
+    { en: "Refresh Requests", af: "Verfris versoeke" },
+    { en: "Manager notes", af: "Bestuursnotas" },
+    { en: "Optional review notes", af: "Opsionele hersieningsnotas" },
+    { en: "Assign work", af: "Ken werk toe" },
+    { en: "Optional work assignment", af: "Opsionele werktoewysing" },
+    { en: "Work plan", af: "Werkplan" },
+    { en: "Job cards", af: "Werkskaarte" },
+    { en: "Workers", af: "Werkers" },
+    { en: "Tasks", af: "Take" },
+    { en: "Daily work plan", af: "Daaglikse werkplan" },
+    { en: "Generate job card", af: "Genereer werkkaart" },
+    { en: "Send job card", af: "Stuur werkkaart" },
+    { en: "Job card history", af: "Werkkaartgeskiedenis" },
+    { en: "Worker management", af: "Werkerbestuur" },
+    { en: "Add worker", af: "Voeg werker by" },
+    { en: "Edit worker", af: "Wysig werker" },
+    { en: "Save worker", af: "Stoor werker" },
+    { en: "Search tasks...", af: "Soek take..." },
+    { en: "Department", af: "Departement" },
+    { en: "Responsible", af: "Verantwoordelik" },
+    { en: "Due date", af: "Sperdatum" },
+    { en: "Next action", af: "Volgende aksie" },
+    { en: "Materials required", af: "Benodigde materiaal" },
+    { en: "Manager note", af: "Bestuursnota" },
+    { en: "Include on job card", af: "Sluit op werkkaart in" },
+    { en: "Planned start", af: "Beplande begin" },
+    { en: "Planned end", af: "Beplande einde" },
+    { en: "Area", af: "Gebied" },
+    { en: "Task description", af: "Taakbeskrywing" },
+    { en: "NKRN \u00b7 In operation", af: "NKRN \u00b7 In werking" },
+    { en: "Event support", af: "Funksieversorging" },
+    { en: "Arrange supplies for an event quickly and simply. NKRN uses your profile automatically.", af: "Re\u00ebl voorraad vir \u2019n funksie vinnig en eenvoudig. NKRN gebruik jou profiel outomaties." },
+    { en: "Supplies must be requested at least three working days before the event. Borrowed items must be cleaned and returned, and damage or breakages must be reported.", af: "Voorraad moet minstens drie werksdae voor die funksie aangevra word. Geleende items moet skoongemaak en terugbesorg word, en skade of breuke moet aangemeld word." },
+    { en: "Event", af: "Geleentheid" },
+    { en: "Supplies", af: "Voorraad" },
+    { en: "Step 1", af: "Stap 1" },
+    { en: "Event details", af: "Funksiebesonderhede" },
+    { en: "We only ask for what NKRN does not already know about you.", af: "Ons vra net wat NKRN nie reeds van jou weet nie." },
+    { en: "Date required", af: "Datum benodig" },
+    { en: "Venue", af: "Lokaal" },
+    { en: "Choose a venue", af: "Kies \u2019n lokaal" },
+    { en: "Hall", af: "Saal" },
+    { en: "Panthera (upper lounge)", af: "Panthera (losie bo)" },
+    { en: "Panthera (lower level)", af: "Panthera (onder)" },
+    { en: "Classrooms", af: "Klaskamers" },
+    { en: "Staff room", af: "Personeelkamer" },
+    { en: "Other", af: "Ander" },
+    { en: "Number of people", af: "Aantal persone" },
+    { en: "History", af: "Geskiedenis" },
+    { en: "My Requests", af: "My versoeke" },
+    { en: "Showing", af: "Wys" },
+    { en: "AI Help", af: "AI Hulp" },
+    { en: "AI assistant", af: "AI-assistent" },
+    { en: "AI Assistant", af: "AI-assistent" },
+    { en: "Describe the problem", af: "Beskryf die probleem" },
+    { en: "Describe your IT problem", af: "Beskryf jou IT-probleem" },
+    { en: "Tell AI what is happening", af: "Vertel vir AI wat gebeur" },
+    { en: "What is happening?", af: "Wat gebeur?" },
+    { en: "Ask AI", af: "Vra AI" },
+    { en: "Get AI help", af: "Kry AI-hulp" },
+    { en: "Analyze", af: "Ontleed" },
+    { en: "Analyse", af: "Ontleed" },
+    { en: "Analyzing...", af: "Besig om te ontleed..." },
+    { en: "Analysing...", af: "Besig om te ontleed..." },
+    { en: "Thinking...", af: "Dink..." },
+    { en: "Thinking\u2026", af: "Dink\u2026" },
+    { en: "Suggested fix", af: "Voorgestelde oplossing" },
+    { en: "Suggested category", af: "Voorgestelde kategorie" },
+    { en: "Suggested priority", af: "Voorgestelde prioriteit" },
+    { en: "Suggested technician", af: "Voorgestelde tegnikus" },
+    { en: "AI recommendation", af: "AI-aanbeveling" },
+    { en: "Try this first", af: "Probeer dit eers" },
+    { en: "Create request", af: "Skep versoek" },
+    { en: "Use suggestion", af: "Gebruik voorstel" },
+    { en: "Clear", af: "Maak skoon" },
+    { en: "Start again", af: "Begin weer" },
+    { en: "AI Help is unavailable right now.", af: "AI Hulp is tans nie beskikbaar nie." },
+    { en: "Unable to get AI help.", af: "Kon nie AI-hulp kry nie." },
+    { en: "You can still submit the request manually.", af: "Jy kan steeds die versoek handmatig indien." },
+    { en: "AI suggestions are advisory. You remain in control of the request.", af: "AI-voorstelle is adviserend. Jy bly in beheer van die versoek." },
+] as const;
+
+const platformFinalEnglishToAfrikaans = new Map<string, string>();
+const platformFinalAfrikaansToEnglish = new Map<string, string>();
+
+for (const entry of platformFinalTranslations) {
+    platformFinalEnglishToAfrikaans.set(normalizeKey(entry.en), entry.af);
+    platformFinalAfrikaansToEnglish.set(normalizeKey(entry.af), entry.en);
+}
+
+function withOriginalWhitespace(value: string, translated: string): string {
+    const leading = value.match(/^\s*/)?.[0] ?? "";
+    const trailing = value.match(/\s*$/)?.[0] ?? "";
+    return `${leading}${translated}${trailing}`;
+}
+
+function translatePlatformDynamic(value: string, language: Language): string | null {
+    const core = value.trim();
+
+    if (language === "en") {
+        let match = core.match(/^Gebruiker #(\d+)$/i);
+        if (match) return `User #${match[1]}`;
+
+        match = core.match(/^Versoek #(\d+) is gestoor\.$/i);
+        if (match) return `Request #${match[1]} was saved.`;
+
+        match = core.match(/^Versoek #(\d+) is opgedateer\.$/i);
+        if (match) return `Request #${match[1]} was updated.`;
+
+        match = core.match(/^Versoek #(\d+) is gekanselleer\.$/i);
+        if (match) return `Request #${match[1]} was cancelled.`;
+
+        match = core.match(/^Versoek #(\d+) is aan die Logistics-span gestuur\.$/i);
+        if (match) return `Request #${match[1]} was sent to the Logistics team.`;
+
+        match = core.match(/^Kommentaar is by versoek #(\d+) gevoeg\.$/i);
+        if (match) return `Comment was added to request #${match[1]}.`;
+
+        match = core.match(/^Kommentaar kon nie by versoek #(\d+) gevoeg word nie\.$/i);
+        if (match) return `The comment could not be added to request #${match[1]}.`;
+
+        match = core.match(/^(.+?) is bygevoeg\.$/i);
+        if (match) return `${match[1]} was added.`;
+
+        match = core.match(/^(.+?) is opgedateer\.$/i);
+        if (match) return `${match[1]} was updated.`;
+
+        match = core.match(/^(.+?) is gedeaktiveer\.$/i);
+        if (match) return `${match[1]} was deactivated.`;
+
+        match = core.match(/^Welkom,\s+(.+?)\.\s+Kies \u2019n module om aan die gang te kom\.$/i);
+        if (match) return `Welcome, ${match[1]}. Choose a module to get started.`;
+
+        match = core.match(/^Reeds bespreek:\s+(.+?)\s+\((.+?)\)\.$/i);
+        if (match) return `Already booked: ${match[1]} (${match[2]}).`;
+
+        match = core.match(/^Wil jy (.+?) se rekening deaktiveer\?\s*Die gebruiker sal nie meer kan aanmeld nie\.$/i);
+        if (match) return `Do you want to deactivate ${match[1]}'s account? The user will no longer be able to sign in.`;
+    } else {
+        let match = core.match(/^User #(\d+)$/i);
+        if (match) return `Gebruiker #${match[1]}`;
+
+        match = core.match(/^Request #(\d+) was saved\.$/i);
+        if (match) return `Versoek #${match[1]} is gestoor.`;
+
+        match = core.match(/^Request #(\d+) was updated\.$/i);
+        if (match) return `Versoek #${match[1]} is opgedateer.`;
+
+        match = core.match(/^Request #(\d+) was cancelled\.$/i);
+        if (match) return `Versoek #${match[1]} is gekanselleer.`;
+
+        match = core.match(/^Request #(\d+) was sent to the Logistics team\.$/i);
+        if (match) return `Versoek #${match[1]} is aan die Logistics-span gestuur.`;
+
+        match = core.match(/^Comment was added to request #(\d+)\.$/i);
+        if (match) return `Kommentaar is by versoek #${match[1]} gevoeg.`;
+
+        match = core.match(/^The comment could not be added to request #(\d+)\.$/i);
+        if (match) return `Kommentaar kon nie by versoek #${match[1]} gevoeg word nie.`;
+
+        match = core.match(/^(.+?) was added\.$/i);
+        if (match) return `${match[1]} is bygevoeg.`;
+
+        match = core.match(/^(.+?) was updated\.$/i);
+        if (match) return `${match[1]} is opgedateer.`;
+
+        match = core.match(/^(.+?) was deactivated\.$/i);
+        if (match) return `${match[1]} is gedeaktiveer.`;
+
+        match = core.match(/^Welcome,\s+(.+?)\.\s+Choose a module to get started\.$/i);
+        if (match) return `Welkom, ${match[1]}. Kies \u2019n module om aan die gang te kom.`;
+
+        match = core.match(/^Already booked:\s+(.+?)\s+\((.+?)\)\.$/i);
+        if (match) return `Reeds bespreek: ${match[1]} (${match[2]}).`;
+
+        match = core.match(/^Do you want to deactivate (.+?)'s account\?\s*The user will no longer be able to sign in\.$/i);
+        if (match) return `Wil jy ${match[1]} se rekening deaktiveer? Die gebruiker sal nie meer kan aanmeld nie.`;
+    }
+
+    return null;
+}
+
+function translatePlatformFinalText(value: string, language: Language): string {
     const key = normalizeKey(value);
     if (!key) return value;
 
-    const exactTranslated = (language === "af" ? englishToAfrikaans : afrikaansToEnglish).get(key);
-    if (exactTranslated !== undefined) {
-        const leading = value.match(/^\s*/)?.[0] ?? "";
-        const trailing = value.match(/\s*$/)?.[0] ?? "";
-        return `${leading}${exactTranslated}${trailing}`;
+    const exact = (
+        language === "af"
+            ? platformFinalEnglishToAfrikaans
+            : platformFinalAfrikaansToEnglish
+    ).get(key);
+
+    if (exact !== undefined) {
+        return withOriginalWhitespace(value, exact);
     }
 
-    const partialTranslations = language === "af"
-        ? partialEnglishToAfrikaans
-        : partialAfrikaansToEnglish;
-
-    let translatedValue = value;
-    for (const { pattern, target } of partialTranslations) {
-        translatedValue = translatedValue.replace(pattern, (_match, prefix: string) => `${prefix}${target}`);
+    const dynamic = translatePlatformDynamic(value, language);
+    if (dynamic !== null) {
+        return withOriginalWhitespace(value, dynamic);
     }
 
-    return translatedValue;
+    return value;
 }
+// NKRN PLATFORM FINAL I18N END
 
+export function translateText(value: string, language: Language): string {
+    const platformFinal = translatePlatformFinalText(value, language);
+    if (platformFinal !== value) {
+        return platformFinal;
+    }
+    const key = normalizeKey(value);
+    if (!key) return value;
+
+    const translationMap =
+        language === "af"
+            ? englishToAfrikaans
+            : afrikaansToEnglish;
+
+    const exactTranslated = translationMap.get(key);
+
+    // If the complete value is not explicitly translated, leave it untouched.
+    // This is intentional: an untranslated sentence is safer than a malformed
+    // sentence produced by partial word replacement.
+    if (exactTranslated === undefined) {
+        const dynamicTranslated =
+        translateDynamicText(value, language);
+
+    if (dynamicTranslated !== value) {
+        return dynamicTranslated;
+    }
+
+    return value;
+    }
+
+    const leadingWhitespace = value.match(/^\s*/)?.[0] ?? "";
+    const trailingWhitespace = value.match(/\s*$/)?.[0] ?? "";
+
+    return `${leadingWhitespace}${exactTranslated}${trailingWhitespace}`;
+}
 function shouldIgnore(element: Element | null): boolean {
     if (!element) return true;
     if (element.closest("[data-nkrn-i18n-ignore]")) return true;
@@ -784,10 +1974,10 @@ function translateDocument(language: Language): void {
         if (translated !== original) node.nodeValue = translated;
     }
 
-    const elements = document.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]");
+    const elements = document.querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title], [alt]");
     for (const element of elements) {
         if (shouldIgnore(element)) continue;
-        for (const attribute of ["placeholder", "aria-label", "title"] as const) {
+        for (const attribute of ["placeholder", "aria-label", "title", "alt"] as const) {
             const value = element.getAttribute(attribute);
             if (!value) continue;
             const translated = translateText(value, language);

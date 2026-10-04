@@ -103,7 +103,7 @@ function displayDate(value?: string | null) {
         return value;
     }
 
-    return date.toLocaleDateString("af-ZA", {
+    return date.toLocaleDateString((typeof document !== "undefined" && document.documentElement.lang === "en" ? "en-ZA" : "af-ZA"), {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -119,7 +119,7 @@ function displayDateTime(value?: string | null) {
         return value;
     }
 
-    return date.toLocaleString("af-ZA", {
+    return date.toLocaleString((typeof document !== "undefined" && document.documentElement.lang === "en" ? "en-ZA" : "af-ZA"), {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -141,7 +141,7 @@ function primaryLocation(request: LogisticsRequest) {
     return (
         primary?.locationName ||
         primary?.locationText ||
-        "Geen ligging verskaf nie"
+        "No location supplied"
     );
 }
 
@@ -209,7 +209,7 @@ export default function LogisticsRequestInbox({
     const [managerNotes, setManagerNotes] = useState("");
     const [departmentID, setDepartmentID] = useState("");
     const [workerID, setWorkerID] = useState("");
-    const [priority, setPriority] = useState("P3");
+    const [priority, setPriority] = useState("Medium");
     const [dueDate, setDueDate] = useState("");
     const [nextAction, setNextAction] = useState("");
     const [includeOnJobCard, setIncludeOnJobCard] = useState(true);
@@ -236,7 +236,7 @@ export default function LogisticsRequestInbox({
 
             if (response.status === 403) {
                 throw new Error(
-                    "Your account does not have permission to manage Logistics requests."
+                    "Jou rekening het nie toegang om Logistieke versoeke te bestuur nie."
                 );
             }
 
@@ -253,7 +253,7 @@ export default function LogisticsRequestInbox({
             setError(
                 loadError instanceof Error
                     ? loadError.message
-                    : "Unable to load Logistics requests."
+                    : "Logistieke versoeke kon nie gelaai word nie."
             );
         } finally {
             setLoading(false);
@@ -282,13 +282,11 @@ export default function LogisticsRequestInbox({
 
     function openRequest(request: LogisticsRequest) {
         setSelectedRequest(request);
-        setReviewStatus(
-            requestStage(request.status) === "Logged" ? "New" : requestStage(request.status) === "Done" ? "Completed" : "Under Review"
-        );
+        setReviewStatus(requestStage(request.status));
         setManagerNotes(request.managerNotes || "");
         setDepartmentID("");
         setWorkerID("");
-        setPriority(request.priority || "P3");
+        setPriority(request.priority || "Medium");
         setDueDate("");
         setNextAction(
             request.requestType === "Maintenance"
@@ -350,7 +348,7 @@ export default function LogisticsRequestInbox({
             );
 
             if (!response.ok) {
-                let message = "Unable to save the request review.";
+                let message = "Die versoek kon nie opgedateer word nie.";
 
                 try {
                     const body = (await response.json()) as {
@@ -375,7 +373,7 @@ export default function LogisticsRequestInbox({
             setError(
                 reviewError instanceof Error
                     ? reviewError.message
-                    : "Unable to save the request review."
+                    : "Die versoek kon nie opgedateer word nie."
             );
         } finally {
             setSavingReview(false);
@@ -422,7 +420,7 @@ export default function LogisticsRequestInbox({
             );
 
             if (!response.ok) {
-                let message = "Unable to convert this request to a task.";
+                let message = "Die versoek kon nie aan ’n taak gekoppel word nie.";
 
                 try {
                     const body = (await response.json()) as {
@@ -452,7 +450,7 @@ export default function LogisticsRequestInbox({
             setError(
                 convertError instanceof Error
                     ? convertError.message
-                    : "Unable to convert this request to a task."
+                    : "Die versoek kon nie aan ’n taak gekoppel word nie."
             );
         } finally {
             setConverting(false);
@@ -474,7 +472,7 @@ export default function LogisticsRequestInbox({
                                 </h2>
                                 {newCount > 0 && (
                                     <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-2.5 py-1 text-xs font-semibold text-yellow-200">
-                                        {newCount} new
+                                        {newCount} nuut
                                     </span>
                                 )}
                             </div>
@@ -485,12 +483,12 @@ export default function LogisticsRequestInbox({
 
                         <div className="flex flex-wrap items-center gap-3">
                             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-400">
-                                {openCount} open
+                                {openCount} oop
                             </span>
 
                             <input aria-label="Soek versoeke" placeholder="Soek naam, versoek of lokaal…" className={inputClass} value={search} onChange={e => setSearch(e.target.value)} />
                             <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
-                            <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["P1", "P2", "P3", "P4"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
+                            <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["Low", "Medium", "High", "Critical"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
                             <select
                                 aria-label="Versoekstatus"
                                 value={filter}
@@ -569,7 +567,7 @@ export default function LogisticsRequestInbox({
                                             <p className="mt-2 text-xs text-zinc-300">Toerusting: {request.equipment.map(item => `${item.equipmentName}${item.quantity ? ` × ${item.quantity}` : ""}${item.notes ? ` (${item.notes})` : ""}`).join(", ") || "Geen"}</p>
                                             <p className="mt-1 text-xs text-zinc-300">{request.maintenanceItems.map(item => `${item.maintenanceName}: ${displayLabel(item.actionType)} ${item.notes || ""}`).join("; ")}</p>
                                             <p className="mt-2 text-xs text-zinc-300">Bestuurdersnota: {request.managerNotes || "Nog geen nota"}</p>
-                                            <p className="mt-1 text-xs text-zinc-300">Verantwoordelik: {(() => { const task = tasks.find(task => task.taskID === request.convertedTaskID); return task?.responsibleWorkerName || task?.responsibleUserName || task?.responsibleText || "Nie toegeken nie"; })()}</p>
+                                            <p className="mt-1 text-xs text-zinc-300">Verantwoordelik: {(() => { const task = tasks.find(task => task.taskID === request.convertedTaskID); return task?.responsibleWorkerName || task?.responsibleUserName || task?.responsibleText || "Unassigned"; })()}</p>
                                             <p className="mt-1 text-xs text-zinc-300">Volgende aksie: {tasks.find(task => task.taskID === request.convertedTaskID)?.nextAction || (isOpenRequest(request) ? "Hersien en ken verantwoordelikheid toe" : displayLabel(request.status))}</p>
                                             <p className="mt-1 font-mono text-xs text-zinc-600">
                                                 Request #{request.requestID}
@@ -638,13 +636,13 @@ export default function LogisticsRequestInbox({
                         <div className="flex flex-col gap-5 border-b border-white/8 pb-5 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-[0.22em] text-yellow-400">
-                                    Logistics Request #{selectedRequest.requestID}
+                                    Logistieke versoek #{selectedRequest.requestID}
                                 </p>
                                 <h2 className="mt-1 text-2xl font-semibold">
                                     {selectedRequest.title}
                                 </h2>
                                 <p className="mt-2 text-sm text-zinc-500">
-                                    Submitted by {selectedRequest.requestedByName} ·{" "}
+                                    Ingedien deur {selectedRequest.requestedByName} ·{" "}
                                     {displayDateTime(selectedRequest.createdDate)}
                                 </p>
                             </div>
@@ -677,11 +675,11 @@ export default function LogisticsRequestInbox({
                                             value={selectedRequest.activityCategory || "—"}
                                         />
                                         <Info
-                                            label="Activity Date"
+                                            label="Datum"
                                             value={displayDate(selectedRequest.activityDate)}
                                         />
                                         <Info
-                                            label="Time"
+                                            label="Tyd"
                                             value={
                                                 selectedRequest.startTime || selectedRequest.endTime
                                                     ? `${shortTime(selectedRequest.startTime)}–${shortTime(
@@ -691,7 +689,7 @@ export default function LogisticsRequestInbox({
                                             }
                                         />
                                         <Info
-                                            label="Current Status"
+                                            label="Huidige status"
                                             value={displayLabel(selectedRequest.status)}
                                         />
                                     </div>
@@ -701,7 +699,7 @@ export default function LogisticsRequestInbox({
                                             Beskrywing
                                         </p>
                                         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
-                                            {selectedRequest.description || "No description supplied."}
+                                            {selectedRequest.description || "Geen beskrywing verskaf nie."}
                                         </p>
                                     </div>
                                 </div>
@@ -761,15 +759,15 @@ export default function LogisticsRequestInbox({
                                             }
                                             className={selectClass}
                                         >
-                                            <option value="New">Logged</option>
-                                            <option value="Under Review">Busy</option>
-                                            <option value="Completed">Done</option>
+                                            <option value="Logged">Aangemeld</option>
+                                            <option value="Busy">Besig</option>
+                                            <option value="Done">Afgehandel</option>
                                         </select>
                                     </label>
 
                                     <label className="mt-4 block">{t("Priority")}
                                         <select className={selectClass} value={priority} onChange={event => setPriority(event.target.value)}>
-                                            {["P4", "P3", "P2", "P1"].map(value => <option key={value} value={value}>{t(displayLabel(value))}</option>)}
+                                            {["Low", "Medium", "High", "Critical"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}
                                         </select>
                                     </label>
                                     <label className="mt-4 block">
@@ -782,7 +780,7 @@ export default function LogisticsRequestInbox({
                                                 setManagerNotes(event.target.value)
                                             }
                                             rows={4}
-                                            placeholder="Optional review notes"
+                                            placeholder="Voeg ’n kort nota by indien nodig"
                                             className={`${inputClass} resize-y`}
                                         />
                                     </label>

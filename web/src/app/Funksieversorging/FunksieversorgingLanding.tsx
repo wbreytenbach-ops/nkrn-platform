@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage, type Language } from "../language";
 import "../nkrn-control.css";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -141,24 +142,34 @@ function workingDaysUntil(dateValue: string) {
     return count;
 }
 
-function formatDate(value: string) {
+function formatDate(value: string, language: Language) {
     if (!value) return "—";
 
-    return new Intl.DateTimeFormat("af-ZA", {
-        dateStyle: "medium",
-    }).format(new Date(value));
+    return new Intl.DateTimeFormat(
+        language === "af" ? "af-ZA" : "en-ZA",
+        { dateStyle: "medium" }
+    ).format(new Date(value));
 }
 
-function statusLabel(status: string) {
-    if (status === "Logged") return "Aangemeld";
-    if (status === "InReview") return "Word hanteer";
-    if (status === "Done") return "Afgehandel";
-    if (status === "Declined") return "Nie goedgekeur nie";
+function statusLabel(status: string, language: Language) {
+    if (language === "af") {
+        if (status === "Logged") return "Aangemeld";
+        if (status === "InReview") return "Word hanteer";
+        if (status === "Done") return "Afgehandel";
+        if (status === "Declined") return "Nie goedgekeur nie";
+        return status;
+    }
+
+    if (status === "Logged") return "Logged";
+    if (status === "InReview") return "In review";
+    if (status === "Done") return "Completed";
+    if (status === "Declined") return "Not approved";
     return status;
 }
 
 export default function FunksieversorgingLanding() {
     const router = useRouter();
+    const { language } = useLanguage();
 
     const [user, setUser] = useState<User | null>(null);
     const [ready, setReady] = useState(false);
@@ -191,6 +202,7 @@ export default function FunksieversorgingLanding() {
     const [canManage, setCanManage] = useState(false);
     const [adminRequests, setAdminRequests] = useState<RequestRecord[]>([]);
     const [showAdmin, setShowAdmin] = useState(false);
+    const [savingStatusID, setSavingStatusID] = useState<number | null>(null);
 
     const authHeaders = useCallback(
         () => ({
@@ -374,13 +386,13 @@ export default function FunksieversorgingLanding() {
             attendance <= 0
         ) {
             setMessage(
-                "Voltooi asseblief die datum, funksie, lokaal en aantal persone."
+                "Vul asseblief die datum, funksie, lokaal en aantal persone in."
             );
             return;
         }
 
         if (venue === "Ander" && !otherVenue.trim()) {
-            setMessage("Spesifiseer asseblief die ander lokaal.");
+            setMessage("Vul asseblief die ander lokaal in.");
             return;
         }
 
@@ -483,6 +495,49 @@ export default function FunksieversorgingLanding() {
         }
     }
 
+    async function updateAdminStatus(
+        requestID: number,
+        status: string
+    ) {
+        try {
+            setSavingStatusID(requestID);
+            setMessage("");
+
+            const response = await fetch(
+                `${API_URL}/api/FunksieversorgingRequests/${requestID}/status`,
+                {
+                    method: "PUT",
+                    headers: authHeaders(),
+                    body: JSON.stringify({ status }),
+                }
+            );
+
+            if (!response.ok) {
+                const detail = await response.text();
+                throw new Error(
+                    detail ||
+                        "Die versoek kon nie opgedateer word nie."
+                );
+            }
+
+            setMessage(
+                `Versoek #${requestID} is opgedateer.`
+            );
+
+            await Promise.all([
+                loadAdmin(),
+                loadMine(),
+            ]);
+        } catch (error) {
+            setMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Die versoek kon nie opgedateer word nie."
+            );
+        } finally {
+            setSavingStatusID(null);
+        }
+    }
     function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -947,7 +1002,7 @@ export default function FunksieversorgingLanding() {
 
                             <Summary
                                 label="Datum"
-                                value={formatDate(neededDate)}
+                                value={formatDate(neededDate, language)}
                             />
 
                             <Summary
@@ -1146,6 +1201,13 @@ export default function FunksieversorgingLanding() {
                                                         request
                                                     }
                                                     admin
+                                                    saving={
+                                                        savingStatusID ===
+                                                        request.requestID
+                                                    }
+                                                    onStatusChange={
+                                                        updateAdminStatus
+                                                    }
                                                 />
                                             )
                                         )}
@@ -1387,7 +1449,7 @@ function DiningGrid({
                                             : "text-zinc-700"
                                     }`}
                                 >
-                                    {isSelected ? "✓" : "○"}
+                                    {isSelected ? "✓" : "â—‹"}
                                 </span>
                             </div>
                         </button>
@@ -1420,10 +1482,18 @@ function Summary({
 function RequestRow({
     request,
     admin,
+    saving = false,
+    onStatusChange,
 }: {
     request: RequestRecord;
     admin: boolean;
+    saving?: boolean;
+    onStatusChange?: (
+        requestID: number,
+        status: string
+    ) => void | Promise<void>;
 }) {
+    const { language } = useLanguage();
     return (
         <article className="rounded-xl border border-white/8 bg-black/20 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1434,7 +1504,7 @@ function RequestRow({
                     </p>
 
                     <p className="mt-1 text-xs text-zinc-500">
-                        {formatDate(request.neededDate)} ·{" "}
+                        {formatDate(request.neededDate, language)} ·{" "}
                         {request.otherVenue ||
                             request.venue}{" "}
                         · {request.attendance} persone
@@ -1448,9 +1518,43 @@ function RequestRow({
                     )}
                 </div>
 
-                <span className="rounded-full border border-white/10 bg-white/4 px-3 py-1 text-xs text-zinc-400">
-                    {statusLabel(request.status)}
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="rounded-full border border-white/10 bg-white/4 px-3 py-1 text-xs text-zinc-400">
+                        {statusLabel(request.status, language)}
+                    </span>
+
+                    {admin && onStatusChange && (
+                        <select
+                            aria-label={`Status vir versoek ${request.requestID}`}
+                            value={
+                                request.status === "InReview"
+                                    ? "Busy"
+                                    : request.status
+                            }
+                            disabled={saving}
+                            onChange={(event) =>
+                                void onStatusChange(
+                                    request.requestID,
+                                    event.target.value
+                                )
+                            }
+                            className="nkrn-select rounded-lg border border-white/10 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-200 outline-none disabled:opacity-50"
+                        >
+                            <option value="Logged">
+                                Aangemeld
+                            </option>
+                            <option value="Busy">
+                                Besig
+                            </option>
+                            <option value="Done">
+                                Afgehandel
+                            </option>
+                            <option value="Declined">
+                                Afgekeur
+                            </option>
+                        </select>
+                    )}
+                </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -1459,7 +1563,7 @@ function RequestRow({
                         key={`${request.requestID}-${item.code}`}
                         className="rounded-lg border border-white/8 bg-white/3 px-2.5 py-1.5 text-xs text-zinc-500"
                     >
-                        {item.requestedQuantity} ×{" "}
+                        {item.requestedQuantity} Ã—{" "}
                         {item.name}
                     </span>
                 ))}

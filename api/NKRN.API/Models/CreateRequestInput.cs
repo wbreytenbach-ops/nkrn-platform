@@ -6,11 +6,15 @@ namespace NKRN.API.Models
     // status and dates are set by the server, including for older clients.
     public class CreateRequestInput
     {
-        [Required, MaxLength(100)]
-        public string Title { get; set; } = string.Empty;
+        [MaxLength(100)]
+        public string? Title { get; set; }
 
         [Required]
         public string Description { get; set; } = string.Empty;
+
+        public bool UseAi { get; set; } = true;
+
+    public Guid? AiSessionID { get; set; }
 
         [MaxLength(20)]
         public string Priority { get; set; } = "Medium";

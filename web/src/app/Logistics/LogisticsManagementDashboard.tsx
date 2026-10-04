@@ -158,7 +158,7 @@ function displayDate(value: string | null | undefined): string {
         return value;
     }
 
-    return date.toLocaleDateString("af-ZA", {
+    return date.toLocaleDateString((typeof document !== "undefined" && document.documentElement.lang === "en" ? "en-ZA" : "af-ZA"), {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -176,7 +176,7 @@ function displayDateTime(value: string | null | undefined): string {
         return value;
     }
 
-    return date.toLocaleString("af-ZA", {
+    return date.toLocaleString((typeof document !== "undefined" && document.documentElement.lang === "en" ? "en-ZA" : "af-ZA"), {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -221,7 +221,7 @@ function responsibleName(task: LogisticsTask): string {
         task.responsibleWorkerName ||
         task.responsibleUserName ||
         task.responsibleText ||
-        "Nie toegeken nie"
+        "Nog nie toegeken nie"
     );
 }
 
@@ -373,7 +373,7 @@ export default function LogisticsManagementDashboard() {
             }
         } catch (loadError) {
             console.error("Unable to load Logistics dashboard:", loadError);
-            setError("Unable to load the Logistics dashboard.");
+            setError("Die Logistiek-bestuursblad kon nie gelaai word nie.");
         } finally {
             setLoading(false);
         }
@@ -441,7 +441,7 @@ export default function LogisticsManagementDashboard() {
                 (task) => task.status?.trim().toLowerCase() === "in proses"
             ).length,
             unassigned: open.filter(
-                (task) => responsibleName(task) === "Nie toegeken nie"
+                (task) => responsibleName(task) === "Nog nie toegeken nie"
             ).length,
         };
     }, [tasks]);
@@ -1147,7 +1147,7 @@ export default function LogisticsManagementDashboard() {
                     <StatCard label="Open" value={statistics.open} note="Benodig aandag" />
                     <StatCard label="High / Critical" value={statistics.urgent} note="Kritiek en dringend" accent="text-orange-300" />
                     <StatCard label="In proses" value={statistics.inProgress} note="Tans aktief" accent="text-blue-300" />
-                    <StatCard label="Nie toegeken nie" value={statistics.unassigned} note="Benodig ’n verantwoordelike" accent="text-yellow-300" />
+                    <StatCard label="Nog nie toegeken nie" value={statistics.unassigned} note="Benodig ’n verantwoordelike" accent="text-yellow-300" />
                 </section>
 
                 <section className="mb-8 grid gap-6 lg:grid-cols-2">
@@ -1181,7 +1181,7 @@ export default function LogisticsManagementDashboard() {
                                                     {item.taskDescription}
                                                 </p>
                                                 <p className="mt-1 text-xs text-zinc-500">
-                                                    {item.workerName || "Nie toegeken nie"} · {item.area || item.departmentName || "No area"}
+                                                    {item.workerName || "Nog nie toegeken nie"} · {item.area || item.departmentName || "No area"}
                                                 </p>
                                             </div>
                                             <span className={`rounded-full border px-2.5 py-1 text-xs ${priorityClass(item.priority)}`}>

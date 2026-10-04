@@ -201,6 +201,12 @@ internal sealed class TestApp : IDisposable
                 services.AddDbContext<ApplicationDbContext>(o => o.UseInMemoryDatabase(databaseName));
                 services.AddSingleton<EmailService>(Email);
                 services.AddScoped<LogisticsRequestNotificationService>();
+                services.Configure<AiSettings>(settings =>
+                {
+                    settings.Enabled = false;
+                });
+                services.AddHttpClient("NKRN-AI");
+                services.AddScoped<NkrnAiService>();
                 services.AddSingleton(new GoogleCalendarService(Options.Create(new GoogleCalendarSettings())));
                 services.AddAuthentication("Test").AddScheme<AuthenticationSchemeOptions, TestAuthentication>("Test", _ => { });
                 services.AddAuthorization();

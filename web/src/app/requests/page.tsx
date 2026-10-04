@@ -16,6 +16,7 @@ import {
 } from "@/services/requestService";
 
 import { RequestModel } from "@/types/request";
+import ItAiAssistant from "../components/ItAiAssistant";
 
 import "../nkrn-control.css";
 
@@ -73,6 +74,7 @@ export default function RequestsPage() {
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [aiSessionID, setAiSessionID] = useState<string | null>(null);
     const [priority, setPriority] = useState("Medium");
     const [categoryID, setCategoryID] = useState("");
     const [requestedForUserID, setRequestedForUserID] = useState("");
@@ -342,8 +344,10 @@ export default function RequestsPage() {
         try {
             const createdRequest = await createRequest({
                 ...(selectedRequester ? { requestedForUserID: selectedRequester.userID } : {}),
-                title,
+                title: title || undefined,
                 description,
+                useAi: true,
+                aiSessionID,
 
                 // Technicians/Admins can choose priority.
                 // Teachers receive the default Medium value.
@@ -368,6 +372,7 @@ export default function RequestsPage() {
 
             setTitle("");
             setDescription("");
+            setAiSessionID(null);
             setRequestedForUserID("");
 
             if (canManageDetails) {
@@ -390,7 +395,7 @@ export default function RequestsPage() {
                     ? itLabel("Only admins may log requests for another person.")
                     : error instanceof RequestSubmissionError && error.status === 400 && selectedRequester
                         ? itLabel("Check the request details and select an active requester with a valid email address.")
-                        : itLabel("Something went wrong submitting your request.")
+                        : itLabel("Die versoek kon nie ingedien word nie. Probeer asseblief weer.")
             );
         } finally {
             setLoading(false);
@@ -545,7 +550,7 @@ export default function RequestsPage() {
                                 </h1>
 
                                 <p className="mt-1 text-sm text-zinc-400">
-                                    Welcome {user.firstName}. Submit a technical support request.
+                                    Welkom {user.firstName}. Vertel ons waarmee die IT-span kan help.
                                 </p>
                             </div>
                         </div>
@@ -636,6 +641,7 @@ export default function RequestsPage() {
                     </div>
 
                     <form
+                        data-nkrn-it-request
                         onSubmit={submitRequest}
                         className="space-y-5"
                     >
@@ -669,27 +675,7 @@ export default function RequestsPage() {
                             </div>
                         )}
 
-                        {/* ========================================
-                            TITLE
-                        ======================================== */}
-
-                        <div>
-                            <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                Versoektitel
-                            </label>
-
-                            <input
-                                required
-                                value={title}
-                                onChange={(e) =>
-                                    setTitle(
-                                        e.target.value
-                                    )
-                                }
-                                placeholder="bv. Die projektor wys geen beeld nie"
-                                className={inputClass}
-                            />
-                        </div>
+                        {/* NKRN AI generates the internal request title from the description. */}
 
                         {/* ========================================
                             DESCRIPTION
@@ -717,6 +703,26 @@ export default function RequestsPage() {
                                 Jy kan ’n voorkeurdatum, sperdatum of ander belangrike inligting by die beskrywing insluit.
                             </p>
                         </div>
+
+                        <ItAiAssistant
+                            description={description}
+                            disabled={loading}
+                            onSuggestedTitle={setTitle}
+                            onSessionStarted={setAiSessionID}
+                            onResolved={() => {
+                                setDescription("");
+                                setTitle("");
+                                setAiSessionID(null);
+                                setMessage("Goed, geen IT-versoek is nodig nie.");
+                            }}
+                            onLogRequest={() => {
+                                const form =
+                                    document.querySelector<HTMLFormElement>(
+                                        "form[data-nkrn-it-request]"
+                                    );
+                                form?.requestSubmit();
+                            }}
+                        />
 
                         {/* ========================================
                             CATEGORY + PRIORITY

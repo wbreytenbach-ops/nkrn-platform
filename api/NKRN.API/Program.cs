@@ -110,11 +110,24 @@ builder.Services.Configure<EmailSettings>(
 );
 
 builder.Services.AddScoped<EmailService>();
+
+builder.Services.Configure<AiSettings>(
+    builder.Configuration.GetSection("AI")
+);
+builder.Services.AddHttpClient("NKRN-AI");
+builder.Services.AddScoped<NkrnAiService>();
+
 builder.Services.AddScoped<LogisticsRequestNotificationService>();
 builder.Services.Configure<LogisticsAutomationOptions>(builder.Configuration.GetSection("LogisticsAutomation"));
 builder.Services.AddScoped<LogisticsJobCardService>();
 builder.Services.AddScoped<LogisticsCalendarSyncService>();
 builder.Services.AddHostedService<LogisticsAutomationService>();
+
+builder.Services.Configure<LogisticsReminderOptions>(
+    builder.Configuration.GetSection("LogisticsReminders")
+);
+builder.Services.AddScoped<LogisticsReminderService>();
+builder.Services.AddHostedService<LogisticsReminderHostedService>();
 
 // ============================================================
 // GOOGLE CALENDAR

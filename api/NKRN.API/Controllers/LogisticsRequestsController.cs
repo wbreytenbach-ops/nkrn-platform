@@ -17,18 +17,24 @@ namespace NKRN.API.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly LogisticsRequestNotificationService _notifications;
+        private readonly NkrnAiService _aiService;
 
         private static readonly HashSet<string> AllowedStatuses =
             new(StringComparer.OrdinalIgnoreCase)
             {
+                "Logged",
+                "Busy",
+                "Done",
+                "Cancelled",
+                "Declined",
+
+                // Historical values remain readable during the Q4 transition.
                 "New",
                 "Under Review",
                 "Needs Information",
                 "Approved",
-                "Declined",
                 "Converted",
-                "Completed",
-                "Cancelled"
+                "Completed"
             };
 
         private static readonly HashSet<string> AllowedMaintenanceActions =
@@ -41,10 +47,12 @@ namespace NKRN.API.Controllers
 
         public LogisticsRequestsController(
             ApplicationDbContext context,
-            LogisticsRequestNotificationService notifications)
+            LogisticsRequestNotificationService notifications,
+            NkrnAiService aiService)
         {
             _context = context;
             _notifications = notifications;
+            _aiService = aiService;
         }
 
         // ============================================================
@@ -249,6 +257,24 @@ namespace NKRN.API.Controllers
             var internalTitle =
                 BuildRequestTitle(request);
 
+            var aiAnalysis = await _aiService.AnalyseAsync(
+                new AiTriageRequest
+                {
+                    ModuleKey = "Logistics",
+                    Description = request.Description.Trim(),
+                    AdditionalContext =
+                        $"Soort: {request.RequestType}; " +
+                        $"Aktiwiteitskategorie: {request.ActivityCategory ?? "Nie gespesifiseer"}; " +
+                        $"Datum: {request.ActivityDate?.ToString("yyyy-MM-dd") ?? "Nie gespesifiseer"}; " +
+                        $"Toerusting-items: {request.Equipment.Count}; " +
+                        $"Instandhoudingsitems: {request.MaintenanceItems.Count}"
+                },
+                HttpContext.RequestAborted);
+
+            var aiPriority =
+                NkrnAiService.NormaliseLogisticsPriority(
+                    aiAnalysis.SuggestedPriority);
+
             var connection =
                 _context.Database.GetDbConnection();
 
@@ -301,8 +327,8 @@ namespace NKRN.API.Controllers
                             @StartTime,
                             @EndTime,
                             @CleanupNextDay,
-                            'P3',
-                            'New',
+                            @Priority,
+                            'Logged',
                             SYSDATETIME(),
                             SYSDATETIME()
                         );
@@ -312,6 +338,11 @@ namespace NKRN.API.Controllers
                         command,
                         "@RequestedByUserID",
                         userID.Value);
+
+                    AddParameter(
+                        command,
+                        "@Priority",
+                        aiPriority);
 
                     AddParameter(
                         command,
@@ -547,6 +578,21 @@ namespace NKRN.API.Controllers
                         });
                 }
 
+                await _aiService.TryStoreAnalysisAsync(
+                    "Logistics",
+                    created.RequestID,
+                    aiAnalysis,
+                    HttpContext.RequestAborted);
+                if (request.AiSessionID.HasValue)
+                {
+                    await _aiService.TryCompleteHelpSessionAsync(
+                        userID.Value,
+                        request.AiSessionID.Value,
+                        "RequestLogged",
+                        created.RequestID,
+                        cancellationToken: HttpContext.RequestAborted);
+                }
+
                 await _notifications.NotifyAsync(created, created: true);
 
                 return CreatedAtAction(
@@ -617,8 +663,8 @@ namespace NKRN.API.Controllers
                 });
             }
 
-            if (update.Priority != null && !new[] { "P1", "P2", "P3", "P4" }.Contains(update.Priority))
-                return BadRequest(new { message = "Priority must be P1, P2, P3 or P4." });
+            if (update.Priority != null && !new[] { "Low", "Medium", "High", "Critical" }.Contains(update.Priority, StringComparer.OrdinalIgnoreCase))
+                return BadRequest(new { message = "Prioriteit moet Low, Medium, High of Critical wees." });
 
             var userID = GetLoggedInUserID();
 
@@ -657,7 +703,12 @@ namespace NKRN.API.Controllers
                     WHERE RequestID = @RequestID AND IsDeleted = 0;
                     """;
 
-                AddParameter(command, "@Priority", update.Priority);
+                AddParameter(
+                    command,
+                    "@Priority",
+                    string.IsNullOrWhiteSpace(update.Priority)
+                        ? null
+                        : NkrnRequestRules.NormalisePriority(update.Priority));
                 AddParameter(
                     command,
                     "@Status",
@@ -688,8 +739,9 @@ namespace NKRN.API.Controllers
                 await using var taskCommand = connection.CreateCommand();
                 taskCommand.Transaction = transaction;
                 taskCommand.CommandText = """
-                    UPDATE T SET Status = CASE @status WHEN 'Completed' THEN 'Afgehandel' WHEN 'New' THEN 'Nog nie begin' WHEN 'Cancelled' THEN 'Cancelled' WHEN 'Declined' THEN 'Cancelled' ELSE 'In Proses' END,
-                        Priority = R.Priority, CompletedDate = CASE WHEN @status = 'Completed' THEN COALESCE(T.CompletedDate, SYSDATETIME()) ELSE NULL END,
+                    UPDATE T SET Status = CASE @status WHEN 'Done' THEN 'Afgehandel' WHEN 'Logged' THEN 'Nog nie begin' WHEN 'Cancelled' THEN 'Cancelled' WHEN 'Declined' THEN 'Cancelled' ELSE 'In Proses' END,
+                        Priority = CASE R.Priority WHEN 'Critical' THEN 'P1' WHEN 'High' THEN 'P2' WHEN 'Low' THEN 'P4' ELSE 'P3' END,
+                        CompletedDate = CASE WHEN @status = 'Done' THEN COALESCE(T.CompletedDate, SYSDATETIME()) ELSE NULL END,
                         UpdatedDate = SYSDATETIME()
                     FROM dbo.LogisticsTasks T JOIN dbo.LogisticsRequests R ON R.ConvertedTaskID = T.TaskID
                     WHERE R.RequestID = @id AND R.IsDeleted = 0;
@@ -1647,11 +1699,7 @@ namespace NKRN.API.Controllers
         private static string CanonicalStatus(
             string status)
         {
-            return AllowedStatuses
-                .First(value =>
-                    value.Equals(
-                        status,
-                        StringComparison.OrdinalIgnoreCase));
+            return NkrnRequestRules.NormaliseRequestStatus(status);
         }
     }
 }

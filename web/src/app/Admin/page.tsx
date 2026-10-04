@@ -5,6 +5,7 @@ import { itLabel, itError } from "../it-labels";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "../language";
 import "../nkrn-control.css";
 
 // ========================================
@@ -165,7 +166,7 @@ function formatDateTime(
         return "Ongeldige datum";
     }
 
-    return date.toLocaleString("af-ZA");
+    return date.toLocaleString((typeof document !== "undefined" && document.documentElement.lang === "en" ? "en-ZA" : "af-ZA"));
 }
 
 // ========================================
@@ -182,6 +183,7 @@ export default function AdminPage() {
 
 function AdminDashboard() {
     const router = useRouter();
+    const { language } = useLanguage();
 
     // ========================================
     // USER
@@ -775,7 +777,7 @@ function AdminDashboard() {
             setShowAddUser(false);
 
             setSuccessMessage(
-                `${createdUser.firstName} ${createdUser.lastName} is bygevoeg.`
+                language === "af" ? `${createdUser.firstName} ${createdUser.lastName} is bygevoeg.` : `${createdUser.firstName} ${createdUser.lastName} was added.`
             );
         } catch (userError) {
             console.error(
@@ -1023,7 +1025,7 @@ setAdministrators(
             setEditingUser(null);
 
             setSuccessMessage(
-                `${updatedUser.firstName} ${updatedUser.lastName} is opgedateer.`
+                language === "af" ? `${updatedUser.firstName} ${updatedUser.lastName} is opgedateer.` : `${updatedUser.firstName} ${updatedUser.lastName} was updated.`
             );
 
             // Rebuild technician/admin lists from the
@@ -1174,7 +1176,7 @@ setAdministrators(
             }
 
             setSuccessMessage(
-                `${systemUser.firstName} ${systemUser.lastName} is gedeaktiveer.`
+                language === "af" ? `${systemUser.firstName} ${systemUser.lastName} is gedeaktiveer.` : `${systemUser.firstName} ${systemUser.lastName} was deactivated.`
             );
         } catch (userError) {
             console.error(
@@ -1419,7 +1421,7 @@ setAdministrators(
             }
 
             setSuccessMessage(
-                `Versoek #${request.requestID} is gestoor.`
+                language === "af" ? `Versoek #${request.requestID} is gestoor.` : `Request #${request.requestID} was saved.`
             );
         } catch (saveError) {
             console.error(

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NKRN.API.Data;
+using NKRN.API.Models;
 using NKRN.API.Services;
 
 namespace NKRN.API.Controllers;
@@ -19,6 +20,12 @@ public class FunksieversorgingRequestsController : ControllerBase
     private readonly EmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
+    private static readonly string[] DefaultNotificationEmails =
+    {
+        "svanwyk@tygies.co.za",
+        "kultuur@tygies.co.za"
+    };
+    private readonly NkrnAiService _aiService;
 
     private static readonly HashSet<string> AllowedVenues =
         new(StringComparer.OrdinalIgnoreCase)
@@ -78,12 +85,14 @@ public class FunksieversorgingRequestsController : ControllerBase
         ApplicationDbContext context,
         EmailService emailService,
         IConfiguration configuration,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        NkrnAiService aiService)
     {
         _context = context;
         _emailService = emailService;
         _configuration = configuration;
         _environment = environment;
+        _aiService = aiService;
     }
 
     [HttpGet("access")]
@@ -165,33 +174,33 @@ public class FunksieversorgingRequestsController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(functionName))
         {
-            return BadRequest("Funksie is verpligtend.");
+            return BadRequest("Vul asseblief die funksie se naam in.");
         }
 
         if (!AllowedVenues.Contains(venue))
         {
-            return BadRequest("Kies 'n geldige lokaal.");
+            return BadRequest("Kies asseblief â€™n geldige lokaal.");
         }
 
         if (venue.Equals("Ander", StringComparison.OrdinalIgnoreCase) &&
             string.IsNullOrWhiteSpace(otherVenue))
         {
-            return BadRequest("Spesifiseer die ander lokaal.");
+            return BadRequest("Vul asseblief die ander lokaal in.");
         }
 
         if (request.Attendance <= 0 || request.Attendance > 5000)
         {
-            return BadRequest("Voer 'n geldige aantal persone in.");
+            return BadRequest("Vul asseblief â€™n geldige aantal persone in.");
         }
 
         if (!request.ReturnAcknowledged)
         {
-            return BadRequest("Die terugbesorgingsbevestiging is verpligtend.");
+            return BadRequest("Bevestig asseblief die terugbesorgingsvoorwaardes.");
         }
 
         if (request.Items == null || request.Items.Count == 0)
         {
-            return BadRequest("Kies minstens een voorraaditem.");
+            return BadRequest("Kies asseblief minstens een voorraaditem.");
         }
 
         var resolvedItems = new List<ResolvedItem>();
@@ -203,7 +212,7 @@ public class FunksieversorgingRequestsController : ControllerBase
 
             if (string.IsNullOrWhiteSpace(code) || !seenCodes.Add(code))
             {
-                return BadRequest("Die voorraadkeuse bevat 'n ongeldige of duplikaat item.");
+                return BadRequest("Een van die voorraaditems is ongeldig of is meer as een keer gekies.");
             }
 
             if (code.Equals("ander", StringComparison.OrdinalIgnoreCase))
@@ -258,6 +267,22 @@ public class FunksieversorgingRequestsController : ControllerBase
 
         var leadTimeWarning =
             CountWorkingDays(DateTime.Today, request.NeededDate.Date) < 3;
+
+        var aiAnalysis = await _aiService.AnalyseAsync(
+            new AiTriageRequest
+            {
+                ModuleKey = "Funksieversorging",
+                Description =
+                    $"Funksie: {functionName}. " +
+                    $"Lokaal: {(venue.Equals("Ander", StringComparison.OrdinalIgnoreCase) ? otherVenue : venue)}. " +
+                    $"Aantal persone: {request.Attendance}. " +
+                    $"Benodig teen: {request.NeededDate:yyyy-MM-dd}. " +
+                    $"Notas: {notes ?? "Geen"}.",
+                AdditionalContext =
+                    $"Voorraaditems: {resolvedItems.Count}; " +
+                    $"Kort kennisgewing: {(leadTimeWarning ? "Ja" : "Nee")}."
+            },
+            HttpContext.RequestAborted);
 
         var createdAt = DateTime.Now;
         int requestID;
@@ -375,6 +400,12 @@ public class FunksieversorgingRequestsController : ControllerBase
             await _context.Database.CloseConnectionAsync();
         }
 
+        await _aiService.TryStoreAnalysisAsync(
+            "Funksieversorging",
+            requestID,
+            aiAnalysis,
+            HttpContext.RequestAborted);
+
         var notification = await TrySendNotificationAsync(
             requestID,
             requester.FirstName,
@@ -423,6 +454,138 @@ public class FunksieversorgingRequestsController : ControllerBase
         });
     }
 
+    public sealed class UpdateFunksieversorgingStatusRequest
+    {
+        public string Status { get; set; } = string.Empty;
+    }
+
+    [HttpPut("{id:int}/status")]
+    public async Task<IActionResult> UpdateStatus(
+        int id,
+        [FromBody] UpdateFunksieversorgingStatusRequest input)
+    {
+        var userID =
+            GetLoggedInUserID();
+
+        if (!userID.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        if (!await CanManageAsync(userID.Value))
+        {
+            return Forbid();
+        }
+
+        var status =
+            input.Status?.Trim() ?? string.Empty;
+
+        status =
+            status.ToLowerInvariant() switch
+            {
+                "logged" => "Logged",
+                "busy" or "inreview" or "in review" => "Busy",
+                "done" => "Done",
+                "declined" => "Declined",
+                _ => string.Empty
+            };
+
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Status moet Aangemeld, Besig, Afgehandel of Afgekeur wees."
+            });
+        }
+
+        int requestedByUserID;
+        DateTime neededDate;
+        string functionName;
+        string venue;
+
+        await _context.Database.OpenConnectionAsync();
+
+        try
+        {
+            var connection =
+                _context.Database.GetDbConnection();
+
+            await using var command =
+                connection.CreateCommand();
+
+            command.CommandText = """
+                UPDATE dbo.FunksieversorgingRequests
+                SET Status = @Status
+                OUTPUT
+                    INSERTED.RequestedByUserID,
+                    INSERTED.NeededDate,
+                    INSERTED.FunctionName,
+                    CASE
+                        WHEN INSERTED.Venue = 'Ander'
+                            THEN COALESCE(INSERTED.OtherVenue, 'Ander')
+                        ELSE INSERTED.Venue
+                    END
+                WHERE RequestID = @RequestID;
+                """;
+
+            AddParameter(
+                command,
+                "@Status",
+                status);
+
+            AddParameter(
+                command,
+                "@RequestID",
+                id);
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return NotFound();
+            }
+
+            requestedByUserID =
+                reader.GetInt32(0);
+
+            neededDate =
+                reader.GetDateTime(1);
+
+            functionName =
+                reader.GetString(2);
+
+            venue =
+                reader.GetString(3);
+        }
+        finally
+        {
+            await _context.Database.CloseConnectionAsync();
+        }
+
+        var requester =
+            await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    user =>
+                        user.UserID ==
+                            requestedByUserID);
+
+        if (requester != null)
+        {
+            await SendStatusUpdateAsync(
+                id,
+                $"{requester.FirstName} {requester.LastName}".Trim(),
+                requester.Email,
+                neededDate,
+                functionName,
+                venue,
+                status);
+        }
+
+        return NoContent();
+    }
     private async Task<bool> CanManageAsync(int userID)
     {
         if (User.IsInRole("3"))
@@ -430,22 +593,80 @@ public class FunksieversorgingRequestsController : ControllerBase
             return true;
         }
 
-        var notificationEmail =
-            _configuration["Funksieversorging:NotificationEmail"]?.Trim();
+        var userEmail = await _context.Users
+            .AsNoTracking()
+            .Where(user =>
+                user.UserID == userID &&
+                user.IsActive)
+            .Select(user => user.Email)
+            .FirstOrDefaultAsync();
 
-        if (string.IsNullOrWhiteSpace(notificationEmail))
+        if (string.IsNullOrWhiteSpace(userEmail))
         {
             return false;
         }
 
-        var userEmail = await _context.Users
-            .AsNoTracking()
-            .Where(u => u.UserID == userID && u.IsActive)
-            .Select(u => u.Email)
-            .FirstOrDefaultAsync();
+        return GetNotificationEmails()
+            .Contains(
+                userEmail.Trim(),
+                StringComparer.OrdinalIgnoreCase);
+    }
 
-        return !string.IsNullOrWhiteSpace(userEmail) &&
-               userEmail.Equals(notificationEmail, StringComparison.OrdinalIgnoreCase);
+    private List<string> GetNotificationEmails()
+    {
+        var recipients =
+            new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+        var configured =
+            _configuration
+                .GetSection("Funksieversorging:NotificationEmails")
+                .Get<string[]>();
+
+        if (configured != null)
+        {
+            foreach (var address in configured)
+            {
+                if (!string.IsNullOrWhiteSpace(address))
+                {
+                    recipients.Add(address.Trim());
+                }
+            }
+        }
+
+        // Backward compatibility with the older single-address setting.
+        var legacy =
+            _configuration[
+                "Funksieversorging:NotificationEmail"]
+                ?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(legacy))
+        {
+            recipients.Add(legacy);
+        }
+
+        foreach (var address in DefaultNotificationEmails)
+        {
+            recipients.Add(address);
+        }
+
+        return recipients.ToList();
+    }
+
+    private HashSet<string> GetNotificationRecipients(
+        string? requesterEmail)
+    {
+        var recipients =
+            new HashSet<string>(
+                GetNotificationEmails(),
+                StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(requesterEmail))
+        {
+            recipients.Add(requesterEmail.Trim());
+        }
+
+        return recipients;
     }
 
     private async Task<List<FunksieversorgingRequestResponse>> LoadRequestsAsync(int? requestedByUserID)
@@ -611,33 +832,25 @@ public class FunksieversorgingRequestsController : ControllerBase
         bool leadTimeWarning,
         IReadOnlyCollection<ResolvedItem> items)
     {
-        var recipient =
-            _configuration["Funksieversorging:NotificationEmail"]?.Trim();
-
-        if (string.IsNullOrWhiteSpace(recipient))
-        {
-            const string error =
-                "Geen Funksieversorging-kennisgewingsadres is opgestel nie.";
-
-            await UpdateNotificationAsync(requestID, null, error);
-            return (null, error);
-        }
+        var recipients =
+            GetNotificationRecipients(
+                requesterEmail);
 
         var sendInDevelopment =
             _configuration.GetValue<bool>(
                 "Funksieversorging:SendEmailInDevelopment");
 
-        if (_environment.IsDevelopment() && !sendInDevelopment)
+        if (_environment.IsDevelopment() &&
+            !sendInDevelopment)
         {
             return (null, null);
         }
 
-        try
-        {
-            var subject =
-                $"Nuwe Funksieversorging-versoek #{requestID} – {functionName}";
+        var subject =
+            $"Funksieversorging: Versoek #{requestID} ontvang â€“ {functionName}";
 
-            var body = BuildEmailBody(
+        var body =
+            BuildEmailBody(
                 requestID,
                 firstName,
                 lastName,
@@ -648,29 +861,125 @@ public class FunksieversorgingRequestsController : ControllerBase
                 attendance,
                 notes,
                 leadTimeWarning,
-                items
-            );
+                items);
 
-            await _emailService.SendEmailAsync(
-                recipient,
-                subject,
-                body
-            );
+        var failures =
+            new List<string>();
 
-            var sentAt = DateTime.Now;
-            await UpdateNotificationAsync(requestID, sentAt, null);
+        var sentCount = 0;
 
-            return (sentAt, null);
-        }
-        catch (Exception ex)
+        foreach (var recipient in recipients)
         {
-            var error = ex.Message.Length <= 1000
-                ? ex.Message
-                : ex.Message[..1000];
+            try
+            {
+                await _emailService.SendEmailAsync(
+                    recipient,
+                    subject,
+                    body);
 
-            await UpdateNotificationAsync(requestID, null, error);
+                sentCount++;
+            }
+            catch (Exception ex)
+            {
+                failures.Add(
+                    $"{recipient}: {ex.Message}");
+            }
+        }
 
-            return (null, error);
+        var sentAt =
+            sentCount > 0
+                ? DateTime.Now
+                : (DateTime?)null;
+
+        string? error =
+            failures.Count == 0
+                ? null
+                : string.Join(
+                    " | ",
+                    failures);
+
+        if (error != null &&
+            error.Length > 1000)
+        {
+            error =
+                error[..1000];
+        }
+
+        await UpdateNotificationAsync(
+            requestID,
+            sentAt,
+            error);
+
+        return (sentAt, error);
+    }
+
+    private async Task SendStatusUpdateAsync(
+        int requestID,
+        string requesterName,
+        string requesterEmail,
+        DateTime neededDate,
+        string functionName,
+        string venue,
+        string status)
+    {
+        var sendInDevelopment =
+            _configuration.GetValue<bool>(
+                "Funksieversorging:SendEmailInDevelopment");
+
+        if (_environment.IsDevelopment() &&
+            !sendInDevelopment)
+        {
+            return;
+        }
+
+        var recipients =
+            GetNotificationRecipients(
+                requesterEmail);
+
+        var statusLabel =
+            status switch
+            {
+                "Logged" => "Aangemeld",
+                "Busy" => "Besig",
+                "Done" => "Afgehandel",
+                "Declined" => "Afgekeur",
+                _ => status
+            };
+
+        var subject =
+            $"Funksieversorging: Versoek #{requestID} â€“ {statusLabel}";
+
+        var body = $"""
+            <html>
+            <body style="font-family:Arial,sans-serif;color:#222;">
+                <h2>Funksieversorging-versoek opgedateer</h2>
+                <p><strong>Versoek:</strong> #{requestID}</p>
+                <p><strong>Ingedien deur:</strong> {WebUtility.HtmlEncode(requesterName)}</p>
+                <p><strong>Funksie:</strong> {WebUtility.HtmlEncode(functionName)}</p>
+                <p><strong>Datum:</strong> {neededDate:yyyy-MM-dd}</p>
+                <p><strong>Lokaal:</strong> {WebUtility.HtmlEncode(venue)}</p>
+                <p><strong>Nuwe status:</strong> {WebUtility.HtmlEncode(statusLabel)}</p>
+                <p>
+                    Meld by die NKRN-portaal aan om die versoek
+                    en die huidige vordering te besigtig.
+                </p>
+            </body>
+            </html>
+            """;
+
+        foreach (var recipient in recipients)
+        {
+            try
+            {
+                await _emailService.SendEmailAsync(
+                    recipient,
+                    subject,
+                    body);
+            }
+            catch
+            {
+                // A status change must remain saved even if one email fails.
+            }
         }
     }
 

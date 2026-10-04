@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LogoutButton from "./components/LogoutButton";
+import { useLanguage } from "./language";
 import "./nkrn-control.css";
 
 interface LoggedInUser {
@@ -140,6 +141,7 @@ function ModuleIcon({
 
 export default function Home() {
     const router = useRouter();
+    const { language, t } = useLanguage();
 
     const [user, setUser] =
         useState<LoggedInUser | null>(null);
@@ -256,26 +258,34 @@ export default function Home() {
                             <Image src="/wit-logo-tygies.png" alt="Laerskool Tygerpoort" width={130} height={52} priority />
                             <div><p className="text-xs uppercase tracking-[.2em] text-[#e7b42b]">NKRN · Laerskool Tygerpoort</p><h1 className="mt-2 text-2xl font-bold">Skoolbedryfsplatform</h1></div>
                         </div>
-                        <div className="flex items-center gap-4"><div className="text-right text-sm"><p className="text-zinc-400">Aangemeld</p><p>{user.firstName} {user.lastName}</p><p className="text-zinc-400">{getRoleName(user.roleID)}</p></div><LogoutButton /></div>
+                        <div className="flex items-center gap-4"><div className="text-right text-sm"><p className="text-zinc-400">Aangemeld</p><p>{user.firstName} {user.lastName}</p><p className="text-zinc-400">{t(getRoleName(user.roleID))}</p></div><LogoutButton /></div>
                     </div>
                     <nav aria-label="Hoofnavigasie" className="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4">
                         <button type="button" aria-current="page" className="q4-nav">Tuis</button>
-                        {modules.map(module => <button type="button" className="q4-nav" key={module.key} disabled={module.status !== "active"} onClick={() => openModule(module)}>{module.name}</button>)}
+                        {modules.map(module => <button type="button" className="q4-nav" key={module.key} disabled={module.status !== "active"} onClick={() => openModule(module)}>{t(module.name)}</button>)}
                     </nav>
                 </header>
                 <section className="py-12 sm:py-16">
                     <p className="text-sm uppercase tracking-[.2em] text-[#e7b42b]">Jou skool. Jou werksruimte.</p>
                     <h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">Elke dag se werk,<br />op een plek.</h2>
-                    <p className="mt-5 text-lg text-zinc-300">Welkom, {user.firstName}. Kies ’n module om aan die gang te kom.</p>
-                    <p className="mt-6 inline-flex rounded-full border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-5 py-2 text-sm text-[#e7b42b]">3 aktiewe modules · 2 toekomstige modules</p>
+                    <p className="mt-5 text-lg text-zinc-300">
+                        {language === "af"
+                            ? `Welkom, ${user.firstName}. Kies ’n module om aan die gang te kom.`
+                            : `Welcome, ${user.firstName}. Choose a module to get started.`}
+                    </p>
+                    <p className="mt-6 inline-flex rounded-full border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-5 py-2 text-sm text-[#e7b42b]">
+                        {language === "af"
+                            ? "3 aktiewe modules · 2 toekomstige modules"
+                            : "3 active modules · 2 future modules"}
+                    </p>
                 </section>
                 <section aria-labelledby="active-modules">
                     <h2 id="active-modules" className="mb-5 text-xl font-semibold">Aktiewe modules</h2>
                     <div className="grid gap-5 md:grid-cols-3">{modules.filter(module => module.status === "active").map(module => (
                         <button key={module.key} type="button" onClick={() => openModule(module)} className="q4-module nkrn-panel group p-7 text-left">
                             <div className="flex items-center justify-between"><ModuleIcon moduleKey={module.key} /><span className="text-xs text-[#e7b42b]">In werking</span></div>
-                            <p className="mt-8 text-xs uppercase tracking-widest text-zinc-400">{module.eyebrow}</p>
-                            <h3 className="mt-2 text-2xl font-bold">{module.name}</h3><p className="mt-3 min-h-20 text-sm leading-6 text-zinc-300">{module.description}</p>
+                            <p className="mt-8 text-xs uppercase tracking-widest text-zinc-400">{t(module.eyebrow)}</p>
+                            <h3 className="mt-2 text-2xl font-bold">{t(module.name)}</h3><p className="mt-3 min-h-20 text-sm leading-6 text-zinc-300">{t(module.description)}</p>
                             <span className="mt-6 block text-sm text-[#e7b42b]">Maak oop →</span>
                         </button>
                     ))}</div>
@@ -283,7 +293,7 @@ export default function Home() {
                 <section className="mt-12 border-t border-white/10 pt-7" aria-labelledby="future-modules">
                     <h2 id="future-modules" className="mb-4 text-lg font-semibold text-zinc-300">Toekomstige modules</h2>
                     <div className="grid gap-4 sm:grid-cols-2">{modules.filter(module => module.status !== "active").map(module => (
-                        <button key={module.key} type="button" disabled className="flex cursor-not-allowed items-center justify-between rounded-2xl border border-white/10 bg-white/3 p-5 text-left"><span><span className="block font-semibold">{module.name}</span><span className="mt-1 block text-sm text-zinc-400">{module.description}</span></span><span className="ml-3 text-xs text-zinc-400">Binnekort</span></button>
+                        <button key={module.key} type="button" disabled className="flex cursor-not-allowed items-center justify-between rounded-2xl border border-white/10 bg-white/3 p-5 text-left"><span><span className="block font-semibold">{t(module.name)}</span><span className="mt-1 block text-sm text-zinc-400">{t(module.description)}</span></span><span className="ml-3 text-xs text-zinc-400">Binnekort</span></button>
                     ))}</div>
                 </section>
             </div>

@@ -27,6 +27,8 @@ namespace NKRN.API.Models
 
         public bool? CleanupNextDay { get; set; }
 
+        public Guid? AiSessionID { get; set; }
+
         public List<CreateLogisticsRequestLocationRequest> Locations { get; set; } = new();
 
         public List<CreateLogisticsRequestEquipmentRequest> Equipment { get; set; } = new();
@@ -98,8 +100,8 @@ namespace NKRN.API.Models
 
         public bool? CleanupNextDay { get; set; }
 
-        public string Priority { get; set; } = "P3";
-        public string Status { get; set; } = "New";
+        public string Priority { get; set; } = "Medium";
+        public string Status { get; set; } = "Logged";
 
         public string? ManagerNotes { get; set; }
 

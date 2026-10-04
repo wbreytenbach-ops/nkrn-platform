@@ -1,11 +1,13 @@
 "use client";
 import LogisticsRequestDiscussion from "./LogisticsRequestDiscussion";
+import ItAiAssistant from "../components/ItAiAssistant";
 
 import { displayLabel, requestStage } from "./labels";
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "../language";
 import "../nkrn-control.css";
 
 interface NKRNUser {
@@ -155,7 +157,7 @@ function displayDate(value?: string | null) {
         return value;
     }
 
-    return date.toLocaleDateString("af-ZA", {
+    return date.toLocaleDateString((typeof document !== "undefined" && document.documentElement.lang === "en" ? "en-ZA" : "af-ZA"), {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -193,7 +195,7 @@ function requestLocation(request: LogisticsRequest) {
     const primary = request.locations?.find((item) => item.isPrimary);
     const first = primary ?? request.locations?.[0];
 
-    return first?.locationName || first?.locationText || "Geen ligging";
+    return first?.locationName || first?.locationText || "No location";
 }
 
 export default function LogisticsTeacherPortal({
@@ -202,6 +204,7 @@ export default function LogisticsTeacherPortal({
     user: NKRNUser;
 }) {
     const router = useRouter();
+    const { language } = useLanguage();
 
     const [view, setView] = useState<PortalView>("home");
     const [loading, setLoading] = useState(true);
@@ -225,6 +228,7 @@ export default function LogisticsTeacherPortal({
     const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General">("Event");
     const [activityCategory, setActivityCategory] = useState("Other");
     const [description, setDescription] = useState("");
+    const [aiSessionID, setAiSessionID] = useState<string | null>(null);
     const [activityDate, setActivityDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
@@ -299,7 +303,7 @@ export default function LogisticsTeacherPortal({
             setError(
                 loadError instanceof Error
                     ? loadError.message
-                    : "Unable to load Logistics."
+                    : "Logistiek kon nie gelaai word nie."
             );
         } finally {
             setLoading(false);
@@ -316,10 +320,10 @@ export default function LogisticsTeacherPortal({
 
     const activeRequests = useMemo(
         () =>
-            requests.filter(
-                (request) =>
-                    !["Completed", "Declined", "Cancelled"].includes(request.status)
-            ),
+            requests.filter((request) => {
+                const stage = requestStage(request.status);
+                return !["Done", "Declined", "Cancelled"].includes(stage);
+            }),
         [requests]
     );
 
@@ -342,6 +346,7 @@ export default function LogisticsTeacherPortal({
         setRequestType("Event");
         setActivityCategory("Other");
         setDescription("");
+        setAiSessionID(null);
         setActivityDate("");
         setStartTime("");
         setEndTime("");
@@ -396,7 +401,7 @@ export default function LogisticsTeacherPortal({
 
             if (!response.ok) {
                 const body = await response.text();
-                throw new Error(body || "Lokaalbeskikbaarheid kon nie nagegaan word nie.");
+                throw new Error(body || (language === "af" ? "Lokaalbeskikbaarheid kon nie nagegaan word nie." : "Venue availability could not be checked."));
             }
 
             const result = (await response.json()) as {
@@ -407,7 +412,7 @@ export default function LogisticsTeacherPortal({
             setAvailabilityOkay(result.available);
 
             if (result.available) {
-                setAvailabilityMessage("Die lokaal is beskikbaar vir hierdie tyd.");
+                setAvailabilityMessage(language === "af" ? "Die lokaal is beskikbaar vir hierdie tyd." : "The venue is available for this time.");
             } else {
                 const conflict = result.conflicts[0];
 
@@ -563,7 +568,8 @@ export default function LogisticsTeacherPortal({
                     endTime:
                         requestType === "Event" ? `${endTime}:00` : null,
                     cleanupNextDay:
-                        requestType === "Event" ? cleanupNextDay : null,
+                        requestType === "Event" ? cleanupNextDay : null,                    aiSessionID,
+
                     locations,
                     equipment,
                     maintenanceItems,
@@ -599,7 +605,9 @@ export default function LogisticsTeacherPortal({
             setRequestOpen(false);
             resetRequestForm();
             setSuccess(
-                `Versoek #${created.requestID} is aan die Logistics-span gestuur.`
+                language === "af"
+                    ? `Versoek #${created.requestID} is aan die Logistics-span gestuur.`
+                    : `Request #${created.requestID} was sent to the Logistics team.`
             );
 
             await loadPortal();
@@ -619,7 +627,7 @@ export default function LogisticsTeacherPortal({
     async function cancelRequest(request: LogisticsRequest) {
         if (
             !window.confirm(
-                `Cancel Logistics Request #${request.requestID}?`
+                `Kanselleer Logistieke versoek #${request.requestID}?`
             )
         ) {
             return;
@@ -638,7 +646,7 @@ export default function LogisticsTeacherPortal({
             );
 
             if (!response.ok) {
-                let message = "Unable to cancel this request.";
+                let message = "Die versoek kon nie gekanselleer word nie.";
 
                 try {
                     const body = (await response.json()) as {
@@ -652,13 +660,13 @@ export default function LogisticsTeacherPortal({
                 throw new Error(message);
             }
 
-            setSuccess(`Request #${request.requestID} was cancelled.`);
+            setSuccess(`Versoek #${request.requestID} is gekanselleer.`);
             await loadPortal();
         } catch (cancelError) {
             setError(
                 cancelError instanceof Error
                     ? cancelError.message
-                    : "Unable to cancel this request."
+                    : "Die versoek kon nie gekanselleer word nie."
             );
         }
     }
@@ -715,8 +723,8 @@ export default function LogisticsTeacherPortal({
                                     Personeelportaal
                                 </h1>
                                 <p className="mt-1 text-sm text-zinc-500">
-                                    Welcome, {user.firstName}. Request assistance,
-                                    check venues and track progress.
+                                    Welkom, {user.firstName}. Dien versoeke in,
+                                    kyk na lokale en volg vordering op.
                                 </p>
                             </div>
                         </div>
@@ -786,9 +794,9 @@ export default function LogisticsTeacherPortal({
                                         Waarmee kan die Logistics-span jou help?
                                     </h2>
                                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400">
-                                        Submit one short request and NKRN will keep
-                                        the request, venue information and progress
-                                        together.
+                                        Dien een kort versoek in. NKRN hou die besonderhede,
+                                        lokaal-inligting en vordering
+                                        op een plek.
                                     </p>
                                 </div>
 
@@ -1071,8 +1079,8 @@ export default function LogisticsTeacherPortal({
                                 Komende besprekings
                             </h2>
                             <p className="mt-2 text-sm text-zinc-500">
-                                Teachers can see confirmed and pending venue use before
-                                submitting an event request.
+                                Sien bestaande en hangende lokaalbesprekings voordat
+                                jy ’n nuwe funksieversoek indien.
                             </p>
                         </div>
 
@@ -1118,9 +1126,9 @@ export default function LogisticsTeacherPortal({
                                     Ligging en lokale
                                 </h2>
                                 <p className="mt-2 text-sm text-zinc-500">
-                                    Select a confirmed NKRN location to see its
-                                    bookings. The detailed campus SVG can later plug
-                                    into these same Location IDs.
+                                    Kies ’n ligging om die bestaande besprekings
+                                    vir daardie area te sien.
+
                                 </p>
                             </div>
 
@@ -1149,8 +1157,8 @@ export default function LogisticsTeacherPortal({
                                         </p>
                                         <p className="mt-2 text-xs text-zinc-500">
                                             {location.canBeBooked
-                                                ? "Bookable venue"
-                                                : "School location"}
+                                                ? "Bespreekbare lokaal"
+                                                : "Skoolligging"}
                                         </p>
                                     </button>
                                 ))}
@@ -1458,6 +1466,43 @@ export default function LogisticsTeacherPortal({
                                         className={`${inputClass} resize-none`}
                                     />
                                 </div>
+                                <ItAiAssistant
+                                    moduleKey="Logistics"
+                                    description={description}
+                                    additionalContext={`Soort: ${requestType}; Ligging: ${
+                                        customLocation || locationID || "Nie gekies nie"
+                                    }; Datum: ${activityDate || "Nie gekies nie"}`}
+                                    disabled={submitting}
+                                    onSessionStarted={setAiSessionID}
+                                    onSuggestedRequestType={(value) =>
+                                        setRequestType(value)
+                                    }
+                                    onSuggestedCategory={(value) => {
+                                        const match =
+                                            referenceData.maintenance.find(
+                                                (item) =>
+                                                    item.maintenanceName.toLowerCase() ===
+                                                    value.toLowerCase()
+                                            );
+
+                                        if (match) {
+                                            setMaintenanceTypeID(
+                                                String(match.maintenanceTypeID)
+                                            );
+                                            setRequestType("Maintenance");
+                                        }
+                                    }}
+                                    onResolved={() => {
+                                        setRequestOpen(false);
+                                        resetRequestForm();
+                                        setSuccess(
+                                            "Goed, geen Logistieke versoek is nodig nie."
+                                        );
+                                    }}
+                                    onLogRequest={() => {
+                                        void submitRequest();
+                                    }}
+                                />
 
                                 <div>
                                     <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">

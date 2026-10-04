@@ -5,6 +5,7 @@ import { itLabel } from "../it-labels";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "../language";
 
 import "../nkrn-control.css";
 
@@ -70,6 +71,7 @@ const selectClass =
 
 export default function TechPage() {
     const router = useRouter();
+    const { language } = useLanguage();
 
     const [user, setUser] = useState<User | null>(null);
     const [checkingUser, setCheckingUser] = useState(true);
@@ -387,7 +389,7 @@ export default function TechPage() {
             }
 
             setMessage(
-                `Versoek #${selectedRequest.requestID} is opgedateer.`
+                language === "af" ? `Versoek #${selectedRequest.requestID} is opgedateer.` : `Request #${selectedRequest.requestID} was updated.`
             );
 
             await loadDashboard();

@@ -18,6 +18,7 @@ namespace NKRN.API.Controllers
         private readonly EmailService _emailService;
         private readonly GoogleCalendarService _calendarService;
         private readonly IConfiguration _configuration;
+        private readonly NkrnAiService _aiService;
 
         private const string GoogleCalendarUser =
             "itdesk@tygerpoort.co.za";
@@ -26,12 +27,14 @@ namespace NKRN.API.Controllers
             ApplicationDbContext context,
             EmailService emailService,
             GoogleCalendarService calendarService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            NkrnAiService aiService)
         {
             _context = context;
             _emailService = emailService;
             _calendarService = calendarService;
             _configuration = configuration;
+            _aiService = aiService;
         }
 
         // ========================================
@@ -200,13 +203,58 @@ namespace NKRN.API.Controllers
                 requester = selectedRequester;
             }
 
+            var cleanDescription = input.Description?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(cleanDescription))
+            {
+                return BadRequest("Beskryf asseblief die probleem.");
+            }
+
+            var categoryOptions = await _context.Categories
+                .AsNoTracking()
+                .OrderBy(category => category.CategoryID)
+                .Select(category => new
+                {
+                    category.CategoryID,
+                    category.CategoryName
+                })
+                .ToListAsync();
+
+            var aiAnalysis = input.UseAi
+                ? await _aiService.AnalyseAsync(
+                    new AiTriageRequest
+                    {
+                        ModuleKey = "IT",
+                        Description = cleanDescription,
+                        AllowedCategories = categoryOptions
+                            .Select(category => category.CategoryName)
+                            .ToList()
+                    },
+                    HttpContext.RequestAborted)
+                : NkrnAiService.CreateFallback("IT", cleanDescription);
+
+            var aiCategoryID = categoryOptions
+                .FirstOrDefault(category =>
+                    !string.IsNullOrWhiteSpace(aiAnalysis.SuggestedCategory) &&
+                    category.CategoryName.Equals(
+                        aiAnalysis.SuggestedCategory,
+                        StringComparison.OrdinalIgnoreCase))
+                ?.CategoryID;
+
+            var generatedTitle =
+                !string.IsNullOrWhiteSpace(input.Title)
+                    ? input.Title.Trim()
+                    : !string.IsNullOrWhiteSpace(aiAnalysis.SuggestedTitle)
+                        ? aiAnalysis.SuggestedTitle.Trim()
+                        : NkrnAiService.CreateFallbackTitle(cleanDescription);
+
             var request = new Request
             {
                 UserID = requester.UserID,
                 CreatedByUserID = loggedInUser.UserID,
-                Title = input.Title.Trim(),
-                Description = input.Description.Trim(),
-                Priority = input.Priority,
+                Title = generatedTitle,
+                Description = cleanDescription,
+                Priority = NkrnAiService.NormaliseItPriority(input.Priority),
                 CategoryID = input.CategoryID,
                 UserName = $"{requester.FirstName} {requester.LastName}".Trim(),
                 UserEmail = requester.Email,
@@ -244,18 +292,19 @@ namespace NKRN.API.Controllers
                 // TEACHER DEFAULT PRIORITY
                 // ========================================
 
-                request.Priority = "Medium";
+                request.Priority =
+                    NkrnAiService.NormaliseItPriority(
+                        aiAnalysis.SuggestedPriority);
 
                 // ========================================
                 // TEACHER DEFAULT CATEGORY
                 // ========================================
 
-                var defaultCategory =
-                    await _context.Categories
-                        .OrderBy(c => c.CategoryID)
-                        .FirstOrDefaultAsync();
+                var defaultCategoryID =
+                    aiCategoryID ??
+                    categoryOptions.FirstOrDefault()?.CategoryID;
 
-                if (defaultCategory == null)
+                if (!defaultCategoryID.HasValue)
                 {
                     return BadRequest(
                         "No request categories are configured."
@@ -263,7 +312,7 @@ namespace NKRN.API.Controllers
                 }
 
                 request.CategoryID =
-                    defaultCategory.CategoryID;
+                    defaultCategoryID.Value;
             }
             else
             {
@@ -272,18 +321,25 @@ namespace NKRN.API.Controllers
                 // ========================================
 
                 if (!request.CategoryID.HasValue || request.CategoryID <= 0 ||
-                    !await _context.Categories.AnyAsync(c => c.CategoryID == request.CategoryID))
+                    !categoryOptions.Any(c => c.CategoryID == request.CategoryID))
+                {
+                    request.CategoryID =
+                        aiCategoryID ??
+                        categoryOptions.FirstOrDefault()?.CategoryID;
+                }
+
+                if (!request.CategoryID.HasValue)
                 {
                     return BadRequest(
                         "A valid category is required."
                     );
                 }
 
-                if (string.IsNullOrWhiteSpace(
-                    request.Priority))
-                {
-                    request.Priority = "Medium";
-                }
+                request.Priority =
+                    NkrnAiService.NormaliseItPriority(
+                        request.Priority,
+                        NkrnAiService.NormaliseItPriority(
+                            aiAnalysis.SuggestedPriority));
             }
 
             // ========================================
@@ -293,6 +349,21 @@ namespace NKRN.API.Controllers
             _context.Requests.Add(request);
 
             await _context.SaveChangesAsync();
+
+            await _aiService.TryStoreAnalysisAsync(
+                "IT",
+                request.RequestID,
+                aiAnalysis,
+                HttpContext.RequestAborted);
+            if (input.AiSessionID.HasValue)
+            {
+                await _aiService.TryCompleteHelpSessionAsync(
+                    loggedInUserID.Value,
+                    input.AiSessionID.Value,
+                    "RequestLogged",
+                    request.RequestID,
+                    cancellationToken: HttpContext.RequestAborted);
+            }
 
             // Notify the actual requester and active admins once per email address.
             // A delivery failure must not turn a saved request into a failed submission.
