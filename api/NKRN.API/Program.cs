@@ -114,7 +114,11 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.Configure<AiSettings>(
     builder.Configuration.GetSection("AI")
 );
-builder.Services.AddHttpClient("NKRN-AI");
+builder.Services.AddHttpClient("NKRN-AI")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+    });
 builder.Services.AddScoped<NkrnAiService>();
 
 builder.Services.AddScoped<LogisticsRequestNotificationService>();
