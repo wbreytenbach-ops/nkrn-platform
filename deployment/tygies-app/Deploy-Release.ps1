@@ -97,10 +97,10 @@ function Assert-CurrentRelease {
 if ($Action -eq 'Install') {
     if (Test-Path -LiteralPath $stateFile) { throw 'This release already has deployment state. Review it; do not repeat Install.' }
     $manifest = Get-Content -LiteralPath (Join-Path $PackageRoot 'release.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($manifest.commit -ne 'a0a92a195715db56eab20ce8b857ed2ae60daef6' -or $manifest.publicApiUrl -ne 'https://portal.tygies.co.za') {
+    if ($manifest.commit -ne '48db35c3e65ba8f4fafcd82396484d58196aa41e' -or $manifest.publicApiUrl -ne 'https://portal.tygies.co.za') {
         throw 'This package is not the expected commit and production address.'
     }
-    if ($manifest.release -notmatch '^NKRN-a0a92a1-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}$') { throw 'Unexpected release identifier.' }
+    if ($manifest.release -notmatch '^NKRN-48db35c-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}$') { throw 'Unexpected release identifier.' }
     $release = [string]$manifest.release
     foreach ($relative in @('api\NKRN.API.dll', 'api\web.config', 'frontend\server.js', 'frontend\.next\BUILD_ID', 'frontend\public\sw.js')) {
         if (-not (Test-Path -LiteralPath (Join-Path $PackageRoot $relative) -PathType Leaf)) { throw "Package is missing $relative." }

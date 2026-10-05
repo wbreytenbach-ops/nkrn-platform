@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
-$commit = 'a0a92a195715db56eab20ce8b857ed2ae60daef6'
+$commit = '48db35c3e65ba8f4fafcd82396484d58196aa41e'
 $apiUrl = 'https://portal.tygies.co.za'
 $serverRuntime = [version]'10.0.11'
 
@@ -44,11 +44,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Cannot read the project Git commit.' }
 # Allow descendant commits only while the exported application trees still match.
 & git.exe -C $ProjectRoot merge-base --is-ancestor $commit HEAD
 if ($LASTEXITCODE -ne 0) {
-    throw "Current HEAD does not descend from the pinned application release a0a92a1."
+    throw "Current HEAD does not descend from the pinned application release 48db35c."
 }
 & git.exe -C $ProjectRoot diff --quiet $commit -- api web tests docs
 if ($LASTEXITCODE -ne 0) {
-    throw 'The tracked api/web/tests/docs files differ from release a0a92a1. Review the intended application release before building.'
+    throw 'The tracked api/web/tests/docs files differ from release 48db35c. Review the intended application release before building.'
 }
 
 $nodeVersionText = & node.exe --version
@@ -61,7 +61,7 @@ if ($LASTEXITCODE -ne 0 -or $sdkVersion -notmatch '^10\.') {
 }
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$releaseId = 'NKRN-a0a92a1-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 6)
+$releaseId = 'NKRN-48db35c-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 6)
 $workRoot = Join-Path $OutputRoot $releaseId
 $sourceRoot = Join-Path $workRoot 'source'
 $packageRoot = Join-Path $workRoot 'package'
