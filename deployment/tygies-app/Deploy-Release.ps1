@@ -1,4 +1,4 @@
-# Run on TYGIES-APP, normally through Invoke-Command -Session $session.
+﻿# Run on TYGIES-APP, normally through Invoke-Command -Session $session.
 # Database migrations are a separate, prior step; this script does not run SQL.
 #requires -Version 5.1
 [CmdletBinding()]
@@ -97,7 +97,7 @@ function Assert-CurrentRelease {
 if ($Action -eq 'Install') {
     if (Test-Path -LiteralPath $stateFile) { throw 'This release already has deployment state. Review it; do not repeat Install.' }
     $manifest = Get-Content -LiteralPath (Join-Path $PackageRoot 'release.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($manifest.commit -ne '48db35c3e65ba8f4fafcd82396484d58196aa41e' -or $manifest.publicApiUrl -ne 'https://portal.tygies.co.za') {
+    if ($manifest.commit -ne 'ac103f2' -or $manifest.publicApiUrl -ne 'https://portal.tygies.co.za') {
         throw 'This package is not the expected commit and production address.'
     }
     if ($manifest.release -notmatch '^NKRN-48db35c-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}$') { throw 'Unexpected release identifier.' }
@@ -231,3 +231,4 @@ else {
         Write-Host 'Temporary Logistics automation pause removed; original configuration now applies. Due job cards may send when the API starts.'
     }
 }
+
