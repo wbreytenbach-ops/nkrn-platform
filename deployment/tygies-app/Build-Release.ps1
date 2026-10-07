@@ -1,4 +1,4 @@
-# Run on Wilco's Windows development PC. This does not contact the live server.
+﻿# Run on Wilco's Windows development PC. This does not contact the live server.
 #requires -Version 5.1
 [CmdletBinding()]
 param(
@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
-$commit = '48db35c3e65ba8f4fafcd82396484d58196aa41e'
+$commit = 'ac103f2'
 $apiUrl = 'https://portal.tygies.co.za'
 $serverRuntime = [version]'10.0.11'
 
@@ -54,7 +54,7 @@ if ($LASTEXITCODE -ne 0) {
 $nodeVersionText = & node.exe --version
 if ($LASTEXITCODE -ne 0) { throw 'Node could not start.' }
 $nodeVersion = [version]($nodeVersionText.Trim().TrimStart('v'))
-if ($nodeVersion.Major -ne 22) { throw 'Use Node 22 on this PC to match TYGIES-APP.' }
+if (@(22,24) -notcontains $nodeVersion.Major) { throw 'Use Node 22 or 24 on this PC.' }
 $sdkVersion = & dotnet.exe --version
 if ($LASTEXITCODE -ne 0 -or $sdkVersion -notmatch '^10\.') {
     throw 'The .NET 10 SDK is required on the build PC.'
@@ -161,3 +161,6 @@ finally {
     [Environment]::SetEnvironmentVariable('NODE_ENV', $oldNodeEnv, 'Process')
     [Environment]::SetEnvironmentVariable('NEXT_TELEMETRY_DISABLED', $oldTelemetry, 'Process')
 }
+
+
+
