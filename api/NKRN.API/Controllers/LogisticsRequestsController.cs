@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Security.Claims;
 using NKRN.API.Data;
@@ -275,6 +275,9 @@ namespace NKRN.API.Controllers
                 NkrnAiService.NormaliseLogisticsPriority(
                     aiAnalysis.SuggestedPriority);
 
+            var databasePriority =
+                NkrnRequestRules.ToLegacyTaskPriority(aiPriority);
+
             var connection =
                 _context.Database.GetDbConnection();
 
@@ -342,7 +345,7 @@ namespace NKRN.API.Controllers
                     AddParameter(
                         command,
                         "@Priority",
-                        aiPriority);
+                        databasePriority);
 
                     AddParameter(
                         command,
@@ -1590,11 +1593,11 @@ namespace NKRN.API.Controllers
                 request.RequestType?.Trim() == "Event" &&
                 !string.IsNullOrWhiteSpace(
                     request.ActivityCategory)
-                    ? $"{typeLabel} – {request.ActivityCategory.Trim()}"
+                    ? $"{typeLabel} â€“ {request.ActivityCategory.Trim()}"
                     : typeLabel;
 
             var title =
-                $"{prefix} – {description}";
+                $"{prefix} â€“ {description}";
 
             return title.Length <= 200
                 ? title
@@ -1703,3 +1706,4 @@ namespace NKRN.API.Controllers
         }
     }
 }
+
