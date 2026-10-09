@@ -8,7 +8,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
-$commit = 'ac103f2'
 $apiUrl = 'https://portal.tygies.co.za'
 $serverRuntime = [version]'10.0.11'
 
@@ -38,18 +37,20 @@ foreach ($program in @('git.exe', 'node.exe', 'npm.cmd', 'dotnet.exe', 'robocopy
 }
 $ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).ProviderPath
 $OutputRoot = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputRoot)
-$head = & git.exe -C $ProjectRoot rev-parse HEAD
-if ($LASTEXITCODE -ne 0) { throw 'Cannot read the project Git commit.' }
-# The deployment scripts may be committed after the pinned application release.
-# Allow descendant commits only while the exported application trees still match.
-& git.exe -C $ProjectRoot merge-base --is-ancestor $commit HEAD
-if ($LASTEXITCODE -ne 0) {
-    throw "Current HEAD does not descend from the pinned application release 48db35c."
+$head = (& git.exe -C $ProjectRoot rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $head -notmatch ('^[a-f0-9]{40}' + '$')) {
+    throw 'Cannot read a valid full Git commit SHA.'
 }
-& git.exe -C $ProjectRoot diff --quiet $commit -- api web tests docs
-if ($LASTEXITCODE -ne 0) {
-    throw 'The tracked api/web/tests/docs files differ from release 48db35c. Review the intended application release before building.'
+$branch = (& git.exe -C $ProjectRoot branch --show-current).Trim()
+if ($LASTEXITCODE -ne 0 -or $branch -ne 'logistics-release-candidate-20261009') {
+    throw ("Build only from logistics-release-candidate-20261009; current branch is '" + $branch + "'.")
 }
+$trackedChanges = & git.exe -C $ProjectRoot status --porcelain --untracked-files=no
+if ($LASTEXITCODE -ne 0 -or $trackedChanges) {
+    throw 'Tracked files have uncommitted changes. Commit or revert them before building.'
+}
+$commit = $head
+$shortCommit = $commit.Substring(0, 7)
 
 $nodeVersionText = & node.exe --version
 if ($LASTEXITCODE -ne 0) { throw 'Node could not start.' }
@@ -61,7 +62,7 @@ if ($LASTEXITCODE -ne 0 -or $sdkVersion -notmatch '^10\.') {
 }
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$releaseId = 'NKRN-48db35c-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 6)
+$releaseId = 'NKRN-' + $shortCommit + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 6)
 $workRoot = Join-Path $OutputRoot $releaseId
 $sourceRoot = Join-Path $workRoot 'source'
 $packageRoot = Join-Path $workRoot 'package'
@@ -132,7 +133,7 @@ try {
     $manifest = [ordered]@{
         release = $releaseId
         commit = $commit
-        branch = 'tygerpoort-q4-2026'
+        branch = $branch
         publicApiUrl = $apiUrl
         createdUtc = [DateTime]::UtcNow.ToString('o')
         buildPlatform = 'Windows'
@@ -161,6 +162,3 @@ finally {
     [Environment]::SetEnvironmentVariable('NODE_ENV', $oldNodeEnv, 'Process')
     [Environment]::SetEnvironmentVariable('NEXT_TELEMETRY_DISABLED', $oldTelemetry, 'Process')
 }
-
-
-
