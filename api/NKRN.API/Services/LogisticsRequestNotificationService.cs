@@ -49,6 +49,14 @@ public class LogisticsRequestNotificationService(
                 }
             }
 
+            if (string.Equals(
+                    request.RequestType?.Trim(),
+                    "Security",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                recipients.Add("jwerner@tygies.co.za");
+            }
+
             var heading = eventHeading ??
                 (created
                     ? "Logistieke versoek ontvang"
