@@ -13,7 +13,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = 'C:\Users\WilcoB\Documents\Visual Studio Projects\NKRN'
 Set-Location -LiteralPath $projectRoot
 $currentBranch = git branch --show-current
-if ($LASTEXITCODE -ne 0 -or $currentBranch -ne 'logistics-release-candidate-20261009') { throw 'Open the tygerpoort-q4-2026 branch before pulling this update.' }
+if ($LASTEXITCODE -ne 0 -or $currentBranch -ne 'logistics-release-candidate-20261009') { throw 'Open the logistics-release-candidate-20261009 branch before pulling this update' }
 git pull --ff-only origin logistics-release-candidate-20261009
 if ($LASTEXITCODE -ne 0) { throw 'Git pull failed. Resolve the reported issue before continuing.' }
 $kitRoot = Join-Path $projectRoot 'deployment\tygies-app'
@@ -73,7 +73,7 @@ $recordedHash = ((Get-Content -LiteralPath $hashFile -Raw) -split '\s+')[0]
 if ($expectedHash -ine $recordedHash) { throw 'The release ZIP does not match its build hash.' }
 
 $releaseName = [System.IO.Path]::GetFileNameWithoutExtension($releaseZip)
-if ($releaseName -notmatch '^NKRN-[a-f0-9]{7}-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}) { throw 'Select the release ZIP, not source.zip or the deployment kit ZIP.' }) { throw 'Select the release ZIP, not source.zip or the deployment kit ZIP.' }
+if ($releaseName -notmatch '^NKRN-[a-f0-9]{7}-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}$') { throw 'Select the release ZIP, not source.zip or the deployment kit ZIP.' }
 $remoteRoot = 'C:\NKRN-Deploy\' + $releaseName
 $remoteZip = $remoteRoot + '\release.zip'
 $remotePackage = $remoteRoot + '\package'
@@ -214,7 +214,7 @@ Invoke-Command -Session $session -ArgumentList $remoteRoot, $remotePackage -Scri
 }
 ```
 
-Rollback stops the same application services, moves the new folders aside as `.failed-...`, restores the previous folders at their original paths, and restarts the application. It preserves the replaced files for investigation and leaves additive SQL changes and database request records intact. Confirm login and request history after rollback. If users have created new OAuth authorisations or other file-based data since the update, keep the `.failed-...` folders for reconciliation.
+Rollback stops only the API, restores the verified API backup in place, and restarts the API. It does not replace or restart the frontend, and it leaves additive SQL changes and database request records intact. Confirm login and request history after rollback. Do not delete the backup until the portal has been verified.
 
 This script does not restore the entire server's IIS configuration, which could affect unrelated sites. The IIS backup remains available for a targeted review if needed.
 
