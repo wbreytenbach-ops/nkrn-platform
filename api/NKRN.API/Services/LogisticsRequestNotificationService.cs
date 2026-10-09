@@ -17,7 +17,8 @@ public class LogisticsRequestNotificationService(
     private static readonly string[] DefaultRecipients =
     {
         "logistiek@tygies.co.za",
-        "terreinbestuur@tygies.co.za"
+        "terreinbestuur@tygies.co.za",
+        "msmit@tygies.co.za"
     };
 
     public async Task NotifyAsync(
