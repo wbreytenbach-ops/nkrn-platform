@@ -157,7 +157,8 @@ namespace NKRN.API.Controllers
                 {
                     "Event",
                     "Maintenance",
-                    "General"
+                    "General",
+                    "Security"
                 },
                 activityCategories = new[]
                 {
@@ -213,6 +214,18 @@ namespace NKRN.API.Controllers
                 return BadRequest(new
                 {
                     message = "A request type is required."
+                });
+            }
+
+            var supportedRequestTypes = new HashSet<string>(
+                new[] { "Event", "Maintenance", "General", "Security" },
+                StringComparer.OrdinalIgnoreCase);
+
+            if (!supportedRequestTypes.Contains(request.RequestType.Trim()))
+            {
+                return BadRequest(new
+                {
+                    message = "Unsupported Logistics request type."
                 });
             }
 
@@ -1569,6 +1582,7 @@ namespace NKRN.API.Controllers
                     "Event" => "Funksie / Aktiwiteit",
                     "Maintenance" => "Instandhouding",
                     "General" => "Algemeen",
+                    "Security" => "Sekuriteit",
                     _ => "Logistics"
                 };
 
