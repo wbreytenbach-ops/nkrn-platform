@@ -225,7 +225,7 @@ export default function LogisticsTeacherPortal({
     const [requestOpen, setRequestOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General">("Event");
+    const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General" | "Security">("Event");
     const [activityCategory, setActivityCategory] = useState("Other");
     const [description, setDescription] = useState("");
     const [aiSessionID, setAiSessionID] = useState<string | null>(null);
@@ -360,7 +360,7 @@ export default function LogisticsTeacherPortal({
         setAvailabilityOkay(null);
     }
 
-    function openRequestForm(type?: "Event" | "Maintenance" | "General") {
+    function openRequestForm(type?: "Event" | "Maintenance" | "General" | "Security") {
         resetRequestForm();
         if (type) {
             setRequestType(type);
@@ -1345,6 +1345,7 @@ export default function LogisticsTeacherPortal({
                                             ["Event", "Funksie / Aktiwiteit", "Lokaal, tyd en toerusting"],
                                             ["Maintenance", "Instandhouding", "Iets moet herstel of vervang word"],
                                             ["General", "Algemeen", "Enige ander logistieke ondersteuning"],
+                                            ["Security", "Sekuriteit", "Sekuriteitsversoeke en veiligheidskwessies"],
                                         ].map(([value, label, detail]) => (
                                             <button
                                                 key={value}
@@ -1355,6 +1356,7 @@ export default function LogisticsTeacherPortal({
                                                             | "Event"
                                                             | "Maintenance"
                                                             | "General"
+                                                            | "Security"
                                                     );
                                                     setError("");
                                                     setStep(1);
@@ -1399,6 +1401,8 @@ export default function LogisticsTeacherPortal({
                                             ? "Funksie- of aktiwiteitsbesonderhede"
                                             : requestType === "Maintenance"
                                             ? "Wat benodig aandag?"
+                                            : requestType === "Security"
+                                            ? "Sekuriteitsversoek"
                                             : "Wat benodig jy?"}
                                     </h3>
 
@@ -1447,6 +1451,8 @@ export default function LogisticsTeacherPortal({
                                             ? "Wat reël jy en wat moet Logistics weet?"
                                             : requestType === "Maintenance"
                                             ? "Wat is fout of wat moet gedoen word?"
+                                            : requestType === "Security"
+                                            ? "Beskryf die veiligheidskwessie, risiko of sekuriteitsondersteuning wat benodig word."
                                             : "Waarmee kan Logistics help?"}
                                     </label>
 
@@ -1461,6 +1467,8 @@ export default function LogisticsTeacherPortal({
                                                 ? "bv. Graad 5-oueraand. Ons benodig die saal gereed voor 17:30."
                                                 : requestType === "Maintenance"
                                                 ? "bv. Die venster in Graad 5A sluit nie en moet nagegaan word."
+                                                : requestType === "Security"
+                                                ? "Beskryf die veiligheidskwessie en waar/wanneer dit gebeur."
                                                 : "Beskryf kortliks wat jy benodig."
                                         }
                                         className={`${inputClass} resize-none`}
