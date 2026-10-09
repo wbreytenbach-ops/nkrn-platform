@@ -1,6 +1,6 @@
 # Deploy NKRN through a PowerShell session
 
-Use this guide on your Windows development PC. The target is TYGIES-APP and the release is commit `a0a92a1` of `tygerpoort-q4-2026`. The public address is https://portal.tygies.co.za.
+Use this guide on your Windows development PC. The target is TYGIES-APP and the source must be the reviewed `logistics-release-candidate-20261009` branch. The builder records the exact full Git commit SHA in `release.json`; it does not use a historical pinned application commit.
 
 Run blocks one at a time in the same **Windows PowerShell 5.1** window. Stop at an error; do not continue with later blocks. The scripts passed PowerShell syntax checks but have not been executed against your Windows servers here. Nothing is deployed merely by downloading this kit.
 
@@ -13,15 +13,15 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = 'C:\Users\WilcoB\Documents\Visual Studio Projects\NKRN'
 Set-Location -LiteralPath $projectRoot
 $currentBranch = git branch --show-current
-if ($LASTEXITCODE -ne 0 -or $currentBranch -ne 'tygerpoort-q4-2026') { throw 'Open the tygerpoort-q4-2026 branch before pulling this update.' }
-git pull --ff-only origin tygerpoort-q4-2026
+if ($LASTEXITCODE -ne 0 -or $currentBranch -ne 'logistics-release-candidate-20261009') { throw 'Open the tygerpoort-q4-2026 branch before pulling this update.' }
+git pull --ff-only origin logistics-release-candidate-20261009
 if ($LASTEXITCODE -ne 0) { throw 'Git pull failed. Resolve the reported issue before continuing.' }
 $kitRoot = Join-Path $projectRoot 'deployment\tygies-app'
 ```
 
 If your prompt starts with `[TYGIES-APP]:`, type `Exit-PSSession` once to return to your local prompt before running these commands. Operations below use `$session` to send individual commands to the server. `Copy-Item -ToSession` runs on your PC, where the source files exist.
 
-The builder remains pinned to application commit `a0a92a1`. It allows later deployment-only commits while verifying that `api`, `web`, `tests` and `docs` still match the application release.
+The builder packages the exact committed `HEAD` of `logistics-release-candidate-20261009`. It stops if tracked files have uncommitted changes. The manifest contains the full commit SHA and the release ID starts with that commit's short SHA.
 
 ## 2. Connect to TYGIES-APP
 
@@ -73,7 +73,7 @@ $recordedHash = ((Get-Content -LiteralPath $hashFile -Raw) -split '\s+')[0]
 if ($expectedHash -ine $recordedHash) { throw 'The release ZIP does not match its build hash.' }
 
 $releaseName = [System.IO.Path]::GetFileNameWithoutExtension($releaseZip)
-if ($releaseName -notmatch '^NKRN-a0a92a1-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}$') { throw 'Select the release ZIP, not source.zip or the deployment kit ZIP.' }
+if ($releaseName -notmatch '^NKRN-[a-f0-9]{7}-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}) { throw 'Select the release ZIP, not source.zip or the deployment kit ZIP.' }) { throw 'Select the release ZIP, not source.zip or the deployment kit ZIP.' }
 $remoteRoot = 'C:\NKRN-Deploy\' + $releaseName
 $remoteZip = $remoteRoot + '\release.zip'
 $remotePackage = $remoteRoot + '\package'
@@ -110,7 +110,7 @@ $savedPaths = @{ remoteRoot = $remoteRoot; remotePackage = $remotePackage; relea
 [System.IO.File]::WriteAllText((Join-Path $kitRoot 'session-deploy-paths.json'), ($savedPaths | ConvertTo-Json), [System.Text.UTF8Encoding]::new($false))
 ```
 
-Confirm the printed manifest has commit `a0a92a195715db56eab20ce8b857ed2ae60daef6` and publicApiUrl `https://portal.tygies.co.za`. Its `deployed:false` and `databaseApplied:false` fields describe the original build package. Deployment progress is tracked separately in `deployment-state.json`.
+Confirm the printed manifest has the exact candidate commit SHA reported by the build and publicApiUrl `https://portal.tygies.co.za`.
 
 ## 5. Inspect the existing application setup
 
@@ -123,7 +123,7 @@ Invoke-Command -Session $session -ArgumentList $remoteRoot -ScriptBlock {
 }
 ```
 
-Check that the API is `C:\inetpub\AuroraITDesk.API`, the IIS ASP.NET Core module is present, and `AuroraFrontend` launches `node.exe` with `server.js` from its recorded AppDirectory. The installer discovers this frontend folder instead of guessing it. It stops before the live switch if these prerequisites differ.
+The installer verifies the frontend service configuration but does not replace the frontend in this release.
 
 SQL is deliberately omitted from this remote check. A PC -> TYGIES-APP -> TYGIES-SQL connection can fail because your Windows credentials are not automatically delegated to the second server. Connect directly from your PC to TYGIES-SQL using SSMS for the next step. [Microsoft explanation of the second hop](https://learn.microsoft.com/en-us/powershell/scripting/security/remoting/ps-remoting-second-hop?view=powershell-7.5).
 
@@ -161,9 +161,9 @@ Invoke-Command -Session $session -ArgumentList $remoteRoot, $remotePackage -Scri
 }
 ```
 
-The installer stages a fresh frontend, saves an IIS configuration backup, then stops only NKRN Portal, AuroraITDeskAPI and AuroraFrontend for the file switch. It retains the old API and frontend directories as `.backup-<release>` siblings and puts the new versions at the **same original paths**. The NSSM service command, IIS bindings, portal proxy configuration and API pool identity are preserved.
+The current installer updates the API in place only. It saves an IIS configuration backup and verifies a complete API backup before overlaying files. The frontend service and NKRN Portal site are deliberately left running and untouched.
 
-The API stage includes the existing production appsettings, token storage and application data with their existing permissions. The published files are overlaid, and the API launch target is updated to `NKRN.API.dll` while existing environment variables and IIS custom configuration remain. Scheduled Logistics automation is temporarily paused through an API environment override.
+The API stage retains the existing production `web.config`, appsettings, token storage and application data with their existing permissions. Published API files are overlaid, and the API launch target is updated to `NKRN.API.dll` while existing environment variables and IIS custom configuration remain.
 
 An installation error triggers an attempted application rollback. If rollback also errors, keep the output and inspect the saved deployment state before further changes. No database rollback is attempted automatically.
 
