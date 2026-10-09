@@ -271,7 +271,6 @@ if ($Action -eq 'Install') {
     }
 
     $release = [string]$manifest.release
-    $release = [string]$manifest.release
 
     foreach ($relative in @(
         'api\NKRN.API.dll',
