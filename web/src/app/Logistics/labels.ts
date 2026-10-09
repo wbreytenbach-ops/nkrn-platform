@@ -18,6 +18,7 @@
     Event: "Event",
     Maintenance: "Maintenance",
     General: "General",
+    Security: "Security",
 
     Repair: "Repair",
     Replace: "Replace",
