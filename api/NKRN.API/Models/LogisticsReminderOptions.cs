@@ -15,6 +15,6 @@ public sealed class LogisticsReminderOptions
     public string[] RecipientEmails { get; set; } =
     {
         "terreinbestuur@tygies.co.za",
-        "mcarnie@tygies.co.za"
+        "logistiek@tygies.co.za"
     };
 }

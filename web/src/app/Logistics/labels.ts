@@ -1,4 +1,4 @@
-const labels: Record<string, string> = {
+﻿const labels: Record<string, string> = {
     P1: "Critical",
     P2: "High",
     P3: "Medium",
@@ -7,6 +7,8 @@ const labels: Record<string, string> = {
     Logged: "Logged",
     Busy: "Busy",
     Done: "Done",
+    Cancelled: "Cancelled",
+    Declined: "Declined",
 
     "Nog nie begin": "Logged",
     Beplan: "Logged",
@@ -25,8 +27,6 @@ const labels: Record<string, string> = {
     Completed: "Done",
     Approved: "Busy",
     Converted: "Busy",
-    Declined: "Declined",
-    Cancelled: "Cancelled",
     "Under Review": "Busy",
     "Needs Information": "Busy",
 
@@ -47,16 +47,33 @@ export function displayLabel(value: string | null | undefined): string {
 }
 
 export function requestStage(status: string): string {
-    if (
-        ["Under Review", "Needs Information", "Approved", "Converted"].includes(
-            status
-        )
-    ) {
-        return "Busy";
+    switch (status) {
+        case "New":
+        case "Logged":
+        case "Nog nie begin":
+        case "Beplan":
+            return "Logged";
+
+        case "Approved":
+        case "Converted":
+        case "Under Review":
+        case "Needs Information":
+        case "In Proses":
+        case "Staan oor":
+        case "Busy":
+            return "Busy";
+
+        case "Completed":
+        case "Done":
+            return "Done";
+
+        case "Cancelled":
+            return "Cancelled";
+
+        case "Declined":
+            return "Declined";
+
+        default:
+            return status;
     }
-
-    if (status === "New") return "Logged";
-    if (status === "Completed") return "Done";
-
-    return status;
 }

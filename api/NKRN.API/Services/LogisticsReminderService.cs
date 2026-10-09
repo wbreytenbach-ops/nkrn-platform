@@ -336,7 +336,7 @@ public sealed class LogisticsReminderService
             new[]
             {
                 "terreinbestuur@tygies.co.za",
-                "mcarnie@tygies.co.za"
+                "logistiek@tygies.co.za"
             }))
         {
             if (!string.IsNullOrWhiteSpace(email))

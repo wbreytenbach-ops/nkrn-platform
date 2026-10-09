@@ -16,8 +16,8 @@ public class LogisticsRequestNotificationService(
 {
     private static readonly string[] DefaultRecipients =
     {
-        "terreinbestuur@tygies.co.za",
-        "mcarnie@tygies.co.za"
+        "logistiek@tygies.co.za",
+        "terreinbestuur@tygies.co.za"
     };
 
     public async Task NotifyAsync(
@@ -33,10 +33,6 @@ public class LogisticsRequestNotificationService(
 
         try
         {
-            var configured =
-                configuration.GetSection("Logistics:RequestRecipientEmails").Get<string[]>()
-                ?? DefaultRecipients;
-
             var recipients = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (!string.IsNullOrWhiteSpace(request.RequestedByEmail))
@@ -44,7 +40,7 @@ public class LogisticsRequestNotificationService(
                 recipients.Add(request.RequestedByEmail.Trim());
             }
 
-            foreach (var address in configured.Concat(DefaultRecipients))
+            foreach (var address in DefaultRecipients)
             {
                 if (!string.IsNullOrWhiteSpace(address))
                 {
