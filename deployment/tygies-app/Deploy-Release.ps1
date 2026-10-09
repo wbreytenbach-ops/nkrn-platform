@@ -259,19 +259,18 @@ if ($Action -eq 'Install') {
         ConvertFrom-Json
 
     if (
-        $manifest.commit -ne 'ac103f2' -or
+        $manifest.commit -notmatch ('^[a-f0-9]{40}' + '$') -or
         $manifest.publicApiUrl -ne 'https://portal.tygies.co.za'
     ) {
-        throw 'This package is not the expected commit and production address.'
+        throw 'This package has an invalid commit SHA or production address.'
     }
 
-    if (
-        $manifest.release -notmatch
-        '^NKRN-48db35c-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}$'
-    ) {
-        throw 'Unexpected release identifier.'
+    $shortCommit = ([string]$manifest.commit).Substring(0, 7)
+    if ($manifest.release -notmatch ('^NKRN-' + [regex]::Escape($shortCommit) + '-[0-9]{8}-[0-9]{6}-[a-f0-9]{6}' + '$')) {
+        throw 'Release identifier does not match the source commit.'
     }
 
+    $release = [string]$manifest.release
     $release = [string]$manifest.release
 
     foreach ($relative in @(
@@ -431,6 +430,8 @@ if ($Action -eq 'Install') {
 
     Save-State
 
+    $script:backupVerified = $false
+
     try {
 
         Write-Host ''
@@ -470,6 +471,18 @@ if ($Action -eq 'Install') {
             -PreserveAcl
 
         Write-Host 'API backup completed.' -ForegroundColor Green
+
+        foreach ($requiredBackupFile in @('web.config', 'NKRN.API.dll')) {
+            $backupFile = Join-Path $state.api.backup $requiredBackupFile
+            if (-not (Test-Path -LiteralPath $backupFile -PathType Leaf)) {
+                throw ("API backup is incomplete; missing " + $requiredBackupFile + ".")
+            }
+        }
+        $liveDllHash = (Get-FileHash -LiteralPath (Join-Path $apiRoot 'NKRN.API.dll') -Algorithm SHA256).Hash
+        $backupDllHash = (Get-FileHash -LiteralPath (Join-Path $state.api.backup 'NKRN.API.dll') -Algorithm SHA256).Hash
+        if ($liveDllHash -ine $backupDllHash) { throw 'API backup DLL hash does not match the live DLL.' }
+        $script:backupVerified = $true
+        Write-Host 'API backup files and DLL hash verified.' -ForegroundColor Green
 
         #
         # Overlay the new API release into the existing root.
@@ -569,7 +582,7 @@ if ($Action -eq 'Install') {
                 -Encoding UTF8 |
             ConvertFrom-Json
 
-        if ($activeMarker.commit -ne 'ac103f2') {
+        if ($activeMarker.commit -ne $manifest.commit) {
             throw "Deployment marker verification failed. Active commit: $($activeMarker.commit)"
         }
 
@@ -597,7 +610,7 @@ if ($Action -eq 'Install') {
         Write-Host '========================================' -ForegroundColor Green
         Write-Host ''
         Write-Host "Release : $release"
-        Write-Host 'Commit  : ac103f2'
+        Write-Host ("Commit  : " + $manifest.commit)
         Write-Host 'API     : RUNNING'
         Write-Host ''
         Write-Host 'Logistics automation is temporarily paused.'
@@ -609,8 +622,23 @@ if ($Action -eq 'Install') {
 
         $deploymentError = $_
 
-        Write-Warning 'Deployment failed. Restoring the API from the backup in place.'
-
+        if ($script:backupVerified) {
+            Write-Warning 'Deployment failed. Restoring the API from the verified backup in place.'
+        }
+        else {
+            Write-Warning 'Deployment failed before a verified backup existed. No API files were overlaid; attempting to restart the unchanged API.'
+            try {
+                Start-ApiOnly
+                $state.status = 'BackupFailedNoChanges'
+                Save-State
+            }
+            catch {
+                Write-Error 'The API backup was not verified and the unchanged API could not be restarted. Inspect IIS immediately.'
+                Write-Error ("Deployment state: " + $stateFile)
+                throw
+            }
+            throw $deploymentError
+        }
         try {
 
             Restore-ApiInPlace
