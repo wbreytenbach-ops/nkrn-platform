@@ -86,6 +86,25 @@ namespace NKRN.API.Controllers
             return Ok(requests);
         }
 
+        // Security view is an additional read-only view for Jwerner.
+        // His normal staff request permissions remain unchanged.
+        [HttpGet("security")]
+        public async Task<ActionResult<IEnumerable<LogisticsRequestResponse>>> GetSecurityRequests(
+            [FromQuery] string? status = null)
+        {
+            if (!await IsSecurityReviewerAsync())
+            {
+                return Forbid();
+            }
+
+            var requests =
+                await LoadRequestsAsync(
+                    status: status,
+                    requestType: "Security");
+
+            return Ok(requests);
+        }
+
         // ============================================================
         // GET ONE REQUEST
         // Owner OR Logistics management.
@@ -110,7 +129,15 @@ namespace NKRN.API.Controllers
                 return NotFound();
             }
 
+            var isSecurityReviewer =
+                await IsSecurityReviewerAsync();
+
             if (request.RequestedByUserID != userID.Value &&
+                !(isSecurityReviewer &&
+                  string.Equals(
+                      request.RequestType,
+                      "Security",
+                      StringComparison.OrdinalIgnoreCase)) &&
                 !await CanManageLogisticsAsync())
             {
                 return Forbid();
@@ -141,12 +168,7 @@ namespace NKRN.API.Controllers
                 locations,
                 equipment,
                 maintenance,
-                requestTypes = new[]
-                {
-                    "Event",
-                    "Maintenance",
-                    "General"
-                },
+                requestTypes = new[] { "Event", "Maintenance", "General" },
                 activityCategories = new[]
                 {
                     "Sport",
@@ -739,7 +761,8 @@ namespace NKRN.API.Controllers
 
         private async Task<List<LogisticsRequestResponse>> LoadRequestsAsync(
             int? requestedByUserID = null,
-            string? status = null)
+            string? status = null,
+            string? requestType = null)
         {
             var output =
                 new List<LogisticsRequestResponse>();
@@ -792,6 +815,9 @@ namespace NKRN.API.Controllers
                         AND
                         (@Status IS NULL
                             OR R.Status = @Status)
+                        AND
+                        (@RequestType IS NULL
+                            OR R.RequestType = @RequestType)
                     ORDER BY
                         R.CreatedDate DESC,
                         R.RequestID DESC;
@@ -806,6 +832,11 @@ namespace NKRN.API.Controllers
                     command,
                     "@Status",
                     CleanNullable(status));
+
+                AddParameter(
+                    command,
+                    "@RequestType",
+                    CleanNullable(requestType));
 
                 await using var reader =
                     await command.ExecuteReaderAsync();
@@ -1446,6 +1477,18 @@ namespace NKRN.API.Controllers
         // LOGISTICS PERMISSION
         // Role 3 remains the existing NKRN admin bypass.
         // ============================================================
+
+        private async Task<bool> IsSecurityReviewerAsync()
+        {
+            var userID = GetLoggedInUserID();
+
+            return userID.HasValue &&
+                await _context.Users.AnyAsync(user =>
+                    user.UserID == userID.Value &&
+                    user.IsActive &&
+                    user.Email != null &&
+                    user.Email.ToLower() == "jwerner@tygies.co.za");
+        }
 
         private async Task<bool> CanManageLogisticsAsync()
         {

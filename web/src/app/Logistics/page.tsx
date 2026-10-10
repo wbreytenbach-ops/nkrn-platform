@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LogisticsManagementDashboard from "./LogisticsManagementDashboard";
+import LogisticsSecurityPortal from "./LogisticsSecurityPortal";
 import LogisticsTeacherPortal from "./LogisticsTeacherPortal";
 import "../nkrn-control.css";
 
@@ -31,6 +32,7 @@ export default function LogisticsPage() {
     const [user, setUser] = useState<NKRNUser | null>(null);
     const [checkingAccess, setCheckingAccess] = useState(true);
     const [managementAccess, setManagementAccess] = useState(false);
+    const [securityView, setSecurityView] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -154,6 +156,36 @@ export default function LogisticsPage() {
 
     if (!user) {
         return null;
+    }
+
+    const hasSecurityView =
+        user.email?.trim().toLowerCase() === "jwerner@tygies.co.za";
+
+    if (hasSecurityView && securityView) {
+        return (
+            <LogisticsSecurityPortal
+                onOpenMyRequests={() => setSecurityView(false)}
+            />
+        );
+    }
+
+    if (hasSecurityView) {
+        return (
+            <>
+                <div className="nkrn-control bg-zinc-950 px-4 pt-4 text-white sm:px-6 lg:px-10">
+                    <div className="mx-auto flex max-w-7xl justify-end">
+                        <button
+                            type="button"
+                            onClick={() => setSecurityView(true)}
+                            className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/15"
+                        >
+                            Open Security requests
+                        </button>
+                    </div>
+                </div>
+                <LogisticsTeacherPortal user={user} />
+            </>
+        );
     }
 
     return managementAccess ? (
