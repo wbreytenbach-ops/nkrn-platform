@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LogisticsManagementDashboard from "./LogisticsManagementDashboard";
+import LogisticsSecurityPortal from "./LogisticsSecurityPortal";
 import LogisticsTeacherPortal from "./LogisticsTeacherPortal";
 import "../nkrn-control.css";
 
@@ -31,6 +32,7 @@ export default function LogisticsPage() {
     const [user, setUser] = useState<NKRNUser | null>(null);
     const [checkingAccess, setCheckingAccess] = useState(true);
     const [managementAccess, setManagementAccess] = useState(false);
+    const [securityAccess, setSecurityAccess] = useState(false);
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -53,6 +55,12 @@ export default function LogisticsPage() {
                 }
 
                 setUser(loggedInUser);
+
+                // Security contact receives a read-only Security-only workspace.
+                if (loggedInUser.email?.trim().toLowerCase() === "jwerner@tygies.co.za") {
+                    setSecurityAccess(true);
+                    return;
+                }
 
                 // NKRN-admins behou altyd bestuursregte.
                 if (loggedInUser.roleID === 3) {
@@ -153,6 +161,10 @@ export default function LogisticsPage() {
 
     if (!user) {
         return null;
+    }
+
+    if (securityAccess) {
+        return <LogisticsSecurityPortal />;
     }
 
     return managementAccess ? (
