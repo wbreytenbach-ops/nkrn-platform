@@ -629,3 +629,14 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Keep the white Tygerpoort header logo visible in light mode by inverting
+   its image colours only; the image remains present in every theme. */
+html[data-theme="light"] .nkrn-control header img[src*="wit-logo-tygies.png"] {
+  filter: invert(1) drop-shadow(0 5px 14px rgba(15, 23, 42, .12)) !important;
+}
+
+html[data-theme="light"] .nkrn-control header img[src*="wit-logo-tygies.png"] {
+  opacity: 1 !important;
+}
+
