@@ -194,6 +194,10 @@ export default function LogisticsRequestInbox({
     const router = useRouter();
     const { language, t } = useLanguage();
     const [deleting, setDeleting] = useState(false);
+    const [bulkDeleting, setBulkDeleting] = useState(false);
+    const [selectedRequestIDs, setSelectedRequestIDs] = useState<number[]>([]);
+    const [createdFrom, setCreatedFrom] = useState("");
+    const [createdTo, setCreatedTo] = useState("");
     const [requests, setRequests] = useState<LogisticsRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -268,11 +272,15 @@ export default function LogisticsRequestInbox({
         return () => window.clearTimeout(timer);
     }, [loadRequests]);
 
-    const visibleRequests = useMemo(() => requests.filter(request =>
-        (filter === "All" || (filter === "Open" ? isOpenRequest(request) : requestStage(request.status) === filter)) &&
-        (!typeFilter || request.requestType === typeFilter) && (!priorityFilter || request.priority === priorityFilter) &&
-        `${request.title} ${request.description ?? ""} ${request.requestedByName} ${request.requestedByEmail} ${primaryLocation(request)} ${request.managerNotes ?? ""}`.toLowerCase().includes(search.toLowerCase())
-    ), [requests, filter, typeFilter, priorityFilter, search]);
+    const visibleRequests = useMemo(() => requests.filter(request => {
+        const createdDate = request.createdDate?.slice(0, 10) ?? "";
+        return (filter === "All" || (filter === "Open" ? isOpenRequest(request) : requestStage(request.status) === filter)) &&
+            (!typeFilter || request.requestType === typeFilter) &&
+            (!priorityFilter || request.priority === priorityFilter) &&
+            (!createdFrom || createdDate >= createdFrom) &&
+            (!createdTo || createdDate <= createdTo) &&
+            `${request.title} ${request.description ?? ""} ${request.requestedByName} ${request.requestedByEmail} ${primaryLocation(request)} ${request.managerNotes ?? ""}`.toLowerCase().includes(search.toLowerCase());
+    }), [requests, filter, typeFilter, priorityFilter, createdFrom, createdTo, search]);
 
     const newCount = requests.filter(
         (request) => request.status === "New"
@@ -322,6 +330,68 @@ export default function LogisticsRequestInbox({
             setSuccess(language === "af" ? "Versoek verwyder." : "Request deleted.");
         } catch (error) { setError(error instanceof Error ? error.message : "Unable to delete the request."); }
         finally { setDeleting(false); }
+    }
+
+    function toggleRequestSelection(requestID: number) {
+        setSelectedRequestIDs(current =>
+            current.includes(requestID)
+                ? current.filter(id => id !== requestID)
+                : [...current, requestID]
+        );
+    }
+
+    function toggleVisibleRequests() {
+        const visibleIDs = visibleRequests.map(request => request.requestID);
+        const allVisibleSelected = visibleIDs.length > 0 &&
+            visibleIDs.every(id => selectedRequestIDs.includes(id));
+
+        setSelectedRequestIDs(current => allVisibleSelected
+            ? current.filter(id => !visibleIDs.includes(id))
+            : Array.from(new Set([...current, ...visibleIDs])));
+    }
+
+    async function deleteSelectedRequests() {
+        if (!isAdmin || bulkDeleting || selectedRequestIDs.length === 0) return;
+
+        const selected = requests.filter(request => selectedRequestIDs.includes(request.requestID));
+        const preview = selected.slice(0, 8).map(request => `#${request.requestID} — ${request.title}`).join("\\n");
+        const remaining = selected.length > 8 ? `\\n…and ${selected.length - 8} more.` : "";
+        const confirmed = window.confirm(language === "af"
+            ? `Verwyder ${selectedRequestIDs.length} geselekteerde versoek(e)? Die versoeke sal uit die lyste verdwyn; gekoppelde werk/take word behou.\\n\\n${preview}${remaining}`
+            : `Delete ${selectedRequestIDs.length} selected request(s)? The requests will disappear from lists; linked work/tasks will be retained.\\n\\n${preview}${remaining}`);
+        if (!confirmed) return;
+
+        setBulkDeleting(true);
+        setError("");
+        setSuccess("");
+        try {
+            const response = await fetch(`${API_URL}/api/LogisticsRequests/bulk-delete`, {
+                method: "POST",
+                headers: authHeaders(),
+                body: JSON.stringify(selectedRequestIDs),
+            });
+            if (!response.ok) {
+                const details = await response.json().catch(() => null);
+                throw new Error(details?.message || (language === "af"
+                    ? "Die geselekteerde versoeke kon nie verwyder word nie."
+                    : "Unable to delete the selected requests."));
+            }
+
+            const result = await response.json() as { deletedCount: number; notFoundRequestIDs: number[] };
+            setSelectedRequestIDs([]);
+            if (selectedRequest && selectedRequestIDs.includes(selectedRequest.requestID)) {
+                setSelectedRequest(null);
+            }
+            await loadRequests();
+            const skipped = result.notFoundRequestIDs?.length ?? 0;
+            setSuccess(language === "af"
+                ? `${result.deletedCount} versoek(e) verwyder.${skipped ? ` ${skipped} was reeds verwyder of nie gevind nie.` : ""}`
+                : `${result.deletedCount} request(s) deleted.${skipped ? ` ${skipped} were already deleted or not found.` : ""}`);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Unable to delete the selected requests.");
+        } finally {
+            setBulkDeleting(false);
+        }
     }
 
     async function saveReview() {
@@ -487,8 +557,10 @@ export default function LogisticsRequestInbox({
                             </span>
 
                             <input aria-label="Soek versoeke" placeholder="Soek naam, versoek of lokaal…" className={inputClass} value={search} onChange={e => setSearch(e.target.value)} />
-                            <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
+                            <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General", "Security"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
                             <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["Low", "Medium", "High", "Critical"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
+                            <input aria-label="Vanaf datum" type="date" title={language === "af" ? "Ingedien vanaf" : "Submitted from"} className={inputClass} value={createdFrom} onChange={e => setCreatedFrom(e.target.value)} />
+                            <input aria-label="Tot datum" type="date" title={language === "af" ? "Ingedien tot" : "Submitted to"} className={inputClass} value={createdTo} onChange={e => setCreatedTo(e.target.value)} />
                             <select
                                 aria-label="Versoekstatus"
                                 value={filter}
@@ -504,6 +576,31 @@ export default function LogisticsRequestInbox({
                                 <option value="All">Alle versoeke</option>
                             </select>
 
+                            {isAdmin && selectedRequestIDs.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-red-400/20 bg-red-500/8 p-2">
+                                    <span className="px-2 text-xs text-red-100">
+                                        {selectedRequestIDs.length} {language === "af" ? "geselekteer" : "selected"}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => void deleteSelectedRequests()}
+                                        disabled={bulkDeleting || deleting}
+                                        className="rounded-lg border border-red-400/30 bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-100 transition hover:bg-red-500/25 disabled:opacity-50"
+                                    >
+                                        {bulkDeleting
+                                            ? (language === "af" ? "Verwyder…" : "Deleting…")
+                                            : (language === "af" ? "Verwyder gekose" : "Delete selected")}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedRequestIDs([])}
+                                        disabled={bulkDeleting}
+                                        className={secondaryButton}
+                                    >
+                                        {language === "af" ? "Maak keuse skoon" : "Clear selection"}
+                                    </button>
+                                </div>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => void loadRequests()}
@@ -542,6 +639,17 @@ export default function LogisticsRequestInbox({
                         <table className="min-w-full text-left text-sm">
                             <thead className="border-b border-white/8 bg-black/15 text-xs uppercase tracking-[0.12em] text-zinc-500">
                                 <tr>
+                                    {isAdmin && (
+                                        <th className="px-4 py-4 font-medium">
+                                            <input
+                                                type="checkbox"
+                                                aria-label={language === "af" ? "Kies alle sigbare versoeke" : "Select all visible requests"}
+                                                checked={visibleRequests.length > 0 && visibleRequests.every(request => selectedRequestIDs.includes(request.requestID))}
+                                                onChange={toggleVisibleRequests}
+                                                className="h-4 w-4 accent-red-500"
+                                            />
+                                        </th>
+                                    )}
                                     <th className="px-5 py-4 font-medium">Versoek</th>
                                     <th className="px-5 py-4 font-medium">Ingedien deur</th>
                                     <th className="px-5 py-4 font-medium">Soort</th>
@@ -558,6 +666,17 @@ export default function LogisticsRequestInbox({
                                         key={request.requestID}
                                         className="transition hover:bg-white/2.5"
                                     >
+                                        {isAdmin && (
+                                            <td className="px-4 py-4 align-top">
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label={language === "af" ? `Kies versoek ${request.requestID}` : `Select request ${request.requestID}`}
+                                                    checked={selectedRequestIDs.includes(request.requestID)}
+                                                    onChange={() => toggleRequestSelection(request.requestID)}
+                                                    className="h-4 w-4 accent-red-500"
+                                                />
+                                            </td>
+                                        )}
                                         <td className="min-w-72 px-5 py-4">
                                             <p className="font-medium text-zinc-100">
                                                 {request.title}
