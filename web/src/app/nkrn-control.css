@@ -1283,3 +1283,74 @@ html.tygies-workspace-active[data-theme="dark"] .workspace-content .nkrn-control
   -webkit-text-fill-color: #bdc1c6 !important;
   opacity: .75;
 }
+
+
+/* Tygies One light-mode button contrast hardening
+   Apply at the workspace boundary instead of relying on every legacy module
+   to place .nkrn-control around every control. Force nested labels/icons to
+   inherit the chosen foreground so Tailwind text utilities cannot override it. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="reset"], input[type="submit"]) {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="reset"], input[type="submit"]) :is(span, strong, em, small, label, svg, i) {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* Darker saturated action colours use white foreground text. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-red-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-rose-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-pink-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-green-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-emerald-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-teal-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-cyan-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-sky-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-blue-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-indigo-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-violet-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-purple-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#b91c2b]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#a31624]"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-red-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-rose-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-pink-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-green-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-emerald-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-teal-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-cyan-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-sky-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-blue-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-indigo-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-violet-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-purple-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#b91c2b]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#a31624]"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Yellow, amber and gold backgrounds need dark text for readable contrast. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-yellow-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-amber-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-orange-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#d7a31f]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#e7b42b]"] {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-yellow-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-amber-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-orange-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#d7a31f]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#e7b42b]"] * {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}
