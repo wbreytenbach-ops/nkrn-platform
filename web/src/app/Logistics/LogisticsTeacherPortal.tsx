@@ -228,6 +228,8 @@ export default function LogisticsTeacherPortal({
     const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General" | "Security">("Event");
     const [activityCategory, setActivityCategory] = useState("Other");
     const [description, setDescription] = useState("");
+    const [securityRequired, setSecurityRequired] = useState(false);
+    const [guardCount, setGuardCount] = useState(1);
     const [aiSessionID, setAiSessionID] = useState<string | null>(null);
     const [activityDate, setActivityDate] = useState("");
     const [startTime, setStartTime] = useState("");
@@ -354,6 +356,8 @@ export default function LogisticsTeacherPortal({
         setLocationID("");
         setCustomLocation("");
         setSelectedEquipment([]);
+        setSecurityRequired(false);
+        setGuardCount(1);
         setMaintenanceTypeID("");
         setMaintenanceAction("Unsure");
         setAvailabilityMessage("");
@@ -453,6 +457,11 @@ export default function LogisticsTeacherPortal({
                 setError(
                     "Vul die aktiwiteitsdatum, begin- en eindtyd in."
                 );
+                return;
+            }
+
+            if (securityRequired && (!Number.isInteger(guardCount) || guardCount < 1 || guardCount > 100)) {
+                setError("Kies asseblief hoeveel sekuriteitswagte benodig word (1–100).");
                 return;
             }
 
@@ -560,7 +569,9 @@ export default function LogisticsTeacherPortal({
                     activityCategory:
                         requestType === "Event" ? activityCategory : null,
                     title: "Logistics-versoek",
-                    description: description.trim() || null,
+                    description: requestType === "Event" && securityRequired
+                        ? `${description.trim()}\\n\\nSEKURITEIT BENODIG: ${guardCount} wag(te).`
+                        : description.trim() || null,
                     activityDate:
                         requestType === "Event" ? activityDate : null,
                     startTime:
@@ -601,13 +612,45 @@ export default function LogisticsTeacherPortal({
             }
 
             const created = (await response.json()) as LogisticsRequest;
+            let securityWarning = "";
+
+            if (requestType === "Event" && securityRequired) {
+                try {
+                    const securityResponse = await fetch(`${API_URL}/api/LogisticsRequests`, {
+                        method: "POST",
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                            requestType: "Security",
+                            activityCategory: null,
+                            title: "Sekuriteit vir funksie",
+                            description: `Sekuriteit benodig vir funksie: ${description.trim()}. Aantal wagte benodig: ${guardCount}.`,
+                            activityDate,
+                            startTime: `${startTime}:00`,
+                            endTime: `${endTime}:00`,
+                            cleanupNextDay: null,
+                            locations,
+                            equipment: [],
+                            maintenanceItems: [],
+                        }),
+                    });
+                    if (!securityResponse.ok) {
+                        securityWarning = language === "af"
+                            ? " Die funksieversoek is gestuur, maar die sekuriteitsversoek kon nie gestuur word nie."
+                            : " The function request was sent, but the security request could not be sent.";
+                    }
+                } catch {
+                    securityWarning = language === "af"
+                        ? " Die funksieversoek is gestuur, maar die sekuriteitsversoek kon nie gestuur word nie."
+                        : " The function request was sent, but the security request could not be sent.";
+                }
+            }
 
             setRequestOpen(false);
             resetRequestForm();
             setSuccess(
                 language === "af"
-                    ? `Versoek #${created.requestID} is aan die Logistics-span gestuur.`
-                    : `Request #${created.requestID} was sent to the Logistics team.`
+                    ? `Versoek #${created.requestID} is aan die Logistics-span gestuur.${securityWarning}`
+                    : `Request #${created.requestID} was sent to the Logistics team.${securityWarning}`
             );
 
             await loadPortal();
@@ -1345,7 +1388,6 @@ export default function LogisticsTeacherPortal({
                                             ["Event", "Funksie / Aktiwiteit", "Lokaal, tyd en toerusting"],
                                             ["Maintenance", "Instandhouding", "Iets moet herstel of vervang word"],
                                             ["General", "Algemeen", "Enige ander logistieke ondersteuning"],
-                                            ["Security", "Sekuriteit", "Sekuriteitsversoeke en veiligheidskwessies"],
                                         ].map(([value, label, detail]) => (
                                             <button
                                                 key={value}
@@ -1474,6 +1516,36 @@ export default function LogisticsTeacherPortal({
                                         className={`${inputClass} resize-none`}
                                     />
                                 </div>
+
+                                {requestType === "Event" && (
+                                    <div className="rounded-xl border border-white/10 bg-white/3 p-4">
+                                        <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-zinc-200">
+                                            <input
+                                                type="checkbox"
+                                                checked={securityRequired}
+                                                onChange={(event) => setSecurityRequired(event.target.checked)}
+                                                className="h-5 w-5 accent-amber-400"
+                                            />
+                                            Sekuriteit benodig vir hierdie funksie
+                                        </label>
+                                        {securityRequired && (
+                                            <div className="mt-4 max-w-xs">
+                                                <label className="mb-2 block text-sm font-medium text-zinc-300" htmlFor="function-guard-count">Aantal sekuriteitswagte</label>
+                                                <input
+                                                    id="function-guard-count"
+                                                    type="number"
+                                                    min={1}
+                                                    max={100}
+                                                    step={1}
+                                                    value={guardCount}
+                                                    onChange={(event) => setGuardCount(Number(event.target.value))}
+                                                    className={inputClass}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <ItAiAssistant
                                     moduleKey="Logistics"
                                     description={description}
