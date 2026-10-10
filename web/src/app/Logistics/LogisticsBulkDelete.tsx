@@ -53,15 +53,12 @@ export default function LogisticsBulkDelete({
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState<"all" | "request" | "task">("all");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
     const loadRecords = useCallback(async () => {
-        setLoading(true);
-        setError("");
-
         try {
             const token = localStorage.getItem("token");
             if (!token) {
@@ -294,7 +291,7 @@ export default function LogisticsBulkDelete({
                         <option value="request">{isAfrikaans ? "Slegs versoeke" : "Requests only"}</option>
                         <option value="task">{isAfrikaans ? "Slegs take" : "Tasks only"}</option>
                     </select>
-                    <button type="button" className={buttonClass} onClick={() => void loadRecords()} disabled={loading || deleting}>
+                    <button type="button" className={buttonClass} onClick={() => { setLoading(true); setError(""); void loadRecords(); }} disabled={loading || deleting}>
                         {loading ? (isAfrikaans ? "Laai…" : "Loading…") : (isAfrikaans ? "Verfris lys" : "Refresh list")}
                     </button>
                 </div>
