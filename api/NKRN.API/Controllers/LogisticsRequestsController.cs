@@ -60,8 +60,7 @@ namespace NKRN.API.Controllers
 
             var requests =
                 await LoadRequestsAsync(
-                    requestedByUserID: userID.Value,
-                    requestType: await IsSecurityReviewerAsync() ? "Security" : null);
+                    requestedByUserID: userID.Value);
 
             return Ok(requests);
         }
@@ -75,16 +74,6 @@ namespace NKRN.API.Controllers
         public async Task<ActionResult<IEnumerable<LogisticsRequestResponse>>> GetAllRequests(
             [FromQuery] string? status = null)
         {
-            if (await IsSecurityReviewerAsync())
-            {
-                var securityRequests =
-                    await LoadRequestsAsync(
-                        status: status,
-                        requestType: "Security");
-
-                return Ok(securityRequests);
-            }
-
             if (!await CanManageLogisticsAsync())
             {
                 return Forbid();
@@ -93,6 +82,25 @@ namespace NKRN.API.Controllers
             var requests =
                 await LoadRequestsAsync(
                     status: status);
+
+            return Ok(requests);
+        }
+
+        // Security view is an additional read-only view for Jwerner.
+        // His normal staff request permissions remain unchanged.
+        [HttpGet("security")]
+        public async Task<ActionResult<IEnumerable<LogisticsRequestResponse>>> GetSecurityRequests(
+            [FromQuery] string? status = null)
+        {
+            if (!await IsSecurityReviewerAsync())
+            {
+                return Forbid();
+            }
+
+            var requests =
+                await LoadRequestsAsync(
+                    status: status,
+                    requestType: "Security");
 
             return Ok(requests);
         }
@@ -124,17 +132,12 @@ namespace NKRN.API.Controllers
             var isSecurityReviewer =
                 await IsSecurityReviewerAsync();
 
-            if (isSecurityReviewer &&
-                !string.Equals(
-                    request.RequestType,
-                    "Security",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                return Forbid();
-            }
-
-            if (!isSecurityReviewer &&
-                request.RequestedByUserID != userID.Value &&
+            if (request.RequestedByUserID != userID.Value &&
+                !(isSecurityReviewer &&
+                  string.Equals(
+                      request.RequestType,
+                      "Security",
+                      StringComparison.OrdinalIgnoreCase)) &&
                 !await CanManageLogisticsAsync())
             {
                 return Forbid();
@@ -165,9 +168,7 @@ namespace NKRN.API.Controllers
                 locations,
                 equipment,
                 maintenance,
-                requestTypes = await IsSecurityReviewerAsync()
-                    ? new[] { "Security" }
-                    : new[] { "Event", "Maintenance", "General", "Security" },
+                requestTypes = new[] { "Event", "Maintenance", "General" },
                 activityCategories = new[]
                 {
                     "Sport",
@@ -211,18 +212,6 @@ namespace NKRN.API.Controllers
                 {
                     message = "A request type is required."
                 });
-            }
-
-            var isSecurityReviewer =
-                await IsSecurityReviewerAsync();
-
-            if (isSecurityReviewer &&
-                !string.Equals(
-                    request.RequestType,
-                    "Security",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                return Forbid();
             }
 
             if (string.IsNullOrWhiteSpace(request.Title))
@@ -718,9 +707,6 @@ namespace NKRN.API.Controllers
 
             try
             {
-                var securityReviewer =
-                    await IsSecurityReviewerAsync();
-
                 await using var command =
                     connection.CreateCommand();
 
@@ -732,7 +718,6 @@ namespace NKRN.API.Controllers
                     WHERE
                         RequestID = @RequestID
                         AND RequestedByUserID = @UserID
-                        AND (@SecurityOnly = 0 OR RequestType = 'Security')
                         AND Status NOT IN ('Converted', 'Completed', 'Cancelled');
                     """;
 
@@ -745,11 +730,6 @@ namespace NKRN.API.Controllers
                     command,
                     "@UserID",
                     userID.Value);
-
-                AddParameter(
-                    command,
-                    "@SecurityOnly",
-                    securityReviewer);
 
                 var affected =
                     await command.ExecuteNonQueryAsync();
