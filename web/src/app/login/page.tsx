@@ -243,11 +243,10 @@ export default function LoginPage() {
                                 </p>
 
                                 <ul className="mt-3 space-y-2 text-sm font-semibold text-zinc-200">
-                                    <li>IT Desk</li>
-                                    <li>Logistics</li>
-                                    <li>Function Setup</li>
-                                    <li>Technician Desk <span className="font-normal text-zinc-500">(staff)</span></li>
-                                    <li>Administration <span className="font-normal text-zinc-500">(admins)</span></li>
+                                    <li>IT-versoek / IT Request</li>
+                                    <li>Logistiek / Logistics</li>
+                                    <li>Funksieversorging / Event Support</li>
+                                    <li>Vervoer / Transport</li>
                                 </ul>
                             </div>
 
