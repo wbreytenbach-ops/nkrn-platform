@@ -243,7 +243,11 @@ function csvCell(value: unknown): string {
 // PAGE
 // ============================================================
 
-export default function LogisticsManagementDashboard() {
+export default function LogisticsManagementDashboard({
+    onCreateRequest,
+}: {
+    onCreateRequest?: () => void;
+}) {
     const router = useRouter();
 
     const [user, setUser] = useState<NKRNUser | null>(null);
@@ -1085,6 +1089,15 @@ export default function LogisticsManagementDashboard() {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
+                            {onCreateRequest && (
+                                <button
+                                    type="button"
+                                    onClick={onCreateRequest}
+                                    className="rounded-xl border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:border-[#d7a31f]/45 hover:bg-[#d7a31f]/15"
+                                >
+                                    + Nuwe Logistics-versoek
+                                </button>
+                            )}
                             {user?.roleID === 3 && (
                                 <button
                                     type="button"
