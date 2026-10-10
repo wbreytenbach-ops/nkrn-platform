@@ -114,7 +114,11 @@ export default function LogisticsBulkDelete({
     }, [isAfrikaans, router]);
 
     useEffect(() => {
-        void loadRecords();
+        const timer = window.setTimeout(() => {
+            void loadRecords();
+        }, 0);
+
+        return () => window.clearTimeout(timer);
     }, [loadRecords]);
 
     const rows = useMemo<RecordRow[]>(() => [
