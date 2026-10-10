@@ -199,6 +199,7 @@ export default function RequestsPage() {
         }
 
         const userID = user.userID;
+        const isStaff = user.roleID === 2 || user.roleID === 3;
 
         let cancelled = false;
 
@@ -206,10 +207,9 @@ export default function RequestsPage() {
             try {
                 // Staff with technician/admin access need the complete request
                 // queue; standard users only see requests belonging to them.
-                const visibleRequests =
-                    user.roleID === 2 || user.roleID === 3
-                        ? await getRequests()
-                        : await getUserRequests(userID);
+                const visibleRequests = isStaff
+                    ? await getRequests()
+                    : await getUserRequests(userID);
 
                 if (cancelled) {
                     return;
