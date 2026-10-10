@@ -262,7 +262,7 @@ export default function Home() {
                     <div className="flex flex-wrap items-center justify-between gap-5">
                         <div className="flex items-center gap-4">
                             <Image src="/wit-logo-tygies.png" alt="Laerskool Tygerpoort" width={130} height={52} priority />
-                            <div><p className="text-xs uppercase tracking-[.2em] text-[#e7b42b]">Laerskool Tygerpoort</p><h1 className="mt-2 text-2xl font-bold">Tygies 1</h1><p className="mt-1 text-sm text-zinc-400">Skoolbedryfsplatform</p></div>
+                            <div><p className="text-xs uppercase tracking-[.2em] text-[#e7b42b]">Laerskool Tygerpoort</p><h1 className="mt-2 text-2xl font-bold">Tygies One</h1><p className="mt-1 text-sm text-zinc-400">Skoolbedryfsplatform</p></div>
                         </div>
                         <div className="flex items-center gap-4"><div className="text-right text-sm"><p className="text-zinc-400">Aangemeld</p><p>{user.firstName} {user.lastName}</p><p className="text-zinc-400">{t(getRoleName(user.roleID))}</p></div><LogoutButton /></div>
                     </div>
@@ -314,12 +314,12 @@ export default function Home() {
                                 {language === "af" ? "Eksterne stelsel" : "External system"}
                             </p>
                             <h2 id="transport-confirm-title" className="mt-3 text-2xl font-bold">
-                                {language === "af" ? "Verlaat Tygies 1?" : "Leave Tygies 1?"}
+                                {language === "af" ? "Verlaat Tygies One?" : "Leave Tygies One?"}
                             </h2>
                             <p className="mt-4 leading-7 text-zinc-300">
                                 {language === "af"
-                                    ? "Transport maak ’n aparte stelsel oop wat buite Tygies 1 gehuisves word. Jy sal in ’n nuwe oortjie voortgaan; hierdie portaal bly oop."
-                                    : "Transport opens a separate system hosted outside Tygies 1. It will open in a new tab, and this portal will remain open."}
+                                    ? "Transport maak ’n aparte stelsel oop wat buite Tygies One gehuisves word. Jy sal in ’n nuwe oortjie voortgaan; hierdie portaal bly oop."
+                                    : "Transport opens a separate system hosted outside Tygies One. It will open in a new tab, and this portal will remain open."}
                             </p>
                             <div className="mt-7 flex flex-wrap justify-end gap-3">
                                 <button
