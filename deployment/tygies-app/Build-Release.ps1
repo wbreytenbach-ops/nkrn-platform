@@ -223,3 +223,5 @@ finally {
     [Environment]::SetEnvironmentVariable('NODE_ENV', $oldNodeEnv, 'Process')
     [Environment]::SetEnvironmentVariable('NEXT_TELEMETRY_DISABLED', $oldTelemetry, 'Process')
 }
+
+# Clear stale native exit codes left by successful robocopy operations for callers.\n$global:LASTEXITCODE = 0\n
