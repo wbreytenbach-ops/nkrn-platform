@@ -1109,3 +1109,41 @@ html[data-theme="dark"] .nkrn-control textarea::placeholder { color: #9aa0a6 !im
   }
 }
 
+/* Module navigation tabs use the same surface and contrast rules as the workspace. */
+.nkrn-control .q4-nav {
+  border: 1px solid var(--tygies-line) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #3c4043 !important;
+  padding: .65rem .9rem;
+  font-weight: 600;
+}
+
+.nkrn-control .q4-nav[aria-current],
+.nkrn-control .q4-nav[aria-current="page"],
+.nkrn-control .q4-nav:hover:enabled {
+  border-color: rgba(185, 28, 43, .42) !important;
+  background: #fbeaec !important;
+  color: var(--tygies-red) !important;
+}
+
+.nkrn-control .q4-nav:disabled {
+  color: #70757a !important;
+  background: #f1f3f4 !important;
+  cursor: not-allowed;
+}
+
+html[data-theme="dark"] .nkrn-control .q4-nav {
+  border-color: #3c4043 !important;
+  background: #292a2d !important;
+  color: #e8eaed !important;
+}
+
+html[data-theme="dark"] .nkrn-control .q4-nav[aria-current],
+html[data-theme="dark"] .nkrn-control .q4-nav[aria-current="page"],
+html[data-theme="dark"] .nkrn-control .q4-nav:hover:enabled {
+  border-color: rgba(239, 68, 68, .6) !important;
+  background: rgba(185, 28, 43, .18) !important;
+  color: #ffb4bc !important;
+}
+
