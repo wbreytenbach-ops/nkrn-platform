@@ -16,24 +16,22 @@ function applyTheme(theme: ThemePreference) {
 export default function LanguageSwitcher() {
     const { language, setLanguage } = useLanguage();
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [theme, setTheme] = useState<ThemePreference>(() => {
-        if (typeof window === "undefined") return "system";
-        const saved = localStorage.getItem("nkrn-theme");
-        return saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
-    });
+    const [theme, setTheme] = useState<ThemePreference>("system");
     const settingsLabel = language === "af" ? "Instellings" : "Settings";
     const languageLabel = language === "af" ? "Taal" : "Language";
     const themeLabel = language === "af" ? "Tema" : "Theme";
 
     useEffect(() => {
-        applyTheme(theme);
+        const saved = localStorage.getItem("nkrn-theme");
+        const preference: ThemePreference = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+        applyTheme(preference);
         const media = window.matchMedia("(prefers-color-scheme: light)");
         const updateSystemTheme = () => {
             if ((localStorage.getItem("nkrn-theme") ?? "system") === "system") applyTheme("system");
         };
         media.addEventListener("change", updateSystemTheme);
         return () => media.removeEventListener("change", updateSystemTheme);
-    }, [theme]);
+    }, []);
 
     function changeTheme(value: ThemePreference) {
         setTheme(value);
@@ -45,7 +43,11 @@ export default function LanguageSwitcher() {
         <div className="fixed right-3 top-3 z-[100] sm:right-5 sm:top-5">
             <button
                 type="button"
-                onClick={() => setSettingsOpen((open) => !open)}
+                onClick={() => {
+                    const saved = localStorage.getItem("nkrn-theme");
+                    setTheme(saved === "light" || saved === "dark" || saved === "system" ? saved : "system");
+                    setSettingsOpen((open) => !open);
+                }}
                 aria-expanded={settingsOpen}
                 aria-controls="nkrn-user-settings"
                 className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-950/85 px-3 py-2 text-xs font-semibold text-zinc-200 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:border-[#d7a31f]/35 hover:text-white"
