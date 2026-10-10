@@ -45,7 +45,7 @@ function New-BrandIcon {
 
     try {
         $sourceImage = [System.Drawing.Image]::FromFile($SourcePath)
-        $bitmap = New-Object System.Drawing.Bitmap($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+        $bitmap = [System.Drawing.Bitmap]::new($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
         $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
         $graphics.Clear([System.Drawing.Color]::Transparent)
         $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
