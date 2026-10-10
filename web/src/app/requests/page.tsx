@@ -66,6 +66,9 @@ export default function RequestsPage() {
     // ========================================
 
     const [requests, setRequests] = useState<RequestModel[]>([]);
+    const [requestSearch, setRequestSearch] = useState("");
+    const [requestStatus, setRequestStatus] = useState("all");
+    const [showAllRequests, setShowAllRequests] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
 
     // ========================================
@@ -463,6 +466,21 @@ export default function RequestsPage() {
 
         return category?.categoryName ?? "Pending IT Desk";
     }
+
+    const filteredRequests = requests.filter((request) => {
+        const query = requestSearch.trim().toLocaleLowerCase();
+        const matchesSearch = !query || [
+            request.requestID,
+            request.title,
+            request.description,
+            request.priority,
+            getStatusLabel(request.statusID),
+            getCategoryName(request.categoryID),
+        ].some((value) => String(value ?? "").toLocaleLowerCase().includes(query));
+        const matchesStatus = requestStatus === "all" || String(request.statusID) === requestStatus;
+        return matchesSearch && matchesStatus;
+    });
+    const visibleRequests = showAllRequests ? filteredRequests : filteredRequests.slice(0, 5);
 
     // ========================================
     // WAIT FOR LOGIN
@@ -893,13 +911,52 @@ export default function RequestsPage() {
                         </p>
                     </div>
 
+                    {requests.length > 0 && (
+                        <div className="mb-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_200px]">
+                            <label className="block">
+                                <span className="mb-2 block text-xs font-medium text-zinc-500">{itLabel("Search requests...")}</span>
+                                <input
+                                    type="search"
+                                    value={requestSearch}
+                                    onChange={(event) => { setRequestSearch(event.target.value); setShowAllRequests(false); }}
+                                    placeholder={itLabel("Search requests...")}
+                                    className="nkrn-input w-full"
+                                    aria-label={itLabel("Search requests...")}
+                                />
+                            </label>
+                            <label className="block">
+                                <span className="mb-2 block text-xs font-medium text-zinc-500">{itLabel("Status")}</span>
+                                <select
+                                    value={requestStatus}
+                                    onChange={(event) => { setRequestStatus(event.target.value); setShowAllRequests(false); }}
+                                    className="nkrn-select w-full"
+                                    aria-label={itLabel("Filter requests by status")}
+                                >
+                                    <option value="all">{itLabel("All statuses")}</option>
+                                    <option value="1">{getStatusLabel(1)}</option>
+                                    <option value="2">{getStatusLabel(2)}</option>
+                                    <option value="3">{getStatusLabel(3)}</option>
+                                </select>
+                            </label>
+                        </div>
+                    )}
                     {requests.length === 0 ? (
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-8 text-center text-sm text-zinc-500">
                             Nog geen versoeke aangemeld nie.
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {requests.map(
+                            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
+                                <span>{itLabel("Showing")} {visibleRequests.length} {itLabel("of")} {filteredRequests.length} {itLabel("matching requests")}</span>
+                                {filteredRequests.length > 5 && (
+                                    <button type="button" className="rounded-lg border border-white/15 px-3 py-2 text-sm" onClick={() => setShowAllRequests((value) => !value)}>
+                                        {showAllRequests ? itLabel("Show fewer") : itLabel("Show all matching requests")}
+                                    </button>
+                                )}
+                            </div>
+                            {visibleRequests.length === 0 ? (
+                                <div className="rounded-xl border border-white/10 p-6 text-center text-sm text-zinc-500">{itLabel("No requests match the current filters.")}</div>
+                            ) : visibleRequests.map(
                                 (request) => (
                                     <div
                                         key={
