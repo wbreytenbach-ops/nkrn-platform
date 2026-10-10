@@ -522,7 +522,7 @@ export default function LogisticsTeacherPortal({
                     `Parkering binne terrein: ${securityParkingRequired ? "Ja" : "Nee"}`,
                     ...(securityParkingRequired ? [`Parkering vanaf: ${securityParkingStart}`, `Parkering tot: ${securityParkingEnd}`] : []),
                     `Vereistes: ${description.trim() || "Geen verdere vereistes"}`,
-                ].join("\\n")
+                ].join("\n")
                 : description.trim() || null;
 
             const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
