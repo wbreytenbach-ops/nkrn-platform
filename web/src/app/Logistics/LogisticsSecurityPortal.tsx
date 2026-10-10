@@ -67,7 +67,7 @@ function requirementsText(value?: string | null) {
 const inputClass =
     "mt-1 w-full rounded-xl border border-white/10 bg-zinc-900/80 px-3.5 py-3 text-sm text-white outline-none focus:border-amber-400/60";
 
-export default function LogisticsSecurityPortal() {
+export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMyRequests: () => void }) {
     const router = useRouter();
     const [requests, setRequests] = useState<SecurityRequest[]>([]);
     const [selected, setSelected] = useState<SecurityRequest | null>(null);
@@ -88,7 +88,7 @@ export default function LogisticsSecurityPortal() {
     const load = useCallback(async () => {
         try {
             setError("");
-            const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
+            const response = await fetch(`${API_URL}/api/LogisticsRequests/security`, {
                 headers: authHeaders(),
                 cache: "no-store",
             });
@@ -267,6 +267,13 @@ export default function LogisticsSecurityPortal() {
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={onOpenMyRequests}
+                            className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-200 hover:bg-amber-400/15"
+                        >
+                            My logistieke versoeke
+                        </button>
                         <button
                             type="button"
                             onClick={() => router.push("/")}
