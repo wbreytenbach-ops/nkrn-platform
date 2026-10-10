@@ -7,6 +7,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$global:NKRNLatestReleaseZip = $null
 Set-StrictMode -Version 2.0
 $apiUrl = 'https://portal.tygies.co.za'
 $serverRuntime = [version]'10.0.11'
