@@ -10,6 +10,7 @@ import LogisticsJobCardHistory from "./LogisticsJobCardHistory";
 import LogisticsAllocationBoard from "./LogisticsAllocationBoard";
 import LogisticsTaskEditor from "./LogisticsTaskEditor";
 import LogisticsRequestInbox from "./LogisticsRequestInbox";
+import LogisticsBulkDelete from "./LogisticsBulkDelete";
 
 // ============================================================
 // TYPES
@@ -1146,6 +1147,7 @@ export default function LogisticsManagementDashboard({
                 )}
 
                 <nav className="sticky top-2 z-20 mb-6 flex flex-wrap gap-2 rounded-2xl border border-white/15 bg-zinc-950/95 p-3" aria-label="Logistics-bestuur">{[["oorsig","Oorsig"],["versoeke","Versoeke"],["take","Take"],["werkplan","Werkplan"],["werkkaarte","Werkkaarte"]].map(([id,label]) => <a className="q4-nav" key={id} href={`#${id}`}>{label}</a>)}</nav>
+                <LogisticsBulkDelete isAdmin={user?.roleID === 3} onDeleted={loadLogistics} />
                 <LogisticsRequestInbox
                     isAdmin={user?.roleID === 3}
                     tasks={tasks}
