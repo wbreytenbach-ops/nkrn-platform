@@ -234,7 +234,7 @@ export default function Home() {
                     </div>
 
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                        NKRN
+                        Laerskool Tygerpoort
                     </p>
 
                     <p className="mt-2 text-sm text-zinc-300">
