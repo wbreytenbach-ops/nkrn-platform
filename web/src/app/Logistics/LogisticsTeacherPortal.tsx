@@ -324,11 +324,11 @@ export default function LogisticsTeacherPortal({
     useEffect(() => {
         if (!requestOpen) return;
 
-        const modal = requestModalRef.current;
-        if (!modal) return;
+        const requestSection = requestModalRef.current;
+        if (!requestSection) return;
 
-        modal.scrollTo({ top: 0, behavior: "smooth" });
-        modal.focus({ preventScroll: true });
+        requestSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        requestSection.focus({ preventScroll: true });
     }, [requestOpen]);
 
     const activeRequests = useMemo(
@@ -1303,36 +1303,17 @@ export default function LogisticsTeacherPortal({
                     </section>
                 )}
 
-                <footer className="mt-10 flex items-center justify-between border-t border-white/7 py-6 text-xs text-zinc-600">
-                    <span>Laerskool Tygerpoort · Logistics</span>
-                    <span className="font-semibold tracking-wide text-zinc-500">
-                        Laerskool Tygerpoort
-                    </span>
-                </footer>
-            </div>
-
-            {requestOpen && (
-                <div
+                {requestOpen && (
+                <section
                     ref={requestModalRef}
-                    role="dialog"
-                    aria-modal="true"
+                    id="logistics-request-form"
+                    role="region"
                     aria-labelledby="logistics-request-dialog-title"
                     tabIndex={-1}
-                    style={{ animation: "nkrn-modal-fade-in 160ms ease-out" }}
-                    className="fixed inset-0 z-50 overflow-y-auto bg-black/75 px-4 py-6 backdrop-blur-sm sm:py-10"
-                    onMouseDown={(event) => {
-                        if (
-                            event.target === event.currentTarget &&
-                            !submitting
-                        ) {
-                            setRequestOpen(false);
-                        }
-                    }}
+                    style={{ animation: "nkrn-modal-slide-down 220ms ease-out" }}
+                    className="scroll-mt-6 mb-8 overflow-hidden rounded-[30px] border border-white/10 bg-zinc-950/95 shadow-2xl shadow-black/50"
                 >
-                    <div
-                        style={{ animation: "nkrn-modal-slide-down 220ms ease-out" }}
-                        className="mx-auto my-auto w-full max-w-3xl rounded-[30px] border border-white/10 bg-zinc-950/95 shadow-2xl shadow-black/50"
-                    >
+                    <div className="mx-auto w-full max-w-3xl">
                         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 rounded-t-[30px] border-b border-white/8 bg-zinc-950/95 p-5 backdrop-blur-xl sm:p-6">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
@@ -2147,6 +2128,16 @@ export default function LogisticsTeacherPortal({
                     </div>
                 </div>
             )}
+
+                <footer className="mt-10 flex items-center justify-between border-t border-white/7 py-6 text-xs text-zinc-600">
+                    <span>Laerskool Tygerpoort · Logistics</span>
+                    <span className="font-semibold tracking-wide text-zinc-500">
+                        Laerskool Tygerpoort
+                    </span>
+                </footer>
+            </div>
+
+            
         </main>
     );
 }
