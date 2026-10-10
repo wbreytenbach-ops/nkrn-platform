@@ -2137,7 +2137,7 @@ export default function LogisticsTeacherPortal({
                             </fieldset>
                         </div>
                     </div>
-                </div>
+                </section>
             )}
 
                 <footer className="mt-10 flex items-center justify-between border-t border-white/7 py-6 text-xs text-zinc-600">
