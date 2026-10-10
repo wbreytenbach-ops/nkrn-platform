@@ -82,6 +82,8 @@
 }
 @media print {
   @page { size: A4; margin: 12mm; }
+  /* The global language/settings control sits outside the print sheet. */
+  .fixed.right-3.top-3 { display: none !important; }
   html, body { background: #fff !important; color: #202124 !important; }
   .fv-print-page { min-height: 0; padding: 0; background: #fff !important; }
   .fv-print-actions { display: none !important; }
