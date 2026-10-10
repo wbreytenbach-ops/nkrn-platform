@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -158,7 +158,7 @@ export default function LogisticsSecurityPortal() {
         setRequirements("");
     }
 
-    async function submitRequest(event: React.FormEvent<HTMLFormElement>) {
+    async function submitRequest(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setError("");
         setSuccess("");
