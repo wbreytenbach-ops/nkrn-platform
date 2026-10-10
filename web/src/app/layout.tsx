@@ -7,45 +7,30 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://portal.tygies.co.za"),
 
   title: {
-    default: "NKRN | Laerskool Tygerpoort",
-    template: "%s | NKRN",
+    default: "Laerskool Tygerpoort",
+    template: "%s | Laerskool Tygerpoort",
   },
 
   description:
     "Laerskool Tygerpoort's secure school operations platform for IT support, logistics and administration.",
 
-  applicationName: "NKRN School Operations",
+  applicationName: "Laerskool Tygerpoort",
 
   manifest: "/manifest.webmanifest",
 
   icons: {
     icon: [
       {
-        url: "/favicon.ico",
-      },
-      {
-        url: "/icon-32x32.png",
-        sizes: "32x32",
-        type: "image/png",
-      },
-      {
-        url: "/icon-192x192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        url: "/icon-512x512.png",
-        sizes: "512x512",
+        url: "/tygie-logo.png",
         type: "image/png",
       },
     ],
 
-    shortcut: "/favicon.ico",
+    shortcut: "/tygie-logo.png",
 
     apple: [
       {
-        url: "/apple-touch-icon.png",
-        sizes: "180x180",
+        url: "/tygie-logo.png",
         type: "image/png",
       },
     ],
@@ -53,7 +38,7 @@ export const metadata: Metadata = {
 
   appleWebApp: {
     capable: true,
-    title: "NKRN",
+    title: "Tygerpoort",
     statusBarStyle: "black-translucent",
   },
 
@@ -64,7 +49,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0b0b0d",
-  colorScheme: "dark",
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
