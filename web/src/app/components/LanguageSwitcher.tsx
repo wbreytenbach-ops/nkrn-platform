@@ -22,6 +22,8 @@ export default function LanguageSwitcher() {
     useEffect(() => {
         const saved = localStorage.getItem("nkrn-theme");
         const preference: ThemePreference = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+        // The saved preference is read once during hydration; this state sync is intentional.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTheme(preference);
         applyTheme(preference);
         const media = window.matchMedia("(prefers-color-scheme: light)");
