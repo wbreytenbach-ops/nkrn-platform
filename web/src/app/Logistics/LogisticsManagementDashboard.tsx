@@ -1571,7 +1571,7 @@ export default function LogisticsManagementDashboard() {
                                         {editingWorker ? "Edit Worker" : "Add Worker"}
                                     </h2>
                                     <p className="mt-2 text-sm leading-6 text-zinc-400">
-                                        Workers do not need an NKRN login account. They can be assigned directly to Daily Work Plan items.
+                                        Workers do not need a Tygerpoort portal login account. They can be assigned directly to Daily Work Plan items.
                                     </p>
                                 </div>
 
