@@ -601,7 +601,7 @@ export default function LogisticsTeacherPortal({
                 `Parkering binne terrein: ${parkingRequired ? "Ja" : "Nee"}`,
                 ...(parkingRequired ? [`Parkering vanaf: ${parkingStartTime}`, `Parkering tot: ${parkingEndTime}`] : []),
                 `Vereistes: ${description.trim() || "Geen verdere vereistes"}`,
-            ].join("\\n");
+            ].join("\n");
 
             const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
                 method: "POST",
@@ -612,7 +612,7 @@ export default function LogisticsTeacherPortal({
                         requestType === "Event" ? activityCategory : null,
                     title: "Logistics-versoek",
                     description: requestType === "Event" && securityRequired
-                        ? `${description.trim()}\\n\\n${securityDescription}`
+                        ? `${description.trim()}\n\n${securityDescription}`
                         : description.trim() || null,
                     activityDate:
                         requestType === "Event" ? activityDate : null,
