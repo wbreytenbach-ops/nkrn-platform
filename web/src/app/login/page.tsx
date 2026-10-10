@@ -20,6 +20,27 @@ interface LoggedInUser {
 export default function LoginPage() {
     const router = useRouter();
 
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
+        if (!token || !storedUser) return;
+
+        try {
+            JSON.parse(storedUser);
+            const requestedPath =
+                new URLSearchParams(window.location.search).get("next") ||
+                sessionStorage.getItem("tygies-return-path");
+            const safePath = requestedPath && requestedPath.startsWith("/") && !requestedPath.startsWith("//")
+                ? requestedPath
+                : "/";
+            sessionStorage.removeItem("tygies-return-path");
+            router.replace(safePath);
+        } catch {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+        }
+    }, [router]);
+
     const [email, setEmail] =
         useState("");
 
@@ -114,10 +135,13 @@ export default function LoginPage() {
                 )
             );
 
-            const requestedPath = new URLSearchParams(window.location.search).get("next");
+            const requestedPath =
+                new URLSearchParams(window.location.search).get("next") ||
+                sessionStorage.getItem("tygies-return-path");
             const safePath = requestedPath && requestedPath.startsWith("/") && !requestedPath.startsWith("//")
                 ? requestedPath
                 : "/";
+            sessionStorage.removeItem("tygies-return-path");
             router.replace(safePath);
         } catch (error) {
             console.error(
