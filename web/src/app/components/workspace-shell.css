@@ -5,6 +5,8 @@
 .workspace-brand{display:flex;align-items:center;gap:8px;min-height:54px;margin:0 0 28px}
 .workspace-brand-link{display:flex;min-width:0;flex:1;align-items:center;gap:10px;text-decoration:none}
 .workspace-crest{width:38px;height:38px;flex:0 0 38px;object-fit:contain}
+html[data-theme="light"] .workspace-crest{filter:invert(1) drop-shadow(0 2px 5px rgba(15,23,42,.10))}
+html[data-theme="dark"] .workspace-crest{filter:none}
 .workspace-brand-copy,.workspace-user-copy{display:flex;min-width:0;flex-direction:column;gap:3px;white-space:nowrap}
 .workspace-brand-copy strong{font-size:16px;font-weight:700;letter-spacing:-.035em;color:#202124}
 .workspace-brand-copy small{font-size:10px;color:#5f6368}
