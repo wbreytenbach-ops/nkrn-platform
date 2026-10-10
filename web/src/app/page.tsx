@@ -320,7 +320,7 @@ export default function Home() {
                                     type="button"
                                     className="rounded-xl bg-[#d7a31f] px-4 py-3 text-sm font-bold text-black"
                                     onClick={() => {
-                                        window.open("https://busbook.infinityfree.me/test/?i=1", "_blank", "noopener,noreferrer");
+                                        window.open("https://busbook.infinityfree.me/test/", "_blank", "noopener,noreferrer");
                                         setTransportConfirmOpen(false);
                                     }}
                                 >
