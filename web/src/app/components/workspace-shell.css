@@ -126,3 +126,49 @@ html.tygies-workspace-active[data-theme=light] .nkrn-control :is(input,select,te
         color: #202735 !important;
     }
 }
+
+
+/* Sign-in page is intentionally independent of legacy .nkrn-control overrides.
+   These high-specificity rules ensure the workspace design is actually visible. */
+main.tygies-login-page {
+  min-height: 100vh;
+  background: #f6f8fc !important;
+  color: #202124 !important;
+  font-family: Arial, Helvetica, sans-serif;
+}
+main.tygies-login-page .text-white { color: #202124 !important; }
+main.tygies-login-page .text-zinc-200,
+main.tygies-login-page .text-zinc-300 { color: #3c4043 !important; }
+main.tygies-login-page .text-zinc-400,
+main.tygies-login-page .text-zinc-500,
+main.tygies-login-page .text-zinc-600,
+main.tygies-login-page .text-zinc-700 { color: #5f6368 !important; }
+main.tygies-login-page [class*="text-[#d7a31f]"],
+main.tygies-login-page [class*="text-[#e7b42b]"] { color: #b91c2b !important; }
+main.tygies-login-page .nkrn-panel {
+  background: #ffffff !important;
+  border: 1px solid #e0e3e7 !important;
+  border-radius: 24px !important;
+  box-shadow: 0 12px 36px rgba(60,64,67,.12) !important;
+  color: #202124 !important;
+  backdrop-filter: none !important;
+}
+main.tygies-login-page [class*="border-white/"] { border-color: #e0e3e7 !important; }
+main.tygies-login-page [class*="bg-white/"] { background-color: #f8f9fa !important; }
+main.tygies-login-page [class*="bg-black/"] { background-color: #ffffff !important; }
+main.tygies-login-page input {
+  background: #ffffff !important;
+  border-color: #dadce0 !important;
+  color: #202124 !important;
+}
+main.tygies-login-page input::placeholder { color: #70757a !important; opacity: 1; }
+main.tygies-login-page button[type="submit"] {
+  background: #b91c2b !important;
+  border-color: #b91c2b !important;
+  color: #ffffff !important;
+}
+main.tygies-login-page button[type="submit"]:hover:not(:disabled) {
+  background: #9f1724 !important;
+}
+main.tygies-login-page .backdrop-blur-xl,
+main.tygies-login-page .backdrop-blur-2xl { backdrop-filter: none !important; }
