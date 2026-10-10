@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import LogoutButton from "./components/LogoutButton";
 import { useLanguage } from "./language";
 import "./nkrn-control.css";
 
@@ -31,17 +29,6 @@ const modules: ModuleDefinition[] = [
     { key: "transport", name: "Transport", shortName: "TR", description: "Vervoer en reisbeplanning.", status: "active", eyebrow: "Skoolvervoer" },
     { key: "curriculum", name: "Curriculum", shortName: "CU", description: "Kurrikulum en onderrigbeplanning.", status: "coming-soon", eyebrow: "Toekomstige module" },
 ];
-
-function getRoleName(roleID: number) {
-    switch (roleID) {
-        case 3:
-            return "Administrateur";
-        case 2:
-            return "Tegnikus";
-        default:
-            return "Personeellid";
-    }
-}
 
 function ModuleIcon({
     moduleKey,
