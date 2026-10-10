@@ -100,7 +100,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             <aside className="workspace-sidebar" aria-label={af ? "Hoofnavigasie" : "Main navigation"}>
                 <div className="workspace-brand">
                     <Link href="/" className="workspace-brand-link" aria-label="Tygies One home" onClick={() => setMobileOpen(false)}>
-                        <Image src="/icon-192x192.png" alt="Laerskool Tygerpoort school crest" width={42} height={42} priority className="workspace-crest" />
+                        <Image src="/wit-logo-tygies.png" alt="Laerskool Tygerpoort school crest" width={42} height={42} priority className="workspace-crest" />
                         <span className="workspace-brand-copy"><strong>Tygies One</strong><small>Laerskool Tygerpoort</small></span>
                     </Link>
                     <button type="button" className="workspace-collapse" onClick={toggleCollapsed} aria-label={collapsed ? (af ? "Brei navigasie uit" : "Expand navigation") : (af ? "Vou navigasie in" : "Collapse navigation")} title={collapsed ? "Expand navigation" : "Collapse navigation"}>‹</button>
