@@ -258,20 +258,7 @@ export default function Home() {
     return (
         <main className="nkrn-control q4-home min-h-screen text-white">
             <div className="relative z-10 mx-auto max-w-7xl px-5 py-8 sm:px-8">
-                <header className="nkrn-panel p-5 sm:p-7">
-                    <div className="flex flex-wrap items-center justify-between gap-5">
-                        <div className="flex items-center gap-4">
-                            <Image src="/wit-logo-tygies.png" alt="Laerskool Tygerpoort" width={130} height={52} priority />
-                            <div><p className="text-xs uppercase tracking-[.2em] text-[#e7b42b]">Laerskool Tygerpoort</p><h1 className="mt-2 text-2xl font-bold">Tygies One</h1><p className="mt-1 text-sm text-zinc-400">Skoolbedryfsplatform</p></div>
-                        </div>
-                        <div className="flex items-center gap-4"><div className="text-right text-sm"><p className="text-zinc-400">Aangemeld</p><p>{user.firstName} {user.lastName}</p><p className="text-zinc-400">{t(getRoleName(user.roleID))}</p></div><LogoutButton /></div>
-                    </div>
-                    <nav aria-label="Hoofnavigasie" className="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4">
-                        <button type="button" aria-current="page" className="q4-nav">Tuis</button>
-                        {modules.map(module => <button type="button" className="q4-nav" key={module.key} disabled={module.status !== "active"} onClick={() => openModule(module)}>{t(module.name)}</button>)}
-                    </nav>
-                </header>
-                <section className="py-12 sm:py-16">
+<section className="py-12 sm:py-16">
                     <p className="text-sm uppercase tracking-[.2em] text-[#e7b42b]">Jou skool. Jou werksruimte.</p>
                     <h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">Elke dag se werk,<br />op een plek.</h2>
                     <p className="mt-5 text-lg text-zinc-300">
