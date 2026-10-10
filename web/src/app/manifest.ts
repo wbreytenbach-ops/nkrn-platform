@@ -4,11 +4,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
 
-    name: "Tygies 1 | Laerskool Tygerpoort",
-    short_name: "Tygies 1",
+    name: "Tygies One | Laerskool Tygerpoort",
+    short_name: "Tygies One",
 
     description:
-      "Tygies 1 se veilige skoolbedryfsportaal vir IT-ondersteuning, logistiek, funksieversorging en administrasie.",
+      "Tygies One se veilige skoolbedryfsportaal vir IT-ondersteuning, logistiek, funksieversorging en administrasie.",
 
     start_url: "/",
     scope: "/",
