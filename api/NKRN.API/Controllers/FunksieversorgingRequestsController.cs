@@ -129,10 +129,15 @@ public class FunksieversorgingRequestsController : ControllerBase
             return NotFound();
         }
 
-        var request = (await LoadRequestsAsync(null))
+        var request = (await LoadRequestsAsync(null, requestID))
             .FirstOrDefault(item => item.RequestID == requestID);
 
-        return request is null ? NotFound() : Ok(request);
+        if (request is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(request);
     }
 
     [HttpGet("mine")]
@@ -693,7 +698,9 @@ public class FunksieversorgingRequestsController : ControllerBase
         return recipients;
     }
 
-    private async Task<List<FunksieversorgingRequestResponse>> LoadRequestsAsync(int? requestedByUserID)
+    private async Task<List<FunksieversorgingRequestResponse>> LoadRequestsAsync(
+        int? requestedByUserID,
+        int? requestID = null)
     {
         var results = new List<FunksieversorgingRequestResponse>();
 
@@ -753,12 +760,18 @@ public class FunksieversorgingRequestsController : ControllerBase
                     FROM dbo.FunksieversorgingRequests R
                     INNER JOIN dbo.Users U
                         ON U.UserID = R.RequestedByUserID
+                    WHERE (@RequestID IS NULL OR R.RequestID = @RequestID)
                     ORDER BY R.CreatedAt DESC, R.RequestID DESC;
                     """;
 
             if (requestedByUserID.HasValue)
             {
                 AddParameter(command, "@RequestedByUserID", requestedByUserID.Value);
+            }
+
+            if (!requestedByUserID.HasValue)
+            {
+                AddParameter(command, "@RequestID", requestID);
             }
 
             await using var reader = await command.ExecuteReaderAsync();
