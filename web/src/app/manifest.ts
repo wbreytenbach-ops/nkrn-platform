@@ -4,11 +4,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
 
-    name: "Laerskool Tygerpoort",
-    short_name: "Tygerpoort",
+    name: "Tygies 1 | Laerskool Tygerpoort",
+    short_name: "Tygies 1",
 
     description:
-      "Laerskool Tygerpoort se skoolbedryfsportaal vir IT-ondersteuning, logistiek en administrasie.",
+      "Tygies 1 se veilige skoolbedryfsportaal vir IT-ondersteuning, logistiek, funksieversorging en administrasie.",
 
     start_url: "/",
     scope: "/",
@@ -16,8 +16,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     orientation: "any",
 
-    background_color: "#0b0b0d",
-    theme_color: "#0b0b0d",
+    background_color: "#18181b",
+    theme_color: "#B91C2B",
 
     categories: [
       "education",
