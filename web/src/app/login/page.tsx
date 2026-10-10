@@ -242,12 +242,13 @@ export default function LoginPage() {
                                     Available now
                                 </p>
 
-                                <p className="mt-2 text-sm font-semibold text-zinc-200">
-                                    IT Desk
-                                </p>
-                                <p className="mt-2 text-sm font-semibold text-zinc-200">
-                                    Logistics
-                                </p>
+                                <ul className="mt-3 space-y-2 text-sm font-semibold text-zinc-200">
+                                    <li>IT Desk</li>
+                                    <li>Logistics</li>
+                                    <li>Function Setup</li>
+                                    <li>Technician Desk <span className="font-normal text-zinc-500">(staff)</span></li>
+                                    <li>Administration <span className="font-normal text-zinc-500">(admins)</span></li>
+                                </ul>
                             </div>
 
                             <div className="rounded-2xl border border-white/8 bg-white/3.5 p-4 backdrop-blur-xl">
