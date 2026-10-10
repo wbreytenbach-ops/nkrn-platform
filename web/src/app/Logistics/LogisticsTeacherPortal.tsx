@@ -5,7 +5,7 @@ import ItAiAssistant from "../components/ItAiAssistant";
 import { displayLabel, requestStage } from "./labels";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../language";
 import "../nkrn-control.css";
@@ -223,6 +223,7 @@ export default function LogisticsTeacherPortal({
 
     const [step, setStep] = useState(0);
     const [requestOpen, setRequestOpen] = useState(false);
+    const requestModalRef = useRef<HTMLDivElement>(null);
     const [submitting, setSubmitting] = useState(false);
 
     const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General" | "Security">("Event");
@@ -319,6 +320,16 @@ export default function LogisticsTeacherPortal({
 
         return () => window.clearTimeout(timer);
     }, [loadPortal]);
+
+    useEffect(() => {
+        if (!requestOpen) return;
+
+        const modal = requestModalRef.current;
+        if (!modal) return;
+
+        modal.scrollTo({ top: 0, behavior: "smooth" });
+        modal.focus({ preventScroll: true });
+    }, [requestOpen]);
 
     const activeRequests = useMemo(
         () =>
@@ -1016,7 +1027,7 @@ export default function LogisticsTeacherPortal({
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
                                     My Logistics-versoeke
                                 </p>
-                                <h2 className="mt-1 text-2xl font-semibold">
+                                <h2 id="logistics-request-dialog-title" className="mt-1 text-2xl font-semibold">
                                     Versoekgeskiedenis
                                 </h2>
                             </div>
@@ -1295,13 +1306,19 @@ export default function LogisticsTeacherPortal({
                 <footer className="mt-10 flex items-center justify-between border-t border-white/7 py-6 text-xs text-zinc-600">
                     <span>Laerskool Tygerpoort · Logistics</span>
                     <span className="font-semibold tracking-wide text-zinc-500">
-                        NKRN™ ©
+                        Laerskool Tygerpoort
                     </span>
                 </footer>
             </div>
 
             {requestOpen && (
                 <div
+                    ref={requestModalRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="logistics-request-dialog-title"
+                    tabIndex={-1}
+                    style={{ animation: "nkrn-modal-fade-in 160ms ease-out" }}
                     className="fixed inset-0 z-50 overflow-y-auto bg-black/75 px-4 py-6 backdrop-blur-sm sm:py-10"
                     onMouseDown={(event) => {
                         if (
@@ -1312,7 +1329,10 @@ export default function LogisticsTeacherPortal({
                         }
                     }}
                 >
-                    <div className="mx-auto my-auto w-full max-w-3xl rounded-[30px] border border-white/10 bg-zinc-950/95 shadow-2xl shadow-black/50">
+                    <div
+                        style={{ animation: "nkrn-modal-slide-down 220ms ease-out" }}
+                        className="mx-auto my-auto w-full max-w-3xl rounded-[30px] border border-white/10 bg-zinc-950/95 shadow-2xl shadow-black/50"
+                    >
                         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 rounded-t-[30px] border-b border-white/8 bg-zinc-950/95 p-5 backdrop-blur-xl sm:p-6">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
