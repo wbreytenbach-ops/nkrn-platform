@@ -32,6 +32,7 @@ export default function LogisticsPage() {
     const [user, setUser] = useState<NKRNUser | null>(null);
     const [checkingAccess, setCheckingAccess] = useState(true);
     const [managementAccess, setManagementAccess] = useState(false);
+    const [adminRequestMode, setAdminRequestMode] = useState(false);
     const [securityAccess, setSecurityAccess] = useState(false);
     const [error, setError] = useState("");
 
@@ -167,8 +168,19 @@ export default function LogisticsPage() {
         return <LogisticsSecurityPortal />;
     }
 
+    if (managementAccess && adminRequestMode) {
+        return (
+            <LogisticsTeacherPortal
+                user={user}
+                onBackToManagement={() => setAdminRequestMode(false)}
+            />
+        );
+    }
+
     return managementAccess ? (
-        <LogisticsManagementDashboard />
+        <LogisticsManagementDashboard
+            onCreateRequest={() => setAdminRequestMode(true)}
+        />
     ) : (
         <LogisticsTeacherPortal user={user} />
     );
