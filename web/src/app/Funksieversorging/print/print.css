@@ -91,3 +91,85 @@
   .fv-print-header, .fv-print-inventory tr, .fv-print-details dl div, .fv-print-signatures { break-inside: avoid; }
   .fv-print-inventory th { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
+
+/* Print reliability: keep the emailed request readable on paper and PDF. */
+.fv-print-sheet {
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+.fv-print-sheet *,
+.fv-print-sheet *::before,
+.fv-print-sheet *::after {
+  box-sizing: border-box;
+}
+
+.fv-print-inventory {
+  break-inside: auto;
+}
+
+.fv-print-inventory table {
+  table-layout: fixed;
+}
+
+.fv-print-inventory th,
+.fv-print-inventory td {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.fv-print-signatures > div {
+  min-width: 0;
+  min-height: 34px;
+}
+
+.fv-print-footer span {
+  overflow-wrap: anywhere;
+}
+
+@media print {
+  html,
+  body {
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .fv-print-sheet {
+    overflow: visible;
+  }
+
+  .fv-print-inventory thead {
+    display: table-header-group;
+  }
+
+  .fv-print-inventory tfoot {
+    display: table-footer-group;
+  }
+
+  .fv-print-inventory tr,
+  .fv-print-signatures,
+  .fv-print-warning,
+  .fv-print-return,
+  .fv-print-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .fv-print-sheet h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .fv-print-details dl div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .fv-print-footer {
+    margin-top: 18px;
+  }
+}
+
