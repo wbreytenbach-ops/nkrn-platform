@@ -2,6 +2,11 @@ const CACHE_VERSION = "tygies-static-v3";
 const STATIC_CACHE = CACHE_VERSION;
 
 const PRECACHE_URLS = [
+  "/icon-192x192.png",
+  "/icon-512x512.png",
+  "/icon-maskable-512x512.png",
+  "/icon-32x32.png",
+  "/apple-touch-icon.png",
   "/tygie-logo.png",
   "/wit-logo-tygies.png",
 ];
