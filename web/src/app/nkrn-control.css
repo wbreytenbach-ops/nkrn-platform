@@ -15,9 +15,9 @@
   --nkrn-text: #ffffff;
   --nkrn-muted: #9f9fa7;
   --nkrn-muted-dark: #696970;
-  --nkrn-gold: #d7a31f;
-  --nkrn-gold-bright: #e7b42b;
-  --nkrn-gold-soft: rgba(215, 163, 31, 0.12);
+  --nkrn-gold: #b91c2b;
+  --nkrn-gold-bright: #d8273a;
+  --nkrn-gold-soft: rgba(185, 28, 43, 0.12);
   --nkrn-red: #ef233c;
   --nkrn-orange: #f59e0b;
   --nkrn-green: #22c55e;
@@ -39,7 +39,7 @@
   left: clamp(18px, 3vw, 46px);
   bottom: 18px;
   z-index: 1;
-  color: rgba(215, 163, 31, .18);
+  color: rgba(185, 28, 43, .18);
   font-family: "Outfit", Arial, sans-serif;
   font-size: 12px;
   font-weight: 900;
@@ -76,7 +76,7 @@
   border: 1px solid rgba(255, 255, 255, .11) !important;
   border-radius: 26px !important;
   background:
-    linear-gradient(145deg, rgba(255,255,255,.072), rgba(255,255,255,.024) 48%, rgba(215,163,31,.018)),
+    linear-gradient(145deg, rgba(255,255,255,.072), rgba(255,255,255,.024) 48%, rgba(185, 28, 43,.018)),
     rgba(10, 11, 13, .70) !important;
   box-shadow:
     0 22px 70px rgba(0,0,0,.30),
@@ -93,7 +93,7 @@
   width: 86px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--nkrn-gold), rgba(215,163,31,0));
+  background: linear-gradient(90deg, var(--nkrn-gold), rgba(185, 28, 43,0));
   opacity: .95;
 }
 
@@ -157,9 +157,9 @@
 .nkrn-input:focus,
 .nkrn-select:focus,
 .nkrn-control textarea:focus {
-  border-color: rgba(215, 163, 31, .72) !important;
+  border-color: rgba(185, 28, 43, .72) !important;
   background: rgba(15,16,18,.82) !important;
-  box-shadow: 0 0 0 3px rgba(215,163,31,.08) !important;
+  box-shadow: 0 0 0 3px rgba(185, 28, 43,.08) !important;
 }
 
 /* Buttons */
@@ -286,7 +286,7 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 12% 8%, rgba(215,163,31,.055), transparent 28%),
+    radial-gradient(circle at 12% 8%, rgba(185, 28, 43,.055), transparent 28%),
     radial-gradient(circle at 88% 30%, rgba(255,255,255,.028), transparent 26%);
 }
 
@@ -368,20 +368,20 @@
 }
 
 /* Q4 additions are scoped to the new operational surfaces. */
-.q4-home { background: radial-gradient(ellipse at 80% 10%, #d7a31f12, transparent 45%), #09090b; }
+.q4-home { background: radial-gradient(ellipse at 80% 10%, #b91c2b12, transparent 45%), #09090b; }
 .q4-nav { border: 1px solid #ffffff20; border-radius: .75rem; padding: .65rem 1rem; font-size: .85rem; }
 .q4-nav:disabled { color: #a1a1aa; cursor: not-allowed; }
-.q4-nav[aria-current], .q4-nav:hover:enabled { border-color: #d7a31f80; color: #e7b42b; background: #d7a31f15; }
-.q4-module { border-top: 2px solid #d7a31f80; transition: transform .15s, border-color .15s; }
-.q4-module:hover { transform: translateY(-3px); border-color: #d7a31f; }
-.q4-home :focus-visible, .q4-logistics :focus-visible { outline: 2px solid #e7b42b; outline-offset: 4px; }
+.q4-nav[aria-current], .q4-nav:hover:enabled { border-color: #b91c2b80; color: #d8273a; background: #b91c2b15; }
+.q4-module { border-top: 2px solid #b91c2b80; transition: transform .15s, border-color .15s; }
+.q4-module:hover { transform: translateY(-3px); border-color: #b91c2b; }
+.q4-home :focus-visible, .q4-logistics :focus-visible { outline: 2px solid #d8273a; outline-offset: 4px; }
 .q4-logistics section[id] { scroll-margin-top: 5rem; }
 @media (prefers-reduced-motion: reduce) { .q4-module { transition: none; } .q4-module:hover { transform: none; } }
 
 /* NKRN FINAL PREMIUM LOGISTICS */
 .q4-logistics {
   background:
-    radial-gradient(circle at 82% 4%, rgba(215,163,31,.075), transparent 27%),
+    radial-gradient(circle at 82% 4%, rgba(185, 28, 43,.075), transparent 27%),
     radial-gradient(circle at 12% 32%, rgba(255,255,255,.025), transparent 22%),
     #060708 !important;
 }
@@ -394,16 +394,16 @@
 }
 
 .q4-logistics .nkrn-panel:hover {
-  border-color: rgba(215,163,31,.20) !important;
+  border-color: rgba(185, 28, 43,.20) !important;
   box-shadow:
     0 34px 100px rgba(0,0,0,.38),
-    0 0 0 1px rgba(215,163,31,.025),
+    0 0 0 1px rgba(185, 28, 43,.025),
     inset 0 1px 0 rgba(255,255,255,.07) !important;
 }
 
 .q4-logistics header.nkrn-panel {
   background:
-    linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.025) 50%, rgba(215,163,31,.025)),
+    linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.025) 50%, rgba(185, 28, 43,.025)),
     rgba(8,9,11,.82) !important;
 }
 
@@ -411,11 +411,11 @@
   min-height: 40px;
 }
 
-.q4-logistics button[class*="bg-[#d7a31f]"],
-.q4-logistics button[class*="border-[#d7a31f]"] {
+.q4-logistics button[class*="bg-[#b91c2b]"],
+.q4-logistics button[class*="border-[#b91c2b]"] {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.05),
-    0 10px 30px rgba(215,163,31,.06);
+    0 10px 30px rgba(185, 28, 43,.06);
 }
 
 .q4-logistics .nkrn-input,
@@ -428,7 +428,7 @@
 .q4-logistics .nkrn-select:focus,
 .q4-logistics textarea:focus {
   box-shadow:
-    0 0 0 3px rgba(215,163,31,.09),
+    0 0 0 3px rgba(185, 28, 43,.09),
     0 14px 36px rgba(0,0,0,.18) !important;
 }
 
@@ -444,7 +444,7 @@
 /* NKRN RELEASE FINAL PREMIUM */
 .nkrn-control {
   background:
-    radial-gradient(circle at 88% 3%, rgba(215,163,31,.055), transparent 26%),
+    radial-gradient(circle at 88% 3%, rgba(185, 28, 43,.055), transparent 26%),
     radial-gradient(circle at 8% 38%, rgba(255,255,255,.022), transparent 22%),
     #060708;
 }
@@ -466,7 +466,7 @@
 .nkrn-control input:focus-visible,
 .nkrn-control textarea:focus-visible,
 .nkrn-control select:focus-visible {
-  outline: 2px solid rgba(231,180,43,.65);
+  outline: 2px solid rgba(216, 39, 58,.65);
   outline-offset: 2px;
 }
 
@@ -650,3 +650,139 @@ html[data-theme="light"] .nkrn-control header img[src*="wit-logo-tygies.png"] {
   opacity: 1 !important;
 }
 
+
+
+/* =========================================================
+   TYGIES 1 — shared visual system
+   Brand: Tygerpoort red, white and charcoal; yellow is reserved.
+   These rules apply across requester, technician, admin and
+   special-permission module screens without changing workflows.
+   ========================================================= */
+:root {
+  --tygies-red: #b91c2b;
+  --tygies-red-hover: #a31624;
+  --tygies-red-soft: rgba(185, 28, 43, .12);
+  --tygies-charcoal: #18181b;
+  --tygies-white: #ffffff;
+}
+
+.nkrn-control {
+  accent-color: var(--tygies-red);
+  color-scheme: dark;
+}
+
+.nkrn-control .nkrn-panel {
+  border-radius: 20px !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.nkrn-control .nkrn-panel::after {
+  background: linear-gradient(90deg, var(--tygies-red), transparent) !important;
+}
+
+.nkrn-control button,
+.nkrn-control a,
+.nkrn-control input,
+.nkrn-control select,
+.nkrn-control textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nkrn-control button:disabled {
+  cursor: not-allowed !important;
+  opacity: .58;
+  transform: none !important;
+}
+
+.nkrn-control button:focus-visible,
+.nkrn-control a:focus-visible,
+.nkrn-control input:focus-visible,
+.nkrn-control select:focus-visible,
+.nkrn-control textarea:focus-visible {
+  outline: 2px solid var(--tygies-red) !important;
+  outline-offset: 3px;
+}
+
+.nkrn-control .nkrn-input,
+.nkrn-control .nkrn-select,
+.nkrn-control input:not([type="checkbox"]):not([type="radio"]),
+.nkrn-control select,
+.nkrn-control textarea {
+  border-radius: 12px !important;
+}
+
+.nkrn-control table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.nkrn-control table thead th {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+
+.nkrn-control table tbody tr {
+  transition: background-color .14s ease;
+}
+
+.nkrn-control table tbody tr:hover {
+  background-color: rgba(255, 255, 255, .025);
+}
+
+.nkrn-control [class*="text-[#d7a31f]"],
+.nkrn-control [class*="text-[#e7b42b]"] {
+  color: var(--tygies-red) !important;
+}
+
+.nkrn-control [class*="bg-[#d7a31f]"] {
+  background-color: var(--tygies-red) !important;
+}
+
+.nkrn-control [class*="border-[#d7a31f]"] {
+  border-color: var(--tygies-red) !important;
+}
+
+.nkrn-control [class*="ring-[#d7a31f]"] {
+  --tw-ring-color: var(--tygies-red) !important;
+}
+
+html[data-theme="light"] .nkrn-control {
+  color-scheme: light;
+  background: #f5f6f8 !important;
+}
+
+html[data-theme="light"] .nkrn-control .nkrn-panel {
+  border-radius: 18px !important;
+  border-color: #e1e4e8 !important;
+}
+
+html[data-theme="light"] .nkrn-control [class*="text-[#d7a31f]"],
+html[data-theme="light"] .nkrn-control [class*="text-[#e7b42b]"] {
+  color: var(--tygies-red) !important;
+}
+
+html[data-theme="light"] .nkrn-control [class*="bg-[#d7a31f]"] {
+  background-color: var(--tygies-red) !important;
+}
+
+html[data-theme="light"] .nkrn-control table tbody tr:hover {
+  background-color: #f8f1f2;
+}
+
+@media (max-width: 640px) {
+  .nkrn-control .nkrn-panel {
+    border-radius: 16px !important;
+  }
+
+  .nkrn-control table {
+    font-size: .82rem;
+  }
+
+  .nkrn-control table th,
+  .nkrn-control table td {
+    padding-left: .6rem;
+    padding-right: .6rem;
+  }
+}
