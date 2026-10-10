@@ -512,6 +512,11 @@ export default function LogisticsTeacherPortal({
                 return;
             }
 
+            if (securityRequired && (!Number.isInteger(guardCount) || guardCount < 1 || guardCount > 100)) {
+                setError("Kies asseblief hoeveel sekuriteitswagte benodig word (1–100).");
+                return;
+            }
+
             if (endTime <= startTime) {
                 setError("Die eindtyd moet ná die begintyd wees.");
                 return;
@@ -570,7 +575,7 @@ export default function LogisticsTeacherPortal({
                         requestType === "Event" ? activityCategory : null,
                     title: "Logistics-versoek",
                     description: requestType === "Event" && securityRequired
-                        ? `${description.trim()}\\n\\nSEKURITEIT BENODIG: ${guardCount} wag(te).`
+                        ? `${description.trim()}\n\nSEKURITEIT BENODIG: ${guardCount} wag(te).`
                         : description.trim() || null,
                     activityDate:
                         requestType === "Event" ? activityDate : null,
