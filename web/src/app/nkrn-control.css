@@ -668,7 +668,6 @@ html[data-theme="light"] .nkrn-control header img[src*="wit-logo-tygies.png"] {
 
 .nkrn-control {
   accent-color: var(--tygies-red);
-  color-scheme: dark;
 }
 
 .nkrn-control .nkrn-panel {
