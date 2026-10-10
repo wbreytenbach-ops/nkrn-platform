@@ -1034,7 +1034,7 @@ export default function LogisticsManagementDashboard() {
                     </p>
                     <h1 className="mt-3 text-2xl font-semibold">Logistics-toegang benodig</h1>
                     <p className="mt-3 text-sm leading-6 text-zinc-400">
-                        Your NKRN account does not currently have permission to open the Logistics module.
+                        Your Tygerpoort account does not currently have permission to open the Logistics module.
                     </p>
                     <button
                         type="button"
@@ -1875,7 +1875,7 @@ export default function LogisticsManagementDashboard() {
                 )}
 
                 <footer className="py-8 text-center text-xs text-zinc-700">
-                    NKRN™ © · Laerskool Tygerpoort
+                    Laerskool Tygerpoort
                 </footer>
             </div>
         </main>
