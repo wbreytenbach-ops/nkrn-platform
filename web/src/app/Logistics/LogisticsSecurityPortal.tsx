@@ -51,17 +51,42 @@ function timeText(value?: string | null) {
     return value ? value.slice(0, 5) : "Nie gespesifiseer nie";
 }
 
+function descriptionField(value: string | null | undefined, label: string) {
+    if (!value) return "";
+    const line = value.split("\n").find(item => item.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+    return line ? line.slice(label.length + 1).trim() : "";
+}
+
 function guardCountText(value?: string | null) {
-    const match = value?.match(/(?:Aantal wagte|Aantal guards|Guard count):\s*(\d+)/i);
-    return match ? match[1] : "Nie gespesifiseer nie";
+    return descriptionField(value, "Aantal wagte buite (Echo 1)") ||
+        descriptionField(value, "Aantal wagte") ||
+        descriptionField(value, "Aantal guards") ||
+        descriptionField(value, "Guard count") ||
+        "Nie gespesifiseer nie";
+}
+
+function schoolGuardsText(value?: string | null) {
+    return descriptionField(value, "Skoolwagte benodig") || "Geen spesifieke skoolwagte aangedui nie";
+}
+
+function parkingRequiredText(value?: string | null) {
+    return descriptionField(value, "Parkering binne terrein") || "Nie aangedui nie";
+}
+
+function parkingTimeText(value: string | null | undefined, label: string) {
+    return descriptionField(value, label) || "—";
 }
 
 function requirementsText(value?: string | null) {
     if (!value) return "Geen verdere vereistes verskaf nie.";
-    return value
-        .replace(/^(?:Aantal wagte|Aantal guards|Guard count):\s*\d+\s*\n?/i, "")
-        .replace(/^Vereistes:\s*/i, "")
-        .trim() || "Geen verdere vereistes verskaf nie.";
+    const fields = [
+        "Aantal wagte buite (Echo 1)", "Aantal wagte", "Aantal guards", "Guard count",
+        "Skoolwagte benodig", "Parkering binne terrein", "Parkering vanaf", "Parkering tot", "Vereistes"
+    ];
+    const cleaned = value.split("\n")
+        .filter(line => !fields.some(label => line.toLowerCase().startsWith(`${label.toLowerCase()}:`)))
+        .join("\n").trim();
+    return cleaned || "Geen verdere vereistes verskaf nie.";
 }
 
 const inputClass =
@@ -82,7 +107,11 @@ export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMy
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [location, setLocation] = useState("");
-    const [guardCount, setGuardCount] = useState("1");
+    const [guardCount, setGuardCount] = useState("0");
+    const [schoolGuards, setSchoolGuards] = useState<string[]>([]);
+    const [parkingRequired, setParkingRequired] = useState(false);
+    const [parkingStartTime, setParkingStartTime] = useState("");
+    const [parkingEndTime, setParkingEndTime] = useState("");
     const [requirements, setRequirements] = useState("");
 
     const load = useCallback(async () => {
@@ -167,7 +196,11 @@ export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMy
         setStartTime("");
         setEndTime("");
         setLocation("");
-        setGuardCount("1");
+        setGuardCount("0");
+        setSchoolGuards([]);
+        setParkingRequired(false);
+        setParkingStartTime("");
+        setParkingEndTime("");
         setRequirements("");
     }
 
@@ -182,15 +215,25 @@ export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMy
         }
 
         const count = Number(guardCount);
-        if (!Number.isInteger(count) || count < 1) {
-            setError("Voer asseblief 'n geldige aantal wagte in.");
+        if (!Number.isInteger(count) || count < 0) {
+            setError("Voer asseblief 'n geldige aantal Echo 1-wagte in (0 of meer).");
+            return;
+        }
+
+        if (parkingRequired && (!parkingStartTime || !parkingEndTime || parkingEndTime <= parkingStartTime)) {
+            setError("Kies asseblief 'n geldige begin- en eindtyd vir parkering.");
             return;
         }
 
         setSubmitting(true);
         try {
-            const description =
-                `Aantal wagte: ${count}\nVereistes: ${requirements.trim()}`;
+            const description = [
+                `Aantal wagte buite (Echo 1): ${count}`,
+                `Skoolwagte benodig: ${schoolGuards.length ? schoolGuards.join(", ") : "Geen"}`,
+                `Parkering binne terrein: ${parkingRequired ? "Ja" : "Nee"}`,
+                ...(parkingRequired ? [`Parkering vanaf: ${parkingStartTime}`, `Parkering tot: ${parkingEndTime}`] : []),
+                `Vereistes: ${requirements.trim() || "Geen verdere vereistes"}`,
+            ].join("\n");
 
             const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
                 method: "POST",
@@ -368,10 +411,10 @@ export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMy
                                 />
                             </label>
                             <label className="text-sm text-zinc-300">
-                                Aantal wagte
+                                Aantal wagte buite (Echo 1)
                                 <input
                                     type="number"
-                                    min={1}
+                                    min={0}
                                     step={1}
                                     className={inputClass}
                                     value={guardCount}
@@ -379,6 +422,61 @@ export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMy
                                     required
                                 />
                             </label>
+                            <fieldset className="rounded-xl border border-white/10 p-4 sm:col-span-2">
+                                <legend className="px-2 text-sm text-zinc-300">Skoolwagte benodig (binne / by die hekke)</legend>
+                                <p className="mb-3 text-xs text-zinc-500">Kies die skoolwag(te) wat vir die geleentheid benodig word.</p>
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    {["Collin", "Herman", "Annanias"].map(name => (
+                                        <label key={name} className="flex items-center gap-3 rounded-lg bg-black/20 p-3 text-sm text-zinc-200">
+                                            <input
+                                                type="checkbox"
+                                                checked={schoolGuards.includes(name)}
+                                                onChange={event => setSchoolGuards(current =>
+                                                    event.target.checked ? [...current, name] : current.filter(item => item !== name)
+                                                )}
+                                                className="h-4 w-4 accent-amber-400"
+                                            />
+                                            {name}
+                                        </label>
+                                    ))}
+                                </div>
+                            </fieldset>
+                            <fieldset className="rounded-xl border border-white/10 p-4 sm:col-span-2">
+                                <legend className="px-2 text-sm text-zinc-300">Parkering binne die skoolterrein</legend>
+                                <label className="flex items-center gap-3 text-sm text-zinc-200">
+                                    <input
+                                        type="checkbox"
+                                        checked={parkingRequired}
+                                        onChange={event => setParkingRequired(event.target.checked)}
+                                        className="h-4 w-4 accent-amber-400"
+                                    />
+                                    Parkering is nodig
+                                </label>
+                                {parkingRequired && (
+                                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                                        <label className="text-sm text-zinc-300">
+                                            Parkering vanaf
+                                            <input
+                                                type="time"
+                                                className={inputClass}
+                                                value={parkingStartTime}
+                                                onChange={event => setParkingStartTime(event.target.value)}
+                                                required={parkingRequired}
+                                            />
+                                        </label>
+                                        <label className="text-sm text-zinc-300">
+                                            Parkering tot
+                                            <input
+                                                type="time"
+                                                className={inputClass}
+                                                value={parkingEndTime}
+                                                onChange={event => setParkingEndTime(event.target.value)}
+                                                required={parkingRequired}
+                                            />
+                                        </label>
+                                    </div>
+                                )}
+                            </fieldset>
                             <label className="text-sm text-zinc-300">
                                 Begintyd
                                 <input
@@ -503,11 +601,25 @@ export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMy
                                         <dd>{dateText(selected.activityDate)}</dd>
                                     </div>
                                     <div>
-                                        <dt className="text-xs text-zinc-400">Aantal wagte</dt>
+                                        <dt className="text-xs text-zinc-400">Wagte buite (Echo 1)</dt>
                                         <dd>{guardCountText(selected.description)}</dd>
                                     </div>
                                     <div>
-                                        <dt className="text-xs text-zinc-400">Tyd</dt>
+                                        <dt className="text-xs text-zinc-400">Skoolwagte (binne / hekke)</dt>
+                                        <dd>{schoolGuardsText(selected.description)}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-xs text-zinc-400">Parkering binne terrein</dt>
+                                        <dd>{parkingRequiredText(selected.description)}</dd>
+                                    </div>
+                                    {parkingRequiredText(selected.description).toLowerCase() === "ja" && (
+                                        <div>
+                                            <dt className="text-xs text-zinc-400">Parkeringstyd</dt>
+                                            <dd>{parkingTimeText(selected.description, "Parkering vanaf")} – {parkingTimeText(selected.description, "Parkering tot")}</dd>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <dt className="text-xs text-zinc-400">Geleentheidstyd</dt>
                                         <dd>{timeText(selected.startTime)} – {timeText(selected.endTime)}</dd>
                                     </div>
                                 </dl>
