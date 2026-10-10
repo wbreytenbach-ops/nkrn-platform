@@ -364,7 +364,7 @@ export default function LoginPage() {
                     </p>
 
                     <p className="font-semibold tracking-wide text-zinc-500">
-                        NKRN™ ©
+                        Laerskool Tygerpoort
                     </p>
                 </footer>
             </div>
