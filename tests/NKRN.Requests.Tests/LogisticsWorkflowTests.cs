@@ -58,10 +58,12 @@ public class LogisticsWorkflowTests
             },
             true);
 
-        Assert.Equal(3,app.Email.Messages.Count);
+        Assert.Equal(4,app.Email.Messages.Count);
         Assert.Contains(app.Email.Messages,m=>m.To=="teacher@example.invalid");
+        Assert.Contains(app.Email.Messages,m=>m.To=="logistiek@tygies.co.za");
         Assert.Contains(app.Email.Messages,m=>m.To=="terreinbestuur@tygies.co.za");
-        Assert.Contains(app.Email.Messages,m=>m.To=="mcarnie@tygies.co.za");
+        Assert.Contains(app.Email.Messages,m=>m.To=="msmit@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages,m=>m.To=="mcarnie@tygies.co.za");
         Assert.DoesNotContain(app.Email.Messages,m=>m.To=="admin@example.invalid");
 
         Assert.All(
@@ -95,9 +97,11 @@ public class LogisticsWorkflowTests
                     Priority="Medium"
                 });
 
-        Assert.Equal(2,app.Email.Messages.Count);
+        Assert.Equal(3,app.Email.Messages.Count);
         Assert.Contains(app.Email.Messages,m=>m.To=="teacher@example.invalid");
-        Assert.Contains(app.Email.Messages,m=>m.To=="mcarnie@tygies.co.za");
+        Assert.Contains(app.Email.Messages,m=>m.To=="logistiek@tygies.co.za");
+        Assert.Contains(app.Email.Messages,m=>m.To=="msmit@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages,m=>m.To=="mcarnie@tygies.co.za");
     }
 
     [Fact]
@@ -117,7 +121,34 @@ public class LogisticsWorkflowTests
                     Status="Logged"
                 });
 
-        Assert.Equal(2,app.Email.Messages.Count);
+        Assert.Equal(3,app.Email.Messages.Count);
+        Assert.Contains(app.Email.Messages,m=>m.To=="logistiek@tygies.co.za");
+        Assert.Contains(app.Email.Messages,m=>m.To=="msmit@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages,m=>m.To=="mcarnie@tygies.co.za");
+    }
+
+    [Fact]
+    public async Task Security_request_notification_includes_security_contact()
+    {
+        using var app=new TestApp();
+        using var scope=app.Server.Services.CreateScope();
+
+        await Service(
+            scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
+            app.Email)
+            .NotifyAsync(
+                new LogisticsRequestResponse
+                {
+                    RequestID=2,
+                    RequestType="Security",
+                    RequestedByEmail="teacher@example.invalid",
+                    Status="Logged",
+                    Priority="High"
+                },
+                true);
+
+        Assert.Contains(app.Email.Messages,m=>m.To=="jwerner@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages,m=>m.To=="mcarnie@tygies.co.za");
     }
 
     [Fact]
@@ -183,7 +214,7 @@ public class LogisticsWorkflowTests
             new[]
             {
                 "terreinbestuur@tygies.co.za",
-                "mcarnie@tygies.co.za"
+                "logistiek@tygies.co.za"
             },
             new LogisticsAutomationOptions()
                 .MasterRecipientEmails);
@@ -308,6 +339,16 @@ public class LogisticsWorkflowTests
             StringComparer.OrdinalIgnoreCase);
 
         Assert.Contains(
+            "logistiek@tygies.co.za",
+            options.RecipientEmails,
+            StringComparer.OrdinalIgnoreCase);
+
+        Assert.Contains(
+            "msmit@tygies.co.za",
+            options.RecipientEmails,
+            StringComparer.OrdinalIgnoreCase);
+
+        Assert.DoesNotContain(
             "mcarnie@tygies.co.za",
             options.RecipientEmails,
             StringComparer.OrdinalIgnoreCase);
