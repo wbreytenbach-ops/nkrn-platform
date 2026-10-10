@@ -172,3 +172,21 @@ main.tygies-login-page button[type="submit"]:hover:not(:disabled) {
 }
 main.tygies-login-page .backdrop-blur-xl,
 main.tygies-login-page .backdrop-blur-2xl { backdrop-filter: none !important; }
+
+
+/* Final login accessibility fixes: darken the white school crest on the light sign-in page. */
+main.tygies-login-page img[alt="Laerskool Tygerpoort"] {
+  filter: invert(1) contrast(1.05) !important;
+  opacity: 1 !important;
+  mix-blend-mode: multiply;
+}
+main.tygies-login-page .text-zinc-200,
+main.tygies-login-page .text-zinc-300,
+main.tygies-login-page .text-zinc-400,
+main.tygies-login-page .text-zinc-500,
+main.tygies-login-page .text-zinc-600,
+main.tygies-login-page .text-zinc-700 {
+  opacity: 1 !important;
+}
+main.tygies-login-page .text-zinc-600 { color: #5f6368 !important; }
+main.tygies-login-page .text-zinc-700 { color: #5f6368 !important; }
