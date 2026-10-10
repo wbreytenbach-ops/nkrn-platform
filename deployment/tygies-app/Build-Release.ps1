@@ -31,6 +31,44 @@ function Copy-Tree {
     }
 }
 
+function New-BrandIcon {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourcePath,
+        [Parameter(Mandatory = $true)][string]$DestinationPath,
+        [Parameter(Mandatory = $true)][int]$Size,
+        [double]$Scale = 0.82
+    )
+
+    $sourceImage = $null
+    $bitmap = $null
+    $graphics = $null
+
+    try {
+        $sourceImage = [System.Drawing.Image]::FromFile($SourcePath)
+        $bitmap = New-Object System.Drawing.Bitmap($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+        $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+        $graphics.Clear([System.Drawing.Color]::Transparent)
+        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+        $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+        $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+
+        $fitSize = $Size * $Scale
+        $ratio = [Math]::Min(($fitSize / $sourceImage.Width), ($fitSize / $sourceImage.Height))
+        $width = [Math]::Max(1, [int][Math]::Round($sourceImage.Width * $ratio))
+        $height = [Math]::Max(1, [int][Math]::Round($sourceImage.Height * $ratio))
+        $left = [int][Math]::Floor(($Size - $width) / 2)
+        $top = [int][Math]::Floor(($Size - $height) / 2)
+
+        $graphics.DrawImage($sourceImage, $left, $top, $width, $height)
+        $bitmap.Save($DestinationPath, [System.Drawing.Imaging.ImageFormat]::Png)
+    }
+    finally {
+        if ($graphics) { $graphics.Dispose() }
+        if ($bitmap) { $bitmap.Dispose() }
+        if ($sourceImage) { $sourceImage.Dispose() }
+    }
+}
+
 if ($env:OS -ne 'Windows_NT') { throw 'Build this package on Windows for the Windows server.' }
 foreach ($program in @('git.exe', 'node.exe', 'npm.cmd', 'dotnet.exe', 'robocopy.exe')) {
     Get-Command $program -ErrorAction Stop | Out-Null
@@ -83,6 +121,18 @@ $oldNodeEnv = [Environment]::GetEnvironmentVariable('NODE_ENV', 'Process')
 $oldTelemetry = [Environment]::GetEnvironmentVariable('NEXT_TELEMETRY_DISABLED', 'Process')
 
 try {
+    # Create correctly sized Tygerpoort PWA/browser icons from the repository logo.
+    Add-Type -AssemblyName System.Drawing
+    $brandLogo = Join-Path $webRoot 'public\\tygie-logo.png'
+    if (-not (Test-Path -LiteralPath $brandLogo -PathType Leaf)) {
+        throw "Tygerpoort logo source is missing: $brandLogo"
+    }
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-32x32.png') -Size 32
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-192x192.png') -Size 192
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-512x512.png') -Size 512
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-maskable-512x512.png') -Size 512 -Scale 0.68
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\apple-touch-icon.png') -Size 180
+
     $env:NEXT_PUBLIC_API_URL = $apiUrl
     $env:NEXT_TELEMETRY_DISABLED = '1'
     [Environment]::SetEnvironmentVariable('NODE_ENV', $null, 'Process')
