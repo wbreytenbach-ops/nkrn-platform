@@ -86,6 +86,15 @@ namespace NKRN.API.Controllers
         public async Task<ActionResult<IEnumerable<LogisticsRequestResponse>>> GetAllRequests(
             [FromQuery] string? status = null)
         {
+            if (await IsSecurityReviewerAsync())
+            {
+                var securityRequests = await LoadRequestsAsync(
+                    status: status,
+                    requestType: "Security");
+
+                return Ok(securityRequests);
+            }
+
             if (!await CanManageLogisticsAsync())
             {
                 return Forbid();
@@ -122,10 +131,21 @@ namespace NKRN.API.Controllers
                 return NotFound();
             }
 
-            if (request.RequestedByUserID != userID.Value &&
-                !await CanManageLogisticsAsync())
+            if (request.RequestedByUserID != userID.Value)
             {
-                return Forbid();
+                var isSecurityReviewer = await IsSecurityReviewerAsync();
+
+                if (isSecurityReviewer &&
+                    !string.Equals(request.RequestType, "Security", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid();
+                }
+
+                if (!isSecurityReviewer &&
+                    !await CanManageLogisticsAsync())
+                {
+                    return Forbid();
+                }
             }
 
             return Ok(request);
@@ -866,7 +886,8 @@ namespace NKRN.API.Controllers
 
         private async Task<List<LogisticsRequestResponse>> LoadRequestsAsync(
             int? requestedByUserID = null,
-            string? status = null)
+            string? status = null,
+            string? requestType = null)
         {
             var output =
                 new List<LogisticsRequestResponse>();
@@ -919,6 +940,9 @@ namespace NKRN.API.Controllers
                         AND
                         (@Status IS NULL
                             OR R.Status = @Status)
+                        AND
+                        (@RequestType IS NULL
+                            OR R.RequestType = @RequestType)
                     ORDER BY
                         R.CreatedDate DESC,
                         R.RequestID DESC;
@@ -933,6 +957,11 @@ namespace NKRN.API.Controllers
                     command,
                     "@Status",
                     CleanNullable(status));
+
+                AddParameter(
+                    command,
+                    "@RequestType",
+                    CleanNullable(requestType));
 
                 await using var reader =
                     await command.ExecuteReaderAsync();
@@ -1628,6 +1657,17 @@ namespace NKRN.API.Controllers
         // LOGISTICS PERMISSION
         // Role 3 remains the existing NKRN admin bypass.
         // ============================================================
+
+        private async Task<bool> IsSecurityReviewerAsync()
+        {
+            var id = GetLoggedInUserID();
+
+            return id.HasValue && await _context.Users.AnyAsync(u =>
+                u.UserID == id.Value &&
+                u.IsActive &&
+                u.Email != null &&
+                u.Email.ToLower() == "jwerner@tygies.co.za");
+        }
 
         private async Task<bool> CanManageLogisticsAsync()
         {
