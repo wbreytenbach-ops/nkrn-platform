@@ -48,3 +48,79 @@ html.tygies-workspace-active[data-theme=light] .nkrn-control :is(input,select,te
 .workspace-shell .workspace-content .nkrn-control .nkrn-panel { border-radius: 16px !important; }
 .workspace-shell .workspace-content .nkrn-control .nkrn-request-form,
 .workspace-shell .workspace-content .nkrn-control .nkrn-request-history { padding-top: 24px !important; padding-bottom: 24px !important; }
+
+
+/* Tygies One sign-in: align the entry screen with the light workspace UI. */
+.tygies-login-page {
+    background: #f5f7fa !important;
+    color: #202735 !important;
+}
+.tygies-login-page .pointer-events-none > div {
+    display: none;
+}
+.tygies-login-page header,
+.tygies-login-page footer {
+    border-color: #e2e6ed !important;
+}
+.tygies-login-page .text-white {
+    color: #202735 !important;
+}
+.tygies-login-page .text-zinc-200,
+.tygies-login-page .text-zinc-300 {
+    color: #4b5565 !important;
+}
+.tygies-login-page .text-zinc-400,
+.tygies-login-page .text-zinc-500 {
+    color: #657083 !important;
+}
+.tygies-login-page .text-zinc-600,
+.tygies-login-page .text-zinc-700 {
+    color: #6b7483 !important;
+}
+.tygies-login-page .nkrn-panel {
+    background: #ffffff !important;
+    border-color: #e1e6ed !important;
+    box-shadow: 0 24px 70px rgba(28, 39, 57, 0.10) !important;
+    color: #202735 !important;
+}
+.tygies-login-page .border-white\/10,
+.tygies-login-page .border-white\/8,
+.tygies-login-page .border-white\/7 {
+    border-color: #e5e9ef !important;
+}
+.tygies-login-page .bg-white\/5,
+.tygies-login-page .bg-white\/3,
+.tygies-login-page .bg-white\/3\.5,
+.tygies-login-page .bg-white\/5\.5 {
+    background: #f7f8fa !important;
+}
+.tygies-login-page .bg-black\/25,
+.tygies-login-page .bg-black\/35 {
+    background: #ffffff !important;
+}
+.tygies-login-page .nkrn-input {
+    background: #ffffff !important;
+    border-color: #d7dde6 !important;
+    color: #202735 !important;
+}
+.tygies-login-page .nkrn-input::placeholder {
+    color: #8b95a5 !important;
+}
+.tygies-login-page .nkrn-input:focus {
+    border-color: #c99b21 !important;
+    box-shadow: 0 0 0 3px rgba(215, 163, 31, 0.12);
+}
+.tygies-login-page .backdrop-blur-xl,
+.tygies-login-page .backdrop-blur-2xl {
+    backdrop-filter: none !important;
+}
+@media (prefers-color-scheme: dark) {
+    .tygies-login-page {
+        background: #f5f7fa !important;
+        color: #202735 !important;
+    }
+    .tygies-login-page .nkrn-panel {
+        background: #ffffff !important;
+        color: #202735 !important;
+    }
+}
