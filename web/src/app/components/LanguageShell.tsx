@@ -3,12 +3,16 @@
 import type { ReactNode } from "react";
 import { LanguageProvider } from "../language";
 import LanguageSwitcher from "./LanguageSwitcher";
+import WorkspaceShell from "./WorkspaceShell";
+import "./workspace-shell.css";
 
 export default function LanguageShell({ children }: { children: ReactNode }) {
     return (
         <LanguageProvider>
-            <LanguageSwitcher />
-            {children}
+            <WorkspaceShell>
+                <LanguageSwitcher />
+                {children}
+            </WorkspaceShell>
         </LanguageProvider>
     );
 }
