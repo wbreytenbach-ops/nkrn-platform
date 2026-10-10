@@ -303,12 +303,7 @@ export default function Home() {
                     ))}</div>
                 </section>
                 {transportConfirmOpen && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-                        onClick={(event) => {
-                            if (event.target === event.currentTarget) setTransportConfirmOpen(false);
-                        }}
-                    >
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
                         <section
                             role="dialog"
                             aria-modal="true"
