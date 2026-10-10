@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 type LocationItem = { locationName?: string | null; locationText?: string | null; isPrimary?: boolean };
@@ -22,21 +23,21 @@ function dateText(value?: string | null) {
 function timeText(value?: string | null) { return value ? value.slice(0, 5) : "Nie gespesifiseer nie"; }
 
 export default function LogisticsSecurityPortal() {
+  const router = useRouter();
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [selected, setSelected] = useState<SecurityRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
-    setLoading(true); setError("");
     try {
       const response = await fetch(`${API_URL}/api/LogisticsRequests`, { headers: headers(), cache: "no-store" });
-      if (response.status === 401) { localStorage.removeItem("token"); localStorage.removeItem("user"); window.location.assign("/login"); return; }
+      if (response.status === 401) { localStorage.removeItem("token"); localStorage.removeItem("user"); router.push("/login"); return; }
       if (!response.ok) throw new Error("Sekuriteitsversoeke kon nie gelaai word nie.");
       const data = await response.json() as SecurityRequest[];
       setRequests(data.filter(item => item.requestType?.toLowerCase() === "security"));
     } catch (e) { setError(e instanceof Error ? e.message : "Kon nie sekuriteitsversoeke laai nie."); }
     finally { setLoading(false); }
-  }, []);
+  }, [router]);
   useEffect(() => { void load(); }, [load]);
   async function open(id: number) {
     setError("");
@@ -52,7 +53,7 @@ export default function LogisticsSecurityPortal() {
     <div className="mx-auto max-w-6xl">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-400">NKRN · Logistiek</p><h1 className="mt-2 text-3xl font-semibold">Sekuriteitsversoeke</h1><p className="mt-2 text-sm text-zinc-400">Sekuriteitsvereistes, datums, tye en liggings.</p></div>
-        <button type="button" onClick={() => void load()} disabled={loading} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10 disabled:opacity-50">{loading ? "Laai…" : "Verfris"}</button>
+        <button type="button" onClick={() => { setLoading(true); setError(""); void load(); }} disabled={loading} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10 disabled:opacity-50">{loading ? "Laai…" : "Verfris"}</button>
       </header>
       {error && <div role="alert" className="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">{error}</div>}
       <div className="grid gap-6 lg:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
