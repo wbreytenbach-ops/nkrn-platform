@@ -718,6 +718,9 @@ namespace NKRN.API.Controllers
 
             try
             {
+                var securityReviewer =
+                    await IsSecurityReviewerAsync();
+
                 await using var command =
                     connection.CreateCommand();
 
@@ -729,6 +732,7 @@ namespace NKRN.API.Controllers
                     WHERE
                         RequestID = @RequestID
                         AND RequestedByUserID = @UserID
+                        AND (@SecurityOnly = 0 OR RequestType = 'Security')
                         AND Status NOT IN ('Converted', 'Completed', 'Cancelled');
                     """;
 
@@ -741,6 +745,11 @@ namespace NKRN.API.Controllers
                     command,
                     "@UserID",
                     userID.Value);
+
+                AddParameter(
+                    command,
+                    "@SecurityOnly",
+                    securityReviewer);
 
                 var affected =
                     await command.ExecuteNonQueryAsync();
