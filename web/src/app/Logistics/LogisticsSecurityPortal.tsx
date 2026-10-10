@@ -47,7 +47,7 @@ function requirementsText(value?: string | null) {
   return cleaned || "Geen verdere vereistes verskaf nie.";
 }
 
-export default function LogisticsSecurityPortal() {
+export default function LogisticsSecurityPortal({ onOpenMyRequests }: { onOpenMyRequests?: () => void } = {}) {
   const router = useRouter();
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [selected, setSelected] = useState<SecurityRequest | null>(null);
@@ -81,7 +81,10 @@ export default function LogisticsSecurityPortal() {
     <div className="mx-auto max-w-6xl">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-400">NKRN · Logistiek</p><h1 className="mt-2 text-3xl font-semibold">Sekuriteitsversoeke</h1><p className="mt-2 text-sm text-zinc-400">Sekuriteitsvereistes, datums, tye en liggings.</p></div>
-        <button type="button" onClick={() => { setLoading(true); setError(""); void load(); }} disabled={loading} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10 disabled:opacity-50">{loading ? "Laai…" : "Verfris"}</button>
+        <div className="flex flex-wrap gap-2">
+          {onOpenMyRequests && <button type="button" onClick={onOpenMyRequests} className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm font-semibold text-amber-200 hover:bg-amber-400/15">My logistieke versoeke</button>}
+          <button type="button" onClick={() => { setLoading(true); setError(""); void load(); }} disabled={loading} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10 disabled:opacity-50">{loading ? "Laai…" : "Verfris"}</button>
+        </div>
       </header>
       {error && <div role="alert" className="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">{error}</div>}
       <div className="grid gap-6 lg:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
