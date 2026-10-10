@@ -111,6 +111,7 @@ New-Item -ItemType Directory -Path $sourceRoot, $packageRoot -Force | Out-Null
 Write-Host 'Exporting the committed source. Local .env files and untracked helpers are not used.'
 Invoke-Checked 'git.exe' @('-C', $ProjectRoot, 'archive', '--format=zip', ('--output=' + $sourceZip), $commit, 'api', 'web', 'tests', 'docs')
 [System.IO.Compression.ZipFile]::ExtractToDirectory($sourceZip, $sourceRoot)
+Remove-Item -LiteralPath $sourceZip -Force
 
 $webRoot = Join-Path $sourceRoot 'web'
 $apiProject = Join-Path $sourceRoot 'api\NKRN.API\NKRN.API.csproj'
@@ -210,12 +211,11 @@ try {
     # ZipFile includes .next and all runtime files. No source/config overlays from the live server.
     [System.IO.Compression.ZipFile]::CreateFromDirectory($packageRoot, $releaseZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
     $hash = (Get-FileHash -LiteralPath $releaseZip -Algorithm SHA256).Hash
-    [System.IO.File]::WriteAllText(($releaseZip + '.sha256.txt'), ($hash + '  ' + [System.IO.Path]::GetFileName($releaseZip)), [System.Text.UTF8Encoding]::new($false))
     Write-Host ''
     Write-Host 'RELEASE PACKAGE READY' -ForegroundColor Green
     Write-Host "ZIP: $releaseZip"
     Write-Host "SHA256: $hash"
-    Write-Host 'Next: copy the ZIP and its .sha256.txt file to C:\NKRN-Deploy on TYGIES-APP.'
+    Write-Host 'Next: deploy this single ZIP with deployment\tygies-app\Deploy-FrontendRelease.ps1.'
     Write-Host 'No files on the live server or database have been changed by this script.'
 }
 finally {
@@ -224,4 +224,6 @@ finally {
     [Environment]::SetEnvironmentVariable('NEXT_TELEMETRY_DISABLED', $oldTelemetry, 'Process')
 }
 
-# Clear stale native exit codes left by successful robocopy operations for callers.\n$global:LASTEXITCODE = 0\n
+
+# Clear stale native exit codes left by successful robocopy operations for callers.
+$global:LASTEXITCODE = 0
