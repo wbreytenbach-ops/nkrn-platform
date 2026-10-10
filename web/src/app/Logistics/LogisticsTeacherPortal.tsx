@@ -1627,16 +1627,30 @@ export default function LogisticsTeacherPortal({
                                     </select>
 
                                     {!locationID && (
-                                        <input
-                                            value={customLocation}
-                                            onChange={(event) =>
-                                                setCustomLocation(
-                                                    event.target.value
-                                                )
-                                            }
-                                            placeholder="Of tik ’n klaskamer / gebied wat nie op die lys is nie"
-                                            className={`${inputClass} mt-3`}
-                                        />
+                                        <>
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {["Panthera Onder", "Panthera Bo", "Panthera Bo en Onder"].map((venue) => (
+                                                    <button
+                                                        key={venue}
+                                                        type="button"
+                                                        onClick={() => setCustomLocation(venue)}
+                                                        className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${customLocation === venue ? "border-[#d7a31f]/50 bg-[#d7a31f]/10 text-[#e7b42b]" : "border-white/10 bg-white/4 text-zinc-300"}`}
+                                                    >
+                                                        {venue}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <input
+                                                value={customLocation}
+                                                onChange={(event) =>
+                                                    setCustomLocation(
+                                                        event.target.value
+                                                    )
+                                                }
+                                                placeholder="Of tik ’n klaskamer / gebied wat nie op die lys is nie"
+                                                className={`${inputClass} mt-3`}
+                                            />
+                                        </>
                                     )}
                                 </div>
 
