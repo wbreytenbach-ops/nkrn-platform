@@ -1,12 +1,8 @@
-const CACHE_VERSION = "nkrn-static-v2";
+const CACHE_VERSION = "tygies-static-v3";
 const STATIC_CACHE = CACHE_VERSION;
 
 const PRECACHE_URLS = [
-  "/icon-192x192.png",
-  "/icon-512x512.png",
-  "/icon-maskable-512x512.png",
-  "/apple-touch-icon.png",
-  "/favicon.ico",
+  "/tygie-logo.png",
   "/wit-logo-tygies.png",
 ];
 
@@ -29,7 +25,7 @@ self.addEventListener("activate", (event) => {
           keys
             .filter(
               (key) =>
-                key.startsWith("nkrn-") &&
+                (key.startsWith("nkrn-") || key.startsWith("tygies-")) &&
                 key !== STATIC_CACHE
             )
             .map((key) => caches.delete(key))
@@ -144,7 +140,7 @@ self.addEventListener("fetch", (event) => {
   name="theme-color"
   content="#0b0b0d"
 >
-<title>NKRN Offline</title>
+<title>Tygerpoort Offline</title>
 
 <style>
 html,
@@ -196,10 +192,10 @@ strong {
 
 <body>
 <main>
-  <h1>NKRN is offline</h1>
+  <h1>Tygerpoort is offline</h1>
 
   <p>
-    This device cannot reach the NKRN
+    This device cannot reach the Tygerpoort
     server right now.
     <strong>
       No live school data has been cached.
