@@ -218,7 +218,12 @@ export default function LogisticsTeacherPortal({
     const [requestOpen, setRequestOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General">("Event");
+    const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General" | "Security">("Event");
+    const [securityGuardCount, setSecurityGuardCount] = useState("0");
+    const [securitySchoolGuards, setSecuritySchoolGuards] = useState<string[]>([]);
+    const [securityParkingRequired, setSecurityParkingRequired] = useState(false);
+    const [securityParkingStart, setSecurityParkingStart] = useState("");
+    const [securityParkingEnd, setSecurityParkingEnd] = useState("");
     const [activityCategory, setActivityCategory] = useState("Sport");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -337,6 +342,11 @@ export default function LogisticsTeacherPortal({
 
     function resetRequestForm() {
         setRequestType("Event");
+        setSecurityGuardCount("0");
+        setSecuritySchoolGuards([]);
+        setSecurityParkingRequired(false);
+        setSecurityParkingStart("");
+        setSecurityParkingEnd("");
         setActivityCategory("Sport");
         setTitle("");
         setDescription("");
@@ -353,7 +363,7 @@ export default function LogisticsTeacherPortal({
         setAvailabilityOkay(null);
     }
 
-    function openRequestForm(type?: "Event" | "Maintenance" | "General") {
+    function openRequestForm(type?: "Event" | "Maintenance" | "General" | "Security") {
         resetRequestForm();
         if (type) {
             setRequestType(type);
@@ -434,14 +444,30 @@ export default function LogisticsTeacherPortal({
             return;
         }
 
-        if (requestType === "Event") {
+        if (requestType === "Event" || requestType === "Security") {
             if (!activityDate || !startTime || !endTime) {
                 setError("Event date, start time and end time are required.");
                 return;
             }
 
             if (endTime <= startTime) {
-                setError("The event end time must be after the start time.");
+                setError(requestType === "Security" ? "The security request end time must be after its start time." : "The event end time must be after the start time.");
+                return;
+            }
+        }
+
+        if (requestType === "Security") {
+            const guardCount = Number(securityGuardCount);
+            if (!Number.isInteger(guardCount) || guardCount < 0) {
+                setError("Enter a valid number of Echo 1 outside guards (0 or more).");
+                return;
+            }
+            if (!locationID && !customLocation.trim()) {
+                setError("Please select or enter the security request location.");
+                return;
+            }
+            if (securityParkingRequired && (!securityParkingStart || !securityParkingEnd || securityParkingEnd <= securityParkingStart)) {
+                setError("When parking is required, enter valid parking start and end times.");
                 return;
             }
         }
@@ -489,6 +515,16 @@ export default function LogisticsTeacherPortal({
                       ]
                     : [];
 
+            const submittedDescription = requestType === "Security"
+                ? [
+                    `Aantal wagte buite (Echo 1): ${Number(securityGuardCount)}`,
+                    `Skoolwagte benodig: ${securitySchoolGuards.length ? securitySchoolGuards.join(", ") : "Geen"}`,
+                    `Parkering binne terrein: ${securityParkingRequired ? "Ja" : "Nee"}`,
+                    ...(securityParkingRequired ? [`Parkering vanaf: ${securityParkingStart}`, `Parkering tot: ${securityParkingEnd}`] : []),
+                    `Vereistes: ${description.trim() || "Geen verdere vereistes"}`,
+                ].join("\\n")
+                : description.trim() || null;
+
             const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
                 method: "POST",
                 headers: authHeaders(),
@@ -497,13 +533,13 @@ export default function LogisticsTeacherPortal({
                     activityCategory:
                         requestType === "Event" ? activityCategory : null,
                     title: title.trim(),
-                    description: description.trim() || null,
+                    description: submittedDescription,
                     activityDate:
-                        requestType === "Event" ? activityDate : null,
+                        requestType === "Event" || requestType === "Security" ? activityDate : null,
                     startTime:
-                        requestType === "Event" ? startTime : null,
+                        requestType === "Event" || requestType === "Security" ? startTime : null,
                     endTime:
-                        requestType === "Event" ? endTime : null,
+                        requestType === "Event" || requestType === "Security" ? endTime : null,
                     cleanupNextDay:
                         requestType === "Event" ? cleanupNextDay : null,
                     locations,
@@ -1223,11 +1259,12 @@ export default function LogisticsTeacherPortal({
                                 <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
                                     Request Type
                                 </label>
-                                <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                     {[
                                         ["Event", "Event / Venue"],
                                         ["Maintenance", "Repair / Maintenance"],
                                         ["General", "General Logistics"],
+                                        ["Security", "Security"],
                                     ].map(([value, label]) => (
                                         <button
                                             key={value}
@@ -1238,6 +1275,7 @@ export default function LogisticsTeacherPortal({
                                                         | "Event"
                                                         | "Maintenance"
                                                         | "General"
+                                                        | "Security"
                                                 )
                                             }
                                             className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
@@ -1251,6 +1289,54 @@ export default function LogisticsTeacherPortal({
                                     ))}
                                 </div>
                             </div>
+
+                            {requestType === "Security" && (
+                                <div className="space-y-5 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 sm:p-5">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-amber-200">Security allocation</h3>
+                                        <p className="mt-1 text-xs text-zinc-400">These details will be attached to the request for Jwerner to review.</p>
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-3">
+                                        <label className="text-sm text-zinc-300">Event date
+                                            <input type="date" min={todayISO()} value={activityDate} onChange={event => setActivityDate(event.target.value)} className={inputClass} required />
+                                        </label>
+                                        <label className="text-sm text-zinc-300">Event starts
+                                            <input type="time" value={startTime} onChange={event => setStartTime(event.target.value)} className={inputClass} required />
+                                        </label>
+                                        <label className="text-sm text-zinc-300">Event ends
+                                            <input type="time" value={endTime} onChange={event => setEndTime(event.target.value)} className={inputClass} required />
+                                        </label>
+                                    </div>
+                                    <label className="block text-sm text-zinc-300">Number of outside guards at Echo 1
+                                        <input type="number" min={0} step={1} value={securityGuardCount} onChange={event => setSecurityGuardCount(event.target.value)} className={inputClass} required />
+                                    </label>
+                                    <fieldset>
+                                        <legend className="text-sm text-zinc-300">School guards required inside / at the gates</legend>
+                                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                                            {["Collin", "Herman", "Annanias"].map(name => (
+                                                <label key={name} className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-zinc-200">
+                                                    <input type="checkbox" checked={securitySchoolGuards.includes(name)} onChange={event => setSecuritySchoolGuards(current => event.target.checked ? [...current, name] : current.filter(item => item !== name))} className="accent-[#d7a31f]" />
+                                                    {name}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </fieldset>
+                                    <div className="space-y-3">
+                                        <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-zinc-200">
+                                            <input type="checkbox" checked={securityParkingRequired} onChange={event => setSecurityParkingRequired(event.target.checked)} className="accent-[#d7a31f]" />
+                                            Parking is required inside the school grounds
+                                        </label>
+                                        {securityParkingRequired && <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="text-sm text-zinc-300">Parking from
+                                                <input type="time" value={securityParkingStart} onChange={event => setSecurityParkingStart(event.target.value)} className={inputClass} required />
+                                            </label>
+                                            <label className="text-sm text-zinc-300">Parking until
+                                                <input type="time" value={securityParkingEnd} onChange={event => setSecurityParkingEnd(event.target.value)} className={inputClass} required />
+                                            </label>
+                                        </div>}
+                                    </div>
+                                </div>
+                            )}
 
                             {requestType === "Event" && (
                                 <div>
