@@ -1245,3 +1245,41 @@ html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-contro
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+
+/* Dark-mode form-entry contrast: apply to every module and every request field.
+   Explicitly set text-fill as well as color so legacy utility classes cannot
+   leave typed text black on charcoal surfaces. */
+html.tygies-workspace-active[data-theme="dark"] .workspace-content .nkrn-control :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea,
+  .nkrn-input,
+  .nkrn-select
+) {
+  background-color: #202124 !important;
+  color: #f1f3f4 !important;
+  -webkit-text-fill-color: #f1f3f4 !important;
+  caret-color: #f1f3f4 !important;
+  border-color: #5f6368 !important;
+  color-scheme: dark;
+}
+
+html.tygies-workspace-active[data-theme="dark"] .workspace-content .nkrn-control :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  .nkrn-input
+)::placeholder {
+  color: #bdc1c6 !important;
+  -webkit-text-fill-color: #bdc1c6 !important;
+  opacity: 1 !important;
+}
+
+html.tygies-workspace-active[data-theme="dark"] .workspace-content .nkrn-control :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  .nkrn-input
+):disabled {
+  color: #bdc1c6 !important;
+  -webkit-text-fill-color: #bdc1c6 !important;
+  opacity: .75;
+}
