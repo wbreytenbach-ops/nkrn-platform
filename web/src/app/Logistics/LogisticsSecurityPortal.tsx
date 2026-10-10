@@ -52,15 +52,15 @@ function timeText(value?: string | null) {
 }
 
 function guardCountText(value?: string | null) {
-    const match = value?.match(/(?:Aantal wagte|Aantal guards|Guard count):\\s*(\\d+)/i);
+    const match = value?.match(/(?:Aantal wagte|Aantal guards|Guard count):\s*(\d+)/i);
     return match ? match[1] : "Nie gespesifiseer nie";
 }
 
 function requirementsText(value?: string | null) {
     if (!value) return "Geen verdere vereistes verskaf nie.";
     return value
-        .replace(/^(?:Aantal wagte|Aantal guards|Guard count):\\s*\\d+\\s*\\n?/i, "")
-        .replace(/^Vereistes:\\s*/i, "")
+        .replace(/^(?:Aantal wagte|Aantal guards|Guard count):\s*\d+\s*\n?/i, "")
+        .replace(/^Vereistes:\s*/i, "")
         .trim() || "Geen verdere vereistes verskaf nie.";
 }
 
@@ -190,7 +190,7 @@ export default function LogisticsSecurityPortal() {
         setSubmitting(true);
         try {
             const description =
-                `Aantal wagte: ${count}\\nVereistes: ${requirements.trim()}`;
+                `Aantal wagte: ${count}\nVereistes: ${requirements.trim()}`;
 
             const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
                 method: "POST",
