@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import {
     createRequest,
     getUserRequests,
+    getRequests,
     getCategories,
     getRequesters,
     RequestSubmissionError,
@@ -203,23 +204,27 @@ export default function RequestsPage() {
 
         async function loadUserRequests() {
             try {
-                const userRequests =
-                    await getUserRequests(userID);
+                // Staff with technician/admin access need the complete request
+                // queue; standard users only see requests belonging to them.
+                const visibleRequests =
+                    user.roleID === 2 || user.roleID === 3
+                        ? await getRequests()
+                        : await getUserRequests(userID);
 
                 if (cancelled) {
                     return;
                 }
 
-                setRequests(userRequests);
+                setRequests(visibleRequests);
             } catch (error) {
                 console.error(
-                    "Failed loading user requests.",
+                    "Failed loading requests.",
                     error
                 );
 
                 if (!cancelled) {
                     setMessage(
-                        "Jou versoeke kon nie gelaai word nie."
+                        "Die IT-versoeke kon nie gelaai word nie."
                     );
                 }
             }
