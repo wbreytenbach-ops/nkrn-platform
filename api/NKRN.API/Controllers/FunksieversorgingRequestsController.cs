@@ -1033,10 +1033,17 @@ public class FunksieversorgingRequestsController : ControllerBase
         var subject =
             $"Funksieversorging: Versoek #{requestID} â€“ {statusLabel}";
 
+        var printUrl = CreatePrintUrl(requestID);
         var body = $"""
             <html>
             <body style="font-family:Arial,sans-serif;color:#222;">
                 <h2>Funksieversorging-versoek opgedateer</h2>
+                <p>
+                    <a href="{WebUtility.HtmlEncode(printUrl)}"
+                       style="display:inline-block;background:#b91c2b;color:#fff;text-decoration:none;font-weight:bold;padding:12px 18px;border-radius:7px;">
+                       Print hard copy of request / Druk hardekopie van versoek
+                    </a>
+                </p>
                 <p><strong>Versoek:</strong> #{requestID}</p>
                 <p><strong>Ingedien deur:</strong> {WebUtility.HtmlEncode(requesterName)}</p>
                 <p><strong>Funksie:</strong> {WebUtility.HtmlEncode(functionName)}</p>
