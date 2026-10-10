@@ -236,7 +236,17 @@ $result = Invoke-Command -Session $Session -ArgumentList $release, $expectedComm
             if ($rollbackResponse.StatusCode -ne 200) {
                 throw "Restored frontend returned HTTP $($rollbackResponse.StatusCode)."
             }
-            throw "NEW RELEASE FAILED; PREVIOUS FRONTEND RESTORED AND HEALTHY. Original error: $deployError"
+
+            return [PSCustomObject]@{
+                Result        = 'ROLLED BACK - PREVIOUS FRONTEND HEALTHY'
+                FailedRelease = $release
+                OriginalError = $deployError
+                HTTPStatus    = $rollbackResponse.StatusCode
+                ServiceStatus = (Get-Service -Name $serviceName).Status
+                Backup        = $backup
+                API           = 'NOT RESTARTED'
+                Database      = 'NOT MODIFIED'
+            }
         }
         catch {
             throw "DEPLOYMENT/ROLLBACK REQUIRES ATTENTION: $($_.Exception.Message)"
