@@ -48,7 +48,18 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
         const rawUser = localStorage.getItem("user");
         if (token && rawUser) {
             try { setSessionUser(JSON.parse(rawUser) as SessionUser); }
-            catch { setSessionUser(null); }
+            catch {
+                setSessionUser(null);
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+            }
+        } else if (pathname !== "/login") {
+            // Keep the exact page opened from an email notification so sign-in
+            // can return the user to that request instead of the home page.
+            sessionStorage.setItem(
+                "tygies-return-path",
+                window.location.pathname + window.location.search
+            );
         }
         setCollapsed(localStorage.getItem("tygies-sidebar-collapsed") === "true");
         setReady(true);
