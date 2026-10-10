@@ -262,7 +262,7 @@ export default function Home() {
                     <div className="flex flex-wrap items-center justify-between gap-5">
                         <div className="flex items-center gap-4">
                             <Image src="/wit-logo-tygies.png" alt="Laerskool Tygerpoort" width={130} height={52} priority />
-                            <div><p className="text-xs uppercase tracking-[.2em] text-[#e7b42b]">Laerskool Tygerpoort</p><h1 className="mt-2 text-2xl font-bold">Skoolbedryfsplatform</h1></div>
+                            <div><p className="text-xs uppercase tracking-[.2em] text-[#e7b42b]">Laerskool Tygerpoort</p><h1 className="mt-2 text-2xl font-bold">Tygies 1</h1><p className="mt-1 text-sm text-zinc-400">Skoolbedryfsplatform</p></div>
                         </div>
                         <div className="flex items-center gap-4"><div className="text-right text-sm"><p className="text-zinc-400">Aangemeld</p><p>{user.firstName} {user.lastName}</p><p className="text-zinc-400">{t(getRoleName(user.roleID))}</p></div><LogoutButton /></div>
                     </div>
