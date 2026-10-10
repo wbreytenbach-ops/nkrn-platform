@@ -1027,7 +1027,7 @@ export default function LogisticsTeacherPortal({
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
                                     My Logistics-versoeke
                                 </p>
-                                <h2 id="logistics-request-dialog-title" className="mt-1 text-2xl font-semibold">
+                                <h2 className="mt-1 text-2xl font-semibold">
                                     Versoekgeskiedenis
                                 </h2>
                             </div>
@@ -1338,7 +1338,7 @@ export default function LogisticsTeacherPortal({
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7a31f]">
                                     Nuwe Logistics-versoek
                                 </p>
-                                <h2 className="mt-1 text-2xl font-semibold">
+                                <h2 id="logistics-request-dialog-title" className="mt-1 text-2xl font-semibold">
                                     Hoe kan ons help?
                                 </h2>
                             </div>
