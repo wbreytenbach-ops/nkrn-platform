@@ -833,7 +833,6 @@ html[data-theme="light"] .nkrn-control table tbody tr:hover {
 
 .nkrn-control .nkrn-panel,
 .nkrn-control .nkrn-panel:hover {
-  overflow: visible;
   border: 1px solid var(--tygies-line) !important;
   border-radius: var(--tygies-radius) !important;
   background: var(--tygies-surface) !important;
