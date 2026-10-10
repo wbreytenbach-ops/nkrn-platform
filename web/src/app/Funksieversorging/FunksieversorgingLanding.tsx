@@ -605,7 +605,7 @@ export default function FunksieversorgingLanding() {
 
                 <header className="nkrn-panel p-8 sm:p-12">
                     <p className="text-sm uppercase tracking-[.2em] text-[#e7b42b]">
-                        NKRN · In werking
+                        Laerskool Tygerpoort · In werking
                     </p>
 
                     <h1 className="mt-4 text-4xl font-bold sm:text-5xl">
@@ -614,7 +614,7 @@ export default function FunksieversorgingLanding() {
 
                     <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
                         Reël voorraad vir ’n funksie vinnig en eenvoudig.
-                        NKRN gebruik jou profiel outomaties.
+                        Laerskool Tygerpoort gebruik jou profiel outomaties.
                     </p>
 
                     <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-500">
@@ -669,7 +669,7 @@ export default function FunksieversorgingLanding() {
                         </h2>
 
                         <p className="mt-2 text-sm text-zinc-500">
-                            Ons vra net wat NKRN nie reeds van jou weet nie.
+                            Ons vra net wat nie reeds op jou profiel beskikbaar is nie.
                         </p>
 
                         <div className="mt-7 grid gap-5 md:grid-cols-2">
