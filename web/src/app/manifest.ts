@@ -4,11 +4,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
 
-    name: "NKRN School Operations",
-    short_name: "NKRN",
+    name: "Laerskool Tygerpoort",
+    short_name: "Tygerpoort",
 
     description:
-      "Secure school operations management for IT support, logistics and administration.",
+      "Laerskool Tygerpoort se skoolbedryfsportaal vir IT-ondersteuning, logistiek en administrasie.",
 
     start_url: "/",
     scope: "/",
@@ -27,20 +27,12 @@ export default function manifest(): MetadataRoute.Manifest {
 
     icons: [
       {
-        src: "/icon-192x192.png",
-        sizes: "192x192",
+        src: "/tygie-logo.png",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon-512x512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: "/icon-maskable-512x512.png",
-        sizes: "512x512",
+        src: "/tygie-logo.png",
         type: "image/png",
         purpose: "maskable",
       },
