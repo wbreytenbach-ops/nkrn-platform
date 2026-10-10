@@ -190,3 +190,39 @@ main.tygies-login-page .text-zinc-700 {
 }
 main.tygies-login-page .text-zinc-600 { color: #5f6368 !important; }
 main.tygies-login-page .text-zinc-700 { color: #5f6368 !important; }
+
+
+/* Light workspace compatibility layer for legacy operational pages.
+   Legacy pages still carry dark-mode utility classes; convert their surfaces as well
+   as their text so dark text is never rendered on dark panels. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control {
+  background: #f8f9fa !important;
+  color: #202124 !important;
+}
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control .nkrn-panel,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control [class*="bg-white/"] {
+  background-color: #ffffff !important;
+  background-image: none;
+  border-color: #e0e3e7 !important;
+  color: #202124;
+}
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control [class*="bg-zinc-950"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control [class*="bg-zinc-900"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control [class*="bg-black/"] {
+  background-color: #ffffff !important;
+  background-image: none;
+}
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control .nkrn-input,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control .nkrn-select,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control textarea {
+  background-color: #ffffff !important;
+  color: #202124 !important;
+  border-color: #dadce0 !important;
+}
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control button:not([class*="bg-red-"]):not([class*="bg-green-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-yellow-"]) {
+  color: #3c4043;
+}
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control .text-zinc-600,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control .text-zinc-700 {
+  color: #5f6368 !important;
+}
