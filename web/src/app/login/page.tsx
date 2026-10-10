@@ -160,7 +160,7 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="tygies-login-page nkrn-control relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <main className="tygies-login-page relative min-h-screen overflow-hidden bg-zinc-950 text-white">
             {/* BACKGROUND */}
 
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
