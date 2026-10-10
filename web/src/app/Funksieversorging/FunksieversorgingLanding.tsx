@@ -58,6 +58,9 @@ type RequestRecord = {
 
 const venues = [
     "Saal",
+    "Panthera Bo",
+    "Panthera Onder",
+    "Panthera Bo en Onder",
     "Panthera (losie bo)",
     "Panthera (onder)",
     "Klaskamers",
@@ -182,6 +185,8 @@ export default function FunksieversorgingLanding() {
     const [venue, setVenue] = useState("");
     const [otherVenue, setOtherVenue] = useState("");
     const [attendance, setAttendance] = useState(0);
+    const [securityRequired, setSecurityRequired] = useState(false);
+    const [guardCount, setGuardCount] = useState(1);
 
     const [quantities, setQuantities] = useState<Record<string, number>>({});
     const [diningSelected, setDiningSelected] = useState<Record<string, boolean>>({});
@@ -396,6 +401,11 @@ export default function FunksieversorgingLanding() {
             return;
         }
 
+        if (securityRequired && (!Number.isInteger(guardCount) || guardCount < 1 || guardCount > 100)) {
+            setMessage("Kies asseblief hoeveel sekuriteitswagte benodig word (1–100).");
+            return;
+        }
+
         setMessage("");
         setStep(2);
     }
@@ -421,6 +431,11 @@ export default function FunksieversorgingLanding() {
         setSubmitting(true);
         setMessage("");
 
+        const requestNotes = [
+            notes.trim(),
+            securityRequired ? `SEKURITEIT BENODIG: ${guardCount} wag(te)` : "",
+        ].filter(Boolean).join("\n");
+
         try {
             const response = await fetch(
                 `${API_URL}/api/FunksieversorgingRequests`,
@@ -436,7 +451,7 @@ export default function FunksieversorgingLanding() {
                                 ? otherVenue.trim()
                                 : null,
                         attendance,
-                        notes: notes.trim() || null,
+                        notes: requestNotes || null,
                         returnAcknowledged: true,
                         items: selectedItems.map((item) => ({
                             code: item.code,
@@ -731,6 +746,33 @@ export default function FunksieversorgingLanding() {
                                     className={inputClass}
                                 />
                             </Field>
+
+                            <div className="md:col-span-2 rounded-xl border border-white/10 bg-white/3 p-4">
+                                <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-zinc-200">
+                                    <input
+                                        type="checkbox"
+                                        checked={securityRequired}
+                                        onChange={(event) => setSecurityRequired(event.target.checked)}
+                                        className="h-5 w-5 accent-amber-400"
+                                    />
+                                    Sekuriteit benodig vir hierdie funksie
+                                </label>
+                                {securityRequired && (
+                                    <div className="mt-4 max-w-xs">
+                                        <Field label="Aantal sekuriteitswagte benodig">
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={100}
+                                                step={1}
+                                                value={guardCount}
+                                                onChange={(event) => setGuardCount(Number(event.target.value))}
+                                                className={inputClass}
+                                            />
+                                        </Field>
+                                    </div>
+                                )}
+                            </div>
 
                             {venue === "Ander" && (
                                 <div className="md:col-span-2">
