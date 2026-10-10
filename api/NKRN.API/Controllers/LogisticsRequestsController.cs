@@ -638,6 +638,67 @@ namespace NKRN.API.Controllers
             return affected == 0 ? NotFound() : NoContent();
         }
 
+        [HttpPost("bulk-delete")]
+        public async Task<IActionResult> DeleteRequests([FromBody] int[] requestIDs)
+        {
+            var userID = GetLoggedInUserID();
+            if (userID == null) return Unauthorized();
+
+            var isAdmin = await _context.Users.AnyAsync(
+                u => u.UserID == userID.Value && u.IsActive && u.RoleID == 3);
+            if (!isAdmin) return Forbid();
+
+            if (requestIDs == null || requestIDs.Length == 0)
+            {
+                return BadRequest(new { message = "Select at least one request to delete." });
+            }
+
+            var ids = requestIDs.Distinct().ToArray();
+            if (ids.Length > 250 || ids.Any(id => id <= 0))
+            {
+                return BadRequest(new { message = "The selected request list is invalid." });
+            }
+
+            var deletedIDs = new List<int>();
+            var notFoundIDs = new List<int>();
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                foreach (var requestID in ids)
+                {
+                    var affected = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+                        UPDATE dbo.LogisticsRequests
+                        SET IsDeleted = 1,
+                            DeletedByUserID = {userID.Value},
+                            DeletedAt = SYSUTCDATETIME(),
+                            UpdatedDate = SYSDATETIME()
+                        WHERE RequestID = {requestID}
+                          AND IsDeleted = 0;
+                        """);
+
+                    if (affected > 0)
+                        deletedIDs.Add(requestID);
+                    else
+                        notFoundIDs.Add(requestID);
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            return Ok(new
+            {
+                deletedCount = deletedIDs.Count,
+                deletedRequestIDs = deletedIDs,
+                notFoundRequestIDs = notFoundIDs
+            });
+        }
+
         [HttpPut("{id:int}/status")]
         public async Task<IActionResult> UpdateStatus(
             int id,
