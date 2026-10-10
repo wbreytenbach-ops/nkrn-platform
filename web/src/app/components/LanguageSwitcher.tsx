@@ -16,14 +16,14 @@ function applyTheme(theme: ThemePreference) {
 export default function LanguageSwitcher() {
     const { language, setLanguage } = useLanguage();
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [theme, setTheme] = useState<ThemePreference>("system");
+    const [theme, setTheme] = useState<ThemePreference>("light");
     const settingsLabel = language === "af" ? "Instellings" : "Settings";
     const languageLabel = language === "af" ? "Taal" : "Language";
     const themeLabel = language === "af" ? "Tema" : "Theme";
 
     useEffect(() => {
         const saved = localStorage.getItem("nkrn-theme");
-        const preference: ThemePreference = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+        const preference: ThemePreference = saved === "light" || saved === "dark" || saved === "system" ? saved : "light";
         applyTheme(preference);
         const media = window.matchMedia("(prefers-color-scheme: light)");
         const updateSystemTheme = () => {
@@ -45,7 +45,7 @@ export default function LanguageSwitcher() {
                 type="button"
                 onClick={() => {
                     const saved = localStorage.getItem("nkrn-theme");
-                    setTheme(saved === "light" || saved === "dark" || saved === "system" ? saved : "system");
+                    setTheme(saved === "light" || saved === "dark" || saved === "system" ? saved : "light");
                     setSettingsOpen((open) => !open);
                 }}
                 aria-expanded={settingsOpen}
