@@ -25,6 +25,8 @@ type PrintRequest = {
     attendance: number;
     status: string;
     leadTimeWarning: boolean;
+    notes: string | null;
+    createdAt: string;
     items: PrintItem[];
 };
 
@@ -136,6 +138,8 @@ export default function FunksieversorgingPrintPage() {
                         <div><dt>Aantal persone</dt><dd>{request.attendance}</dd></div>
                         <div><dt>Ingedien deur</dt><dd>{request.requesterName}</dd></div>
                         <div><dt>E-pos</dt><dd>{request.requesterEmail}</dd></div>
+                        <div><dt>Ingedien op</dt><dd>{formatDate(request.createdAt)}</dd></div>
+                        <div><dt>Status</dt><dd>{request.status}</dd></div>
                     </dl>
                 </section>
 
@@ -155,6 +159,13 @@ export default function FunksieversorgingPrintPage() {
                         </tbody>
                     </table>
                 </section>
+
+                {request.notes && (
+                    <section className="fv-print-return">
+                        <h2>Bykomende nota</h2>
+                        <p>{request.notes}</p>
+                    </section>
+                )}
 
                 <section className="fv-print-return">
                     <h2>Terugbesorging en verantwoordelikheid</h2>
