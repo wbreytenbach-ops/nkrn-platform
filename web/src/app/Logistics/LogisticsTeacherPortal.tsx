@@ -694,7 +694,7 @@ export default function LogisticsTeacherPortal({
     }
 
     return (
-        <main className="nkrn-control q4-logistics relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <main className="nkrn-control nkrn-logistics-simplified q4-logistics relative min-h-screen overflow-hidden bg-zinc-950 text-white">
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
                 <div className="absolute -left-40 -top-40 h-136 w-136 rounded-full bg-white/[0.035] blur-3xl" />
                 <div className="absolute -right-40 top-1/4 h-152 w-152 rounded-full bg-[#d7a31f]/4.5 blur-3xl" />
