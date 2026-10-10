@@ -51,6 +51,19 @@ function timeText(value?: string | null) {
     return value ? value.slice(0, 5) : "Nie gespesifiseer nie";
 }
 
+function guardCountText(value?: string | null) {
+    const match = value?.match(/(?:Aantal wagte|Aantal guards|Guard count):\\s*(\\d+)/i);
+    return match ? match[1] : "Nie gespesifiseer nie";
+}
+
+function requirementsText(value?: string | null) {
+    if (!value) return "Geen verdere vereistes verskaf nie.";
+    return value
+        .replace(/^(?:Aantal wagte|Aantal guards|Guard count):\\s*\\d+\\s*\\n?/i, "")
+        .replace(/^Vereistes:\\s*/i, "")
+        .trim() || "Geen verdere vereistes verskaf nie.";
+}
+
 const inputClass =
     "mt-1 w-full rounded-xl border border-white/10 bg-zinc-900/80 px-3.5 py-3 text-sm text-white outline-none focus:border-amber-400/60";
 
@@ -483,6 +496,10 @@ export default function LogisticsSecurityPortal() {
                                         <dd>{dateText(selected.activityDate)}</dd>
                                     </div>
                                     <div>
+                                        <dt className="text-xs text-zinc-400">Aantal wagte</dt>
+                                        <dd>{guardCountText(selected.description)}</dd>
+                                    </div>
+                                    <div>
                                         <dt className="text-xs text-zinc-400">Tyd</dt>
                                         <dd>{timeText(selected.startTime)} – {timeText(selected.endTime)}</dd>
                                     </div>
@@ -491,7 +508,7 @@ export default function LogisticsSecurityPortal() {
                                     Vereistes / beskrywing
                                 </h3>
                                 <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
-                                    {selected.description || "Geen verdere beskrywing verskaf nie."}
+                                    {requirementsText(selected.description)}
                                 </p>
                                 <h3 className="mt-6 text-sm font-semibold text-zinc-300">
                                     Ligging
