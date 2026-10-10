@@ -81,11 +81,19 @@ function requirementsText(value?: string | null) {
     if (!value) return "Geen verdere vereistes verskaf nie.";
     const fields = [
         "Aantal wagte buite (Echo 1)", "Aantal wagte", "Aantal guards", "Guard count",
-        "Skoolwagte benodig", "Parkering binne terrein", "Parkering vanaf", "Parkering tot", "Vereistes"
+        "Skoolwagte benodig", "Parkering binne terrein", "Parkering vanaf", "Parkering tot"
     ];
-    const cleaned = value.split("\n")
-        .filter(line => !fields.some(label => line.toLowerCase().startsWith(`${label.toLowerCase()}:`)))
-        .join("\n").trim();
+    const cleaned = value.split("\n").flatMap(line => {
+        const trimmed = line.trim();
+        if (trimmed.toLowerCase().startsWith("vereistes:")) {
+            const detail = trimmed.slice("Vereistes:".length).trim();
+            return detail ? [detail] : [];
+        }
+        if (fields.some(label => trimmed.toLowerCase().startsWith(`${label.toLowerCase()}:`))) {
+            return [];
+        }
+        return trimmed ? [trimmed] : [];
+    }).join("\n").trim();
     return cleaned || "Geen verdere vereistes verskaf nie.";
 }
 
