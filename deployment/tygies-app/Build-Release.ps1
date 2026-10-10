@@ -123,15 +123,15 @@ $oldTelemetry = [Environment]::GetEnvironmentVariable('NEXT_TELEMETRY_DISABLED',
 try {
     # Create correctly sized Tygerpoort PWA/browser icons from the repository logo.
     Add-Type -AssemblyName System.Drawing
-    $brandLogo = Join-Path $webRoot 'public\\tygie-logo.png'
+    $brandLogo = Join-Path $webRoot 'public\tygie-logo.png'
     if (-not (Test-Path -LiteralPath $brandLogo -PathType Leaf)) {
         throw "Tygerpoort logo source is missing: $brandLogo"
     }
-    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-32x32.png') -Size 32
-    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-192x192.png') -Size 192
-    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-512x512.png') -Size 512
-    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\icon-maskable-512x512.png') -Size 512 -Scale 0.68
-    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\\apple-touch-icon.png') -Size 180
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\icon-32x32.png') -Size 32
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\icon-192x192.png') -Size 192
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\icon-512x512.png') -Size 512
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\icon-maskable-512x512.png') -Size 512 -Scale 0.68
+    New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\apple-touch-icon.png') -Size 180
 
     $env:NEXT_PUBLIC_API_URL = $apiUrl
     $env:NEXT_TELEMETRY_DISABLED = '1'
