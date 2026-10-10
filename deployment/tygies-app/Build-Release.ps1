@@ -130,6 +130,16 @@ try {
     }
     Copy-Tree (Join-Path $sourceRoot 'api\NKRN.API\Database') (Join-Path $packageRoot 'database')
 
+    # This historical script reassigns Logistics management to mcarnie and changes
+    # daily job-card scheduling. It is deliberately excluded from release packages.
+    $excludedManagerScheduleScript = Join-Path $packageRoot 'database\20260916_LogisticsManagerAndSchedule.sql'
+    if (Test-Path -LiteralPath $excludedManagerScheduleScript -PathType Leaf) {
+        Remove-Item -LiteralPath $excludedManagerScheduleScript -Force
+    }
+    if (Test-Path -LiteralPath $excludedManagerScheduleScript) {
+        throw 'Unsafe historical manager/schedule SQL must not be included in a release package.'
+    }
+
     $manifest = [ordered]@{
         release = $releaseId
         commit = $commit
@@ -142,6 +152,7 @@ try {
         frameworkDependent = $true
         expectedServerRuntime = $serverRuntime.ToString()
         databaseApplied = $false
+        excludedDatabaseScripts = @('20260916_LogisticsManagerAndSchedule.sql')
         deployed = $false
     }
     $json = $manifest | ConvertTo-Json
