@@ -1171,7 +1171,7 @@ public class FunksieversorgingRequestsController : ControllerBase
                 <div style="background:#fff;border:1px solid #e5e7eb;border-top:0;padding:24px;border-radius:0 0 12px 12px;">
                   <p style="margin:0 0 20px;">Gebruik die knoppie hieronder om ’n A4-hardekopie oop te maak en dit te druk. Geen portaal-aanmelding is nodig nie.</p>
                   <p style="margin:0 0 24px;">
-                    <a href="{E(printUrl)}" style="display:inline-block;background:#b91c2b;color:#fff;text-decoration:none;font-weight:bold;padding:13px 20px;border-radius:7px;">Druk hardekopie van versoek</a>
+                    <a href="{E(printUrl)}" style="display:inline-block;background:#b91c2b;color:#fff;text-decoration:none;font-weight:bold;padding:13px 20px;border-radius:7px;">Print Hard Copy of Request / Druk hardekopie van versoek</a>
                   </p>
                 <p><strong>Versoek:</strong> #{requestID}</p>
                 <p><strong>Ingedien deur:</strong> {E($"{firstName} {lastName}".Trim())}</p>
