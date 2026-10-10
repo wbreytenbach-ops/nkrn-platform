@@ -776,7 +776,7 @@ export default function LogisticsTeacherPortal({
 
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#d7a31f]">
-                                    NKRN · Logistics
+                                    Laerskool Tygerpoort · Logistics
                                 </p>
                                 <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
                                     Personeelportaal
@@ -853,7 +853,7 @@ export default function LogisticsTeacherPortal({
                                         Waarmee kan die Logistics-span jou help?
                                     </h2>
                                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400">
-                                        Dien een kort versoek in. NKRN hou die besonderhede,
+                                        Dien een kort versoek in. Die portaal hou die besonderhede,
                                         lokaal-inligting en vordering
                                         op een plek.
                                     </p>
@@ -1476,7 +1476,7 @@ export default function LogisticsTeacherPortal({
                                     <p className="mt-1 text-sm text-zinc-500">
                                         Jou naam, e-pos, datum van indiening,
                                         interne status en prioriteit word
-                                        outomaties deur NKRN hanteer.
+                                        outomaties deur die portaal hanteer.
                                     </p>
                                 </div>
 
@@ -1771,7 +1771,7 @@ export default function LogisticsTeacherPortal({
                                                                 }`}
                                                             >
                                                                 {availabilityMessage ||
-                                                                    "NKRN kan die lokaal teen bestaande besprekings kontroleer."}
+                                                                    "Die portaal kan die lokaal teen bestaande besprekings kontroleer."}
                                                             </p>
                                                         </div>
 
@@ -2109,7 +2109,7 @@ export default function LogisticsTeacherPortal({
                                     </p>
 
                                     <p className="mt-2 text-xs leading-5 text-zinc-600">
-                                        NKRN koppel jou identiteit en die
+                                        Die portaal koppel jou identiteit en die
                                         indieningstyd outomaties. Die
                                         Logistics-span bepaal interne
                                         prioriteit, status en toewysing.
