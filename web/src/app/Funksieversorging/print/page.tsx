@@ -113,7 +113,7 @@ export default function FunksieversorgingPrintPage() {
             <article className="fv-print-sheet">
                 <header className="fv-print-header">
                     <div>
-                        <p className="fv-print-eyebrow">Laerskool Tygerpoort · Tygies 1</p>
+                        <p className="fv-print-eyebrow">Laerskool Tygerpoort · Tygies One</p>
                         <h1>Funksieversorging</h1>
                         <p>Hardekopie van voorraadversoek</p>
                     </div>
