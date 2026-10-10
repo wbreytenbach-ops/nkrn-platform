@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import "../nkrn-control.css";
 
@@ -114,7 +114,11 @@ export default function LoginPage() {
                 )
             );
 
-            router.push("/");
+            const requestedPath = new URLSearchParams(window.location.search).get("next");
+            const safePath = requestedPath && requestedPath.startsWith("/") && !requestedPath.startsWith("//")
+                ? requestedPath
+                : "/";
+            router.replace(safePath);
         } catch (error) {
             console.error(
                 "Login error:",
@@ -132,7 +136,7 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="nkrn-control relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <main className="tygies-login-page nkrn-control relative min-h-screen overflow-hidden bg-zinc-950 text-white">
             {/* BACKGROUND */}
 
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
