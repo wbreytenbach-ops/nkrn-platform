@@ -59,19 +59,22 @@ export default function LogisticsPage() {
                 setUser(loggedInUser);
 
                 // Security contact receives a read-only Security-only workspace.
-                if (loggedInUser.email?.trim().toLowerCase() === "jwerner@tygies.co.za") {
+                if (
+                    loggedInUser.email?.trim().toLowerCase() ===
+                    "jwerner@tygies.co.za"
+                ) {
                     setSecurityAccess(true);
                     return;
                 }
 
-                // NKRN-admins behou altyd bestuursregte.
+                // NKRN-admins retain their management permissions.
                 if (loggedInUser.roleID === 3) {
                     setManagementAccess(true);
                     return;
                 }
 
-                // Hierdie bestaande eindpunt respekteer reeds Logistiek se
-                // ModulePermissions. Ons verander dus nie die toegangslogika nie.
+                // This endpoint already respects Logistics ModulePermissions.
+                // Keep the existing access-control logic unchanged.
                 const response = await fetch(
                     `${API_URL}/api/LogisticsTasks?includeArchived=false`,
                     {
@@ -105,7 +108,10 @@ export default function LogisticsPage() {
                     `Kon nie Logistiek-toegang bepaal nie (${response.status}).`
                 );
             } catch (accessError) {
-                console.error("Kon nie Logistiek-toegang bepaal nie:", accessError);
+                console.error(
+                    "Kon nie Logistiek-toegang bepaal nie:",
+                    accessError
+                );
 
                 if (!cancelled) {
                     setError(
@@ -133,9 +139,11 @@ export default function LogisticsPage() {
             <main className="nkrn-control flex min-h-screen items-center justify-center bg-zinc-950 text-white">
                 <div className="nkrn-panel rounded-[28px] border border-white/10 bg-white/4 px-8 py-7 text-center shadow-2xl shadow-black/20 backdrop-blur-2xl">
                     <div className="mx-auto mb-4 h-3 w-3 animate-pulse rounded-full bg-[#e7b42b]" />
+
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7a31f]">
                         Logistiek
                     </p>
+
                     <p className="mt-2 text-sm text-zinc-400">
                         Jou werkruimte word oopgemaak…
                     </p>
@@ -149,6 +157,7 @@ export default function LogisticsPage() {
             <main className="nkrn-control flex min-h-screen items-center justify-center bg-zinc-950 px-5 text-white">
                 <div className="nkrn-panel max-w-lg rounded-[28px] border border-red-400/15 bg-white/4 p-8 text-center">
                     <p className="text-sm text-red-300">{error}</p>
+
                     <button
                         type="button"
                         onClick={() => router.push("/")}
@@ -166,13 +175,17 @@ export default function LogisticsPage() {
     }
 
     if (securityAccess && securityView) {
-        return <LogisticsSecurityPortal onOpenMyRequests={() => setSecurityView(false)} />;
+        return (
+            <LogisticsSecurityPortal
+                onOpenMyRequests={() => setSecurityView(false)}
+            />
+        );
     }
 
     if (securityAccess) {
         return (
             <>
-                <div className="nkrn-control bg-zinc-950 px-4 pt-4 text-white sm:px-6 lg:px-10">
+                <div className="bg-zinc-950 px-4 pt-4 text-white sm:px-6 lg:px-10">
                     <div className="mx-auto flex max-w-7xl justify-end">
                         <button
                             type="button"
@@ -183,6 +196,7 @@ export default function LogisticsPage() {
                         </button>
                     </div>
                 </div>
+
                 <LogisticsTeacherPortal user={user} />
             </>
         );
