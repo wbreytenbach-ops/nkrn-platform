@@ -481,3 +481,82 @@
     min-height: 44px;
   }
 }
+
+/* User-selectable light theme. Dark remains the default. */
+html[data-theme="light"] {
+  color-scheme: light;
+  --nkrn-bg: #f3f5f8;
+  --nkrn-bg-soft: #ffffff;
+  --nkrn-panel: #ffffff;
+  --nkrn-panel-soft: #f8fafc;
+  --nkrn-border: rgba(15, 23, 42, .14);
+  --nkrn-border-strong: rgba(15, 23, 42, .22);
+  --nkrn-text: #172033;
+  --nkrn-muted: #586174;
+  --nkrn-muted-dark: #697386;
+}
+
+html[data-theme="light"] body {
+  background: #f3f5f8 !important;
+  color: #172033 !important;
+}
+
+html[data-theme="light"] .nkrn-control {
+  background: linear-gradient(180deg, #f8fafc, #eef2f7) !important;
+  color: #172033 !important;
+}
+
+html[data-theme="light"] .nkrn-panel {
+  background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(248,250,252,.96)) !important;
+  border-color: rgba(15,23,42,.13) !important;
+  box-shadow: 0 14px 38px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.9) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="light"] .nkrn-input,
+html[data-theme="light"] .nkrn-select,
+html[data-theme="light"] .nkrn-control textarea,
+html[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: rgba(15,23,42,.18) !important;
+}
+
+html[data-theme="light"] .nkrn-control .text-white,
+html[data-theme="light"] .nkrn-control .text-zinc-100,
+html[data-theme="light"] .nkrn-control .text-zinc-200,
+html[data-theme="light"] .nkrn-control .text-zinc-300 {
+  color: #253047 !important;
+}
+
+html[data-theme="light"] .nkrn-control .text-zinc-400,
+html[data-theme="light"] .nkrn-control .text-zinc-500,
+html[data-theme="light"] .nkrn-control .text-zinc-600 {
+  color: #586174 !important;
+}
+
+html[data-theme="light"] .nkrn-control [class*="bg-zinc-950"],
+html[data-theme="light"] .nkrn-control [class*="bg-zinc-900"],
+html[data-theme="light"] .nkrn-control [class*="bg-black/"],
+html[data-theme="light"] .nkrn-control [class*="bg-white/"] {
+  background-color: rgba(255,255,255,.82) !important;
+}
+
+html[data-theme="light"] .nkrn-control [class*="border-white/"] {
+  border-color: rgba(15,23,42,.13) !important;
+}
+
+html[data-theme="light"] .fixed.right-4.top-4 {
+  background: rgba(255,255,255,.96) !important;
+  color: #253047 !important;
+  border-color: rgba(15,23,42,.15) !important;
+}
+
+html[data-theme="light"] .fixed.right-4.top-4 select {
+  background: #f8fafc !important;
+  color: #172033 !important;
+  border-color: rgba(15,23,42,.16) !important;
+}
