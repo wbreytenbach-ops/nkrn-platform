@@ -549,16 +549,26 @@ html[data-theme="light"] .nkrn-control [class*="border-white/"] {
   border-color: rgba(15,23,42,.13) !important;
 }
 
-html[data-theme="light"] .fixed.right-4.top-4 {
+html[data-theme="light"] .fixed.right-3.top-3 > button {
   background: rgba(255,255,255,.96) !important;
   color: #253047 !important;
   border-color: rgba(15,23,42,.15) !important;
 }
 
-html[data-theme="light"] .fixed.right-4.top-4 select {
+html[data-theme="light"] #nkrn-user-settings {
+  background: rgba(255,255,255,.98) !important;
+  color: #253047 !important;
+  border-color: rgba(15,23,42,.15) !important;
+}
+
+html[data-theme="light"] #nkrn-user-settings select {
   background: #f8fafc !important;
   color: #172033 !important;
   border-color: rgba(15,23,42,.16) !important;
+}
+
+html[data-theme="light"] #nkrn-user-settings label {
+  color: #536079 !important;
 }
 
 
