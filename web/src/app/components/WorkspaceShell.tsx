@@ -45,6 +45,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [ready, setReady] = useState(false);
 
+    /* eslint-disable react-hooks/set-state-in-effect -- hydrate the persisted session from browser storage. */
     useEffect(() => {
         const token = localStorage.getItem("token");
         const rawUser = localStorage.getItem("user");
@@ -66,6 +67,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
         setCollapsed(localStorage.getItem("tygies-sidebar-collapsed") === "true");
         setReady(true);
     }, [pathname]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     useEffect(() => {
         if (pathname === "/login" || !ready || !sessionUser) return;
