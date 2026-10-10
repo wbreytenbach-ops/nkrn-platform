@@ -354,11 +354,11 @@ export default function LogisticsRequestInbox({
         if (!isAdmin || bulkDeleting || selectedRequestIDs.length === 0) return;
 
         const selected = requests.filter(request => selectedRequestIDs.includes(request.requestID));
-        const preview = selected.slice(0, 8).map(request => `#${request.requestID} — ${request.title}`).join("\\n");
-        const remaining = selected.length > 8 ? `\\n…and ${selected.length - 8} more.` : "";
+        const preview = selected.slice(0, 8).map(request => `#${request.requestID} — ${request.title}`).join("\n");
+        const remaining = selected.length > 8 ? `\n…and ${selected.length - 8} more.` : "";
         const confirmed = window.confirm(language === "af"
-            ? `Verwyder ${selectedRequestIDs.length} geselekteerde versoek(e)? Die versoeke sal uit die lyste verdwyn; gekoppelde werk/take word behou.\\n\\n${preview}${remaining}`
-            : `Delete ${selectedRequestIDs.length} selected request(s)? The requests will disappear from lists; linked work/tasks will be retained.\\n\\n${preview}${remaining}`);
+            ? `Verwyder ${selectedRequestIDs.length} geselekteerde versoek(e)? Die versoeke sal uit die lyste verdwyn; gekoppelde werk/take word behou.\n\n${preview}${remaining}`
+            : `Delete ${selectedRequestIDs.length} selected request(s)? The requests will disappear from lists; linked work/tasks will be retained.\n\n${preview}${remaining}`);
         if (!confirmed) return;
 
         setBulkDeleting(true);
@@ -559,8 +559,14 @@ export default function LogisticsRequestInbox({
                             <input aria-label="Soek versoeke" placeholder="Soek naam, versoek of lokaal…" className={inputClass} value={search} onChange={e => setSearch(e.target.value)} />
                             <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General", "Security"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
                             <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["Low", "Medium", "High", "Critical"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
-                            <input aria-label="Vanaf datum" type="date" title={language === "af" ? "Ingedien vanaf" : "Submitted from"} className={inputClass} value={createdFrom} onChange={e => setCreatedFrom(e.target.value)} />
-                            <input aria-label="Tot datum" type="date" title={language === "af" ? "Ingedien tot" : "Submitted to"} className={inputClass} value={createdTo} onChange={e => setCreatedTo(e.target.value)} />
+                            <label className="min-w-36 flex-1">
+                                <span className="mb-1 block text-xs text-zinc-500">{language === "af" ? "Ingedien vanaf" : "Submitted from"}</span>
+                                <input aria-label={language === "af" ? "Ingedien vanaf" : "Submitted from"} type="date" className={inputClass} value={createdFrom} onChange={e => setCreatedFrom(e.target.value)} />
+                            </label>
+                            <label className="min-w-36 flex-1">
+                                <span className="mb-1 block text-xs text-zinc-500">{language === "af" ? "Ingedien tot" : "Submitted to"}</span>
+                                <input aria-label={language === "af" ? "Ingedien tot" : "Submitted to"} type="date" className={inputClass} value={createdTo} onChange={e => setCreatedTo(e.target.value)} />
+                            </label>
                             <select
                                 aria-label="Versoekstatus"
                                 value={filter}
