@@ -21,16 +21,26 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/tygie-logo.png",
+        url: "/favicon.ico",
+      },
+      {
+        url: "/icon-32x32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        url: "/icon-192x192.png",
+        sizes: "192x192",
         type: "image/png",
       },
     ],
 
-    shortcut: "/tygie-logo.png",
+    shortcut: "/icon-32x32.png",
 
     apple: [
       {
-        url: "/tygie-logo.png",
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
         type: "image/png",
       },
     ],
