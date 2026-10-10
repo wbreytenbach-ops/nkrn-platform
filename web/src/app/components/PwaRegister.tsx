@@ -21,7 +21,7 @@ export default function PwaRegister() {
         void caches.keys().then((keys) =>
           Promise.all(
             keys
-              .filter((key) => key.startsWith("nkrn-"))
+              .filter((key) => key.startsWith("nkrn-") || key.startsWith("tygies-"))
               .map((key) => caches.delete(key))
           )
         );
@@ -43,7 +43,7 @@ export default function PwaRegister() {
         await registration.update();
       } catch (error) {
         console.error(
-          "NKRN service worker registration failed.",
+          "Tygerpoort service worker registration failed.",
           error
         );
       }
