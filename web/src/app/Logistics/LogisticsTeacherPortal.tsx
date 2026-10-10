@@ -233,6 +233,10 @@ export default function LogisticsTeacherPortal({
     const [description, setDescription] = useState("");
     const [securityRequired, setSecurityRequired] = useState(false);
     const [guardCount, setGuardCount] = useState(1);
+    const [schoolGuards, setSchoolGuards] = useState<string[]>([]);
+    const [parkingRequired, setParkingRequired] = useState(false);
+    const [parkingStartTime, setParkingStartTime] = useState("");
+    const [parkingEndTime, setParkingEndTime] = useState("");
     const [aiSessionID, setAiSessionID] = useState<string | null>(null);
     const [activityDate, setActivityDate] = useState("");
     const [startTime, setStartTime] = useState("");
@@ -371,6 +375,10 @@ export default function LogisticsTeacherPortal({
         setSelectedEquipment([]);
         setSecurityRequired(false);
         setGuardCount(1);
+        setSchoolGuards([]);
+        setParkingRequired(false);
+        setParkingStartTime("");
+        setParkingEndTime("");
         setMaintenanceTypeID("");
         setMaintenanceAction("Unsure");
         setAvailabilityMessage("");
@@ -474,7 +482,11 @@ export default function LogisticsTeacherPortal({
             }
 
             if (securityRequired && (!Number.isInteger(guardCount) || guardCount < 1 || guardCount > 100)) {
-                setError("Kies asseblief hoeveel sekuriteitswagte benodig word (1–100).");
+                setError("Kies asseblief hoeveel sekuriteitswagte buite by Echo 1 benodig word (1–100).");
+                return;
+            }
+            if (securityRequired && parkingRequired && (!parkingStartTime || !parkingEndTime || parkingEndTime <= parkingStartTime)) {
+                setError("Kies asseblief geldige parkeer-begin- en eindtye.");
                 return;
             }
 
@@ -526,7 +538,11 @@ export default function LogisticsTeacherPortal({
             }
 
             if (securityRequired && (!Number.isInteger(guardCount) || guardCount < 1 || guardCount > 100)) {
-                setError("Kies asseblief hoeveel sekuriteitswagte benodig word (1–100).");
+                setError("Kies asseblief hoeveel sekuriteitswagte buite by Echo 1 benodig word (1–100).");
+                return;
+            }
+            if (securityRequired && parkingRequired && (!parkingStartTime || !parkingEndTime || parkingEndTime <= parkingStartTime)) {
+                setError("Kies asseblief geldige parkeer-begin- en eindtye.");
                 return;
             }
 
@@ -579,6 +595,14 @@ export default function LogisticsTeacherPortal({
                       ]
                     : [];
 
+            const securityDescription = [
+                `Aantal wagte buite (Echo 1): ${guardCount}`,
+                `Skoolwagte benodig: ${schoolGuards.length ? schoolGuards.join(", ") : "Geen"}`,
+                `Parkering binne terrein: ${parkingRequired ? "Ja" : "Nee"}`,
+                ...(parkingRequired ? [`Parkering vanaf: ${parkingStartTime}`, `Parkering tot: ${parkingEndTime}`] : []),
+                `Vereistes: ${description.trim() || "Geen verdere vereistes"}`,
+            ].join("\\n");
+
             const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
                 method: "POST",
                 headers: authHeaders(),
@@ -588,7 +612,7 @@ export default function LogisticsTeacherPortal({
                         requestType === "Event" ? activityCategory : null,
                     title: "Logistics-versoek",
                     description: requestType === "Event" && securityRequired
-                        ? `${description.trim()}\n\nSEKURITEIT BENODIG: ${guardCount} wag(te).`
+                        ? `${description.trim()}\\n\\n${securityDescription}`
                         : description.trim() || null,
                     activityDate:
                         requestType === "Event" ? activityDate : null,
@@ -641,7 +665,7 @@ export default function LogisticsTeacherPortal({
                             requestType: "Security",
                             activityCategory: null,
                             title: "Sekuriteit vir funksie",
-                            description: `Sekuriteit benodig vir funksie: ${description.trim()}. Aantal wagte benodig: ${guardCount}.`,
+                            description: securityDescription,
                             activityDate,
                             startTime: `${startTime}:00`,
                             endTime: `${endTime}:00`,
@@ -1546,18 +1570,32 @@ export default function LogisticsTeacherPortal({
                                             Sekuriteit benodig vir hierdie funksie
                                         </label>
                                         {securityRequired && (
-                                            <div className="mt-4 max-w-xs">
-                                                <label className="mb-2 block text-sm font-medium text-zinc-300" htmlFor="function-guard-count">Aantal sekuriteitswagte</label>
-                                                <input
-                                                    id="function-guard-count"
-                                                    type="number"
-                                                    min={1}
-                                                    max={100}
-                                                    step={1}
-                                                    value={guardCount}
-                                                    onChange={(event) => setGuardCount(Number(event.target.value))}
-                                                    className={inputClass}
-                                                />
+                                            <div className="mt-4 space-y-5">
+                                                <div className="max-w-xs">
+                                                    <label className="mb-2 block text-sm font-medium text-zinc-300" htmlFor="function-guard-count">Aantal wagte buite by Echo 1</label>
+                                                    <input id="function-guard-count" type="number" min={1} max={100} step={1} value={guardCount} onChange={(event) => setGuardCount(Number(event.target.value))} className={inputClass} />
+                                                </div>
+                                                <fieldset>
+                                                    <legend className="mb-2 text-sm font-medium text-zinc-300">Skoolwagte benodig binne / by die hekke</legend>
+                                                    <div className="grid gap-2 sm:grid-cols-3">
+                                                        {["Collin", "Herman", "Annanias"].map((name) => (
+                                                            <label key={name} className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/3 p-3 text-sm text-zinc-200">
+                                                                <input type="checkbox" checked={schoolGuards.includes(name)} onChange={(event) => setSchoolGuards((current) => event.target.checked ? [...current, name] : current.filter((item) => item !== name))} className="accent-amber-400" />
+                                                                {name}
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </fieldset>
+                                                <div>
+                                                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/3 p-3 text-sm text-zinc-200">
+                                                        <input type="checkbox" checked={parkingRequired} onChange={(event) => setParkingRequired(event.target.checked)} className="accent-amber-400" />
+                                                        Parkering binne die skoolterrein benodig
+                                                    </label>
+                                                    {parkingRequired && <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                                                        <label className="text-sm text-zinc-300">Parkering vanaf<input type="time" value={parkingStartTime} onChange={(event) => setParkingStartTime(event.target.value)} className={inputClass} required /></label>
+                                                        <label className="text-sm text-zinc-300">Parkering tot<input type="time" value={parkingEndTime} onChange={(event) => setParkingEndTime(event.target.value)} className={inputClass} required /></label>
+                                                    </div>}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
