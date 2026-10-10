@@ -958,7 +958,7 @@ html[data-theme="light"] .nkrn-control table tbody tr:hover {
 .nkrn-control [class*="bg-white/"] { background-color: #fff !important; }
 .nkrn-control [class*="border-white/"],
 .nkrn-control [class*="border-zinc-"] { border-color: var(--tygies-line) !important; }
-.nkrn-control .text-white { color: #202124 !important; }
+.nkrn-control .text-white:not([class*="bg-red-"]):not([class*="bg-[#b91c2b]"]):not([class*="bg-[#a31624]"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-violet-"]):not([class*="bg-orange-"]):not([class*="bg-amber-"]):not([class*="bg-black"]) { color: #202124 !important; }
 .nkrn-control .text-zinc-100,
 .nkrn-control .text-zinc-200,
 .nkrn-control .text-zinc-300 { color: #303134 !important; }
