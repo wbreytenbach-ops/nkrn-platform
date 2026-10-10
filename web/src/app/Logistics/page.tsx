@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LogisticsManagementDashboard from "./LogisticsManagementDashboard";
+import LogisticsSecurityPortal from "./LogisticsSecurityPortal";
 import LogisticsTeacherPortal from "./LogisticsTeacherPortal";
 import "../nkrn-control.css";
 
@@ -154,6 +155,10 @@ export default function LogisticsPage() {
 
     if (!user) {
         return null;
+    }
+
+    if (user.email?.trim().toLowerCase() === "jwerner@tygies.co.za") {
+        return <LogisticsSecurityPortal />;
     }
 
     return managementAccess ? (
