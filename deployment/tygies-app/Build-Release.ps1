@@ -48,7 +48,8 @@ function New-BrandIcon {
         $sourceImage = [System.Drawing.Image]::FromFile($SourcePath)
         $bitmap = [System.Drawing.Bitmap]::new($Size, $Size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
         $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
-        $graphics.Clear([System.Drawing.Color]::Transparent)
+        # Use a solid dark tile so the white Tygerpoort mark remains visible as an app icon.
+        $graphics.Clear([System.Drawing.Color]::FromArgb(255, 11, 11, 13))
         $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
         $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
         $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
@@ -123,11 +124,12 @@ $oldNodeEnv = [Environment]::GetEnvironmentVariable('NODE_ENV', 'Process')
 $oldTelemetry = [Environment]::GetEnvironmentVariable('NEXT_TELEMETRY_DISABLED', 'Process')
 
 try {
-    # Create correctly sized Tygerpoort PWA/browser icons from the repository logo.
+    # Create correctly sized Tygerpoort PWA/browser icons from the verified, decodable white logo.
+    # tygie-logo.png cannot be decoded by Windows GDI+ on the build PC; do not use it here.
     Add-Type -AssemblyName System.Drawing
-    $brandLogo = Join-Path $webRoot 'public\tygie-logo.png'
+    $brandLogo = Join-Path $webRoot 'public\wit-logo-tygies.png'
     if (-not (Test-Path -LiteralPath $brandLogo -PathType Leaf)) {
-        throw "Tygerpoort logo source is missing: $brandLogo"
+        throw "Verified Tygerpoort logo source is missing: $brandLogo"
     }
     New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\icon-32x32.png') -Size 32
     New-BrandIcon -SourcePath $brandLogo -DestinationPath (Join-Path $webRoot 'public\icon-192x192.png') -Size 192
