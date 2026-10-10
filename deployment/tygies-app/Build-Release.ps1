@@ -225,5 +225,8 @@ finally {
 }
 
 
+# Expose the exact ZIP path so deployment is a single command in this PowerShell session.
+$global:NKRNLatestReleaseZip = $releaseZip
+
 # Clear stale native exit codes left by successful robocopy operations for callers.
 $global:LASTEXITCODE = 0
