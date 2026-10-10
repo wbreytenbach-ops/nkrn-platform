@@ -38,7 +38,10 @@ export default function LogisticsSecurityPortal() {
     } catch (e) { setError(e instanceof Error ? e.message : "Kon nie sekuriteitsversoeke laai nie."); }
     finally { setLoading(false); }
   }, [router]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
   async function open(id: number) {
     setError("");
     try {
