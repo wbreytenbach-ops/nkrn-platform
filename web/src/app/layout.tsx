@@ -7,14 +7,14 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://portal.tygies.co.za"),
 
   title: {
-    default: "Tygies 1 | Laerskool Tygerpoort",
-    template: "%s | Tygies 1",
+    default: "Tygies One | Laerskool Tygerpoort",
+    template: "%s | Tygies One",
   },
 
   description:
-    "Tygies 1 is Laerskool Tygerpoort’s secure school operations portal for staff requests, logistics, event support and administration.",
+    "Tygies One is Laerskool Tygerpoort’s secure school operations portal for staff requests, logistics, event support and administration.",
 
-  applicationName: "Tygies 1",
+  applicationName: "Tygies One",
 
   manifest: "/manifest.webmanifest",
 
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
 
   appleWebApp: {
     capable: true,
-    title: "Tygies 1",
+    title: "Tygies One",
     statusBarStyle: "black-translucent",
   },
 
