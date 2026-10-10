@@ -2,6 +2,8 @@ using System.Data;
 using System.Data.Common;
 using System.Net;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -109,6 +111,28 @@ public class FunksieversorgingRequestsController : ControllerBase
         {
             canManage = await CanManageAsync(userID.Value)
         });
+    }
+
+    [AllowAnonymous]
+    [HttpGet("print/{requestID:int}")]
+    public async Task<ActionResult<FunksieversorgingRequestResponse>> GetPrintableRequest(
+        int requestID,
+        [FromQuery] long expires,
+        [FromQuery] string signature)
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        if (expires < now ||
+            expires > DateTimeOffset.UtcNow.AddDays(31).ToUnixTimeSeconds() ||
+            !IsPrintSignatureValid(requestID, expires, signature))
+        {
+            return NotFound();
+        }
+
+        var request = (await LoadRequestsAsync(null))
+            .FirstOrDefault(item => item.RequestID == requestID);
+
+        return request is null ? NotFound() : Ok(request);
     }
 
     [HttpGet("mine")]
@@ -819,6 +843,50 @@ public class FunksieversorgingRequestsController : ControllerBase
         return items;
     }
 
+    private string CreatePrintUrl(int requestID)
+    {
+        var expires = DateTimeOffset.UtcNow.AddDays(30).ToUnixTimeSeconds();
+        var signature = CreatePrintSignature(requestID, expires);
+        var baseUrl = (_configuration["PublicBaseUrl"] ?? "https://portal.tygies.co.za").TrimEnd('/');
+        return $"{baseUrl}/Funksieversorging/print?requestID={requestID}&expires={expires}&signature={Uri.EscapeDataString(signature)}";
+    }
+
+    private string CreatePrintSignature(int requestID, long expires)
+    {
+        var configuredKey = _configuration["Jwt:Key"];
+        if (string.IsNullOrWhiteSpace(configuredKey))
+        {
+            throw new InvalidOperationException("The configured signing key is unavailable.");
+        }
+
+        var derivedKey = HMACSHA256.HashData(
+            Encoding.UTF8.GetBytes(configuredKey),
+            Encoding.UTF8.GetBytes("NKRN-Funksieversorging-Print-Link-v1"));
+
+        var payload = Encoding.UTF8.GetBytes($"{requestID}:{expires}");
+        return Convert.ToHexString(HMACSHA256.HashData(derivedKey, payload)).ToLowerInvariant();
+    }
+
+    private bool IsPrintSignatureValid(int requestID, long expires, string? signature)
+    {
+        if (string.IsNullOrWhiteSpace(signature))
+        {
+            return false;
+        }
+
+        try
+        {
+            var supplied = Convert.FromHexString(signature);
+            var expected = Convert.FromHexString(CreatePrintSignature(requestID, expires));
+            return supplied.Length == expected.Length &&
+                CryptographicOperations.FixedTimeEquals(supplied, expected);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
     private async Task<(DateTime? SentAt, string? Error)> TrySendNotificationAsync(
         int requestID,
         string firstName,
@@ -849,9 +917,12 @@ public class FunksieversorgingRequestsController : ControllerBase
         var subject =
             $"Funksieversorging: Versoek #{requestID} ontvang â€“ {functionName}";
 
+        var printUrl = CreatePrintUrl(requestID);
+
         var body =
             BuildEmailBody(
                 requestID,
+                printUrl,
                 firstName,
                 lastName,
                 requesterEmail,
@@ -1017,6 +1088,7 @@ public class FunksieversorgingRequestsController : ControllerBase
 
     private static string BuildEmailBody(
         int requestID,
+        string printUrl,
         string firstName,
         string lastName,
         string requesterEmail,
@@ -1069,9 +1141,18 @@ public class FunksieversorgingRequestsController : ControllerBase
 
         return $"""
             <html>
-            <body style="font-family:Arial,sans-serif;color:#222;">
-                <h2>Nuwe Funksieversorging-versoek</h2>
-
+            <body style="margin:0;padding:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#25262a;">
+              <div style="max-width:760px;margin:0 auto;padding:24px 12px;">
+                <div style="background:#b91c2b;color:#fff;padding:22px 24px;border-radius:12px 12px 0 0;">
+                  <p style="margin:0 0 6px;font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">Laerskool Tygerpoort</p>
+                  <h2 style="margin:0;font-size:23px;">Nuwe Funksieversorging-versoek</h2>
+                  <p style="margin:8px 0 0;color:#fff;font-size:14px;">Versoek #{requestID}</p>
+                </div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-top:0;padding:24px;border-radius:0 0 12px 12px;">
+                  <p style="margin:0 0 20px;">Gebruik die knoppie hieronder om ’n A4-hardekopie oop te maak en dit te druk. Geen portaal-aanmelding is nodig nie.</p>
+                  <p style="margin:0 0 24px;">
+                    <a href="{E(printUrl)}" style="display:inline-block;background:#b91c2b;color:#fff;text-decoration:none;font-weight:bold;padding:13px 20px;border-radius:7px;">Druk hardekopie van versoek</a>
+                  </p>
                 <p><strong>Versoek:</strong> #{requestID}</p>
                 <p><strong>Ingedien deur:</strong> {E($"{firstName} {lastName}".Trim())}</p>
                 <p><strong>E-pos:</strong> {E(requesterEmail)}</p>
@@ -1104,6 +1185,11 @@ public class FunksieversorgingRequestsController : ControllerBase
                     Die gebruiker het bevestig dat geleende voorraad skoongemaak en volgens afspraak
                     terugbesorg sal word en dat skade of breuke aangemeld sal word.
                 </p>
+                <p style="margin:24px 0 0;padding-top:14px;border-top:1px solid #e5e7eb;font-size:11px;color:#6b7280;">
+                  Laerskool Tygerpoort · Tygies 1 · Funksieversorging
+                </p>
+                </div>
+              </div>
             </body>
             </html>
             """;
