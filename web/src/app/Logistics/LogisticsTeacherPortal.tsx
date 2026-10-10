@@ -200,8 +200,10 @@ function requestLocation(request: LogisticsRequest) {
 
 export default function LogisticsTeacherPortal({
     user,
+    onBackToManagement,
 }: {
     user: NKRNUser;
+    onBackToManagement?: () => void;
 }) {
     const router = useRouter();
     const { language } = useLanguage();
@@ -789,6 +791,15 @@ export default function LogisticsTeacherPortal({
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3">
+                            {onBackToManagement && (
+                                <button
+                                    type="button"
+                                    onClick={onBackToManagement}
+                                    className="rounded-xl border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:bg-[#d7a31f]/15"
+                                >
+                                    Terug na Logistics-bestuur
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => router.push("/")}
