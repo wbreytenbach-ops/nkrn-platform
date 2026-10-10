@@ -525,7 +525,7 @@ html[data-theme="light"] textarea {
   border-color: rgba(15,23,42,.18) !important;
 }
 
-html[data-theme="light"] .nkrn-control .text-white,
+html[data-theme="light"] .nkrn-control .text-white:not([class*="bg-red-"]):not([class*="bg-[#d7a31f]"]):not([class*="bg-[#e7b42b]"]):not([class*="bg-black/"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-violet-"]),
 html[data-theme="light"] .nkrn-control .text-zinc-100,
 html[data-theme="light"] .nkrn-control .text-zinc-200,
 html[data-theme="light"] .nkrn-control .text-zinc-300 {
@@ -540,7 +540,6 @@ html[data-theme="light"] .nkrn-control .text-zinc-600 {
 
 html[data-theme="light"] .nkrn-control [class*="bg-zinc-950"],
 html[data-theme="light"] .nkrn-control [class*="bg-zinc-900"],
-html[data-theme="light"] .nkrn-control [class*="bg-black/"],
 html[data-theme="light"] .nkrn-control [class*="bg-white/"] {
   background-color: rgba(255,255,255,.82) !important;
 }
