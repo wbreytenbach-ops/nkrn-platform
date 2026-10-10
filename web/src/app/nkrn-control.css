@@ -1147,3 +1147,101 @@ html[data-theme="dark"] .nkrn-control .q4-nav:hover:enabled {
   color: #ffb4bc !important;
 }
 
+/* Tygies One global light-mode button contrast correction.
+   Keep existing button backgrounds/status colours; correct the foreground and
+   override legacy text-white utility classes inside buttons and button-like links. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control button,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control a[role="button"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control input[type="button"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control input[type="reset"] {
+  color: #202124 !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control button :is(span, strong, em, svg, small, label),
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control a[role="button"] :is(span, strong, em, svg, small) {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Filled action buttons retain high-contrast white text, including nested labels. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-red-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-emerald-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-green-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-blue-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-indigo-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-violet-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-orange-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#b91c2b]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#a31624]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#d7a31f]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#e7b42b]"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-red-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-emerald-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-green-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-blue-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-indigo-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-violet-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-orange-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#b91c2b]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#a31624]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#d7a31f]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#e7b42b]"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Native submit controls are primary actions throughout legacy modules. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control button[type="submit"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control input[type="submit"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
