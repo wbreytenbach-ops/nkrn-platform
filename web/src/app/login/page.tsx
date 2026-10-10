@@ -175,7 +175,7 @@ export default function LoginPage() {
                             </p>
 
                             <p className="mt-1 text-sm font-medium text-zinc-300">
-                                School Operations Platform
+                                Tygies 1 · School Operations Portal
                             </p>
                         </div>
                     </div>
