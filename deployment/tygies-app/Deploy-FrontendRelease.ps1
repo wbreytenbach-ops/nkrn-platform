@@ -39,8 +39,14 @@ try {
         $reader.Dispose()
     }
 
+    # ZipFile.CreateFromDirectory on Windows may store entry names with backslashes.
+    # Normalize separators when validating so valid Windows-built ZIPs are accepted.
+    $normalizedEntries = @{}
+    foreach ($entry in $archive.Entries) {
+        $normalizedEntries[$entry.FullName.Replace('\', '/')] = $true
+    }
     foreach ($entryName in @('frontend/server.js', 'frontend/.next/BUILD_ID')) {
-        if ($null -eq $archive.GetEntry($entryName)) {
+        if (-not $normalizedEntries.ContainsKey($entryName)) {
             throw "Release ZIP is missing $entryName."
         }
     }
