@@ -101,13 +101,13 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     return (
         <div className={`workspace-shell ${collapsed ? "is-collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}>
             {mobileOpen && <button type="button" className="workspace-backdrop" aria-label={af ? "Sluit navigasie" : "Close navigation"} onClick={() => setMobileOpen(false)} />}
-            <aside className="workspace-sidebar" aria-label={af ? "Hoofnavigasie" : "Main navigation"}>
+            <aside id="tygies-workspace-navigation" className="workspace-sidebar" aria-label={af ? "Hoofnavigasie" : "Main navigation"}>
                 <div className="workspace-brand">
                     <Link href="/" className="workspace-brand-link" aria-label="Tygies One home" onClick={() => setMobileOpen(false)}>
                         <Image src="/wit-logo-tygies.png" alt="Laerskool Tygerpoort school crest" width={42} height={42} priority className="workspace-crest" />
                         <span className="workspace-brand-copy"><strong>Tygies One</strong><small>Laerskool Tygerpoort</small></span>
                     </Link>
-                    <button type="button" className="workspace-collapse" onClick={toggleCollapsed} aria-label={collapsed ? (af ? "Brei navigasie uit" : "Expand navigation") : (af ? "Vou navigasie in" : "Collapse navigation")} title={collapsed ? "Expand navigation" : "Collapse navigation"}>‹</button>
+                    <button type="button" className="workspace-collapse" onClick={() => { if (window.matchMedia("(max-width: 760px)").matches) { setMobileOpen(false); } else { toggleCollapsed(); } }} aria-label={mobileOpen ? (af ? "Sluit navigasie" : "Close navigation") : collapsed ? (af ? "Brei navigasie uit" : "Expand navigation") : (af ? "Vou navigasie in" : "Collapse navigation")} title={mobileOpen ? (af ? "Sluit navigasie" : "Close navigation") : collapsed ? (af ? "Brei navigasie uit" : "Expand navigation") : (af ? "Vou navigasie in" : "Collapse navigation")}><span className="workspace-collapse-desktop-icon" aria-hidden="true">{collapsed ? "›" : "‹"}</span><span className="workspace-collapse-mobile-icon" aria-hidden="true">×</span></button>
                 </div>
                 <div className="workspace-nav-label">{af ? "WERKRUIMTE" : "WORKSPACE"}</div>
                 <nav className="workspace-nav">
@@ -126,7 +126,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             </aside>
             <div className="workspace-main">
                 <header className="workspace-topbar">
-                    <button type="button" className="workspace-mobile-menu" onClick={() => setMobileOpen(true)} aria-label={af ? "Maak navigasie oop" : "Open navigation"}>☰</button>
+                    <button type="button" className="workspace-mobile-menu" onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-controls="tygies-workspace-navigation" aria-label={mobileOpen ? (af ? "Sluit navigasie" : "Close navigation") : (af ? "Maak navigasie oop" : "Open navigation")}>{mobileOpen ? "×" : "☰"}</button>
                     <div className="workspace-page-context"><span>{af ? "Laerskool Tygerpoort" : "Laerskool Tygerpoort"}</span><strong>{visibleNavigation.find((item) => isActive(item.href))?.[af ? "labelAf" : "labelEn"] ?? "Tygies One"}</strong></div>
                     <div className="workspace-topbar-right"><span className="workspace-secure-dot" /> <span>{af ? "Veilige werkruimte" : "Secure workspace"}</span></div>
                 </header>
