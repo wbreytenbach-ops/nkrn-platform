@@ -253,7 +253,7 @@ export default function Home() {
                             ? `Welkom, ${user.firstName}. Kies ’n module om aan die gang te kom.`
                             : `Welcome, ${user.firstName}. Choose a module to get started.`}
                     </p>
-                    <p className="mt-6 inline-flex rounded-full border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-5 py-2 text-sm text-[#e7b42b]">
+                    <p className="q4-module-summary mt-6 inline-flex rounded-full border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-5 py-2 text-sm text-[#e7b42b]">
                         {language === "af"
                             ? "4 aktiewe modules · 1 toekomstige module"
                             : "4 active modules · 1 future module"}
