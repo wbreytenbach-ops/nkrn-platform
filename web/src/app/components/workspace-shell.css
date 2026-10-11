@@ -226,3 +226,62 @@ html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-contro
 html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control .text-zinc-700 {
   color: #5f6368 !important;
 }
+
+/* Tygies One: keep the workspace navigation dark in both theme modes.
+   The content area follows the selected theme; the sidebar remains charcoal. */
+.workspace-shell {
+  --ws-side-bg: #202124;
+  --ws-line: #3c4043;
+}
+.workspace-sidebar {
+  color: #e8eaed;
+  background: #202124;
+  border-right-color: #3c4043;
+}
+.workspace-sidebar .workspace-brand-copy strong,
+.workspace-sidebar .workspace-user-copy strong {
+  color: #f1f3f4;
+}
+.workspace-sidebar .workspace-brand-copy small,
+.workspace-sidebar .workspace-user-copy small,
+.workspace-sidebar .workspace-nav-label {
+  color: #bdc1c6;
+}
+.workspace-sidebar .workspace-collapse {
+  border-color: #5f6368;
+  color: #e8eaed;
+  background: #303134;
+}
+.workspace-sidebar .workspace-nav-link {
+  color: #e8eaed;
+}
+.workspace-sidebar .workspace-nav-link:hover {
+  color: #ffffff;
+  background: #3c4043;
+}
+.workspace-sidebar .workspace-nav-link.is-active {
+  color: #ffb4bc;
+  background: #5f252b;
+}
+.workspace-sidebar .workspace-nav-link.is-active svg {
+  color: #ffb4bc;
+}
+.workspace-sidebar .workspace-sidebar-footer {
+  border-top-color: #3c4043;
+}
+.workspace-sidebar .workspace-logout {
+  color: #bdc1c6;
+}
+.workspace-sidebar .workspace-logout:hover {
+  color: #ffb4bc;
+  background: #3c4043;
+}
+
+/* The gold summary label needs a darker foreground on the light homepage. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .q4-module-summary {
+  color: #78570a !important;
+  -webkit-text-fill-color: #78570a !important;
+  background-color: rgba(215, 163, 31, .12) !important;
+  border-color: rgba(120, 87, 10, .3) !important;
+}
+
