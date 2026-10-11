@@ -285,3 +285,75 @@ html.tygies-workspace-active[data-theme="light"] .workspace-content .q4-module-s
   border-color: rgba(120, 87, 10, .3) !important;
 }
 
+
+
+/* Responsive navigation controls: stateful desktop arrow and clear mobile close action. */
+.workspace-collapse-desktop-icon {
+  display: inline-block;
+  font-size: 25px;
+  line-height: 1;
+}
+.workspace-collapse-mobile-icon {
+  display: none;
+  font-size: 25px;
+  line-height: 1;
+}
+.workspace-collapse,
+.workspace-mobile-menu {
+  transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease;
+}
+.workspace-collapse:focus-visible,
+.workspace-mobile-menu:focus-visible,
+.workspace-nav-link:focus-visible {
+  outline: 2px solid #e7b42b;
+  outline-offset: 3px;
+}
+.workspace-sidebar {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.workspace-backdrop {
+  touch-action: manipulation;
+}
+@media (max-width: 760px) {
+  .workspace-collapse-desktop-icon {
+    display: none;
+  }
+  .workspace-collapse-mobile-icon {
+    display: inline-block;
+  }
+  .workspace-collapse {
+    min-width: 36px;
+    min-height: 36px;
+    border-color: #5f6368;
+    border-radius: 10px;
+    color: #f1f3f4;
+    background: #303134;
+  }
+  .workspace-collapse:hover,
+  .workspace-mobile-menu:hover {
+    background: #3c4043;
+    color: #ffffff;
+  }
+  .workspace-mobile-menu {
+    min-width: 40px;
+    min-height: 40px;
+    border-color: #5f6368;
+    background: #303134;
+    color: #f1f3f4;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .workspace-sidebar {
+    width: min(320px, 88vw);
+    padding-top: max(18px, env(safe-area-inset-top));
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    box-shadow: 18px 0 48px rgba(0, 0, 0, .28);
+  }
+  .workspace-backdrop {
+    background: rgba(10, 12, 16, .58);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+  }
+}
