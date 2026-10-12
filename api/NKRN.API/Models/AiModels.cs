@@ -1,4 +1,4 @@
-namespace NKRN.API.Models;
+﻿namespace NKRN.API.Models;
 
 public sealed class AiConversationMessage
 {
@@ -8,6 +8,7 @@ public sealed class AiConversationMessage
 
 public sealed class AiTriageRequest
 {
+    public string Language { get; set; } = "af";
     public string ModuleKey { get; set; } = "IT";
     public string Description { get; set; } = string.Empty;
     public string? AdditionalContext { get; set; }
@@ -38,6 +39,7 @@ public sealed class AiTriageResult
 
 public sealed class AiHelpInput
 {
+    public string Language { get; set; } = "af";
     public string ModuleKey { get; set; } = "IT";
     public string Description { get; set; } = string.Empty;
     public string? AdditionalContext { get; set; }

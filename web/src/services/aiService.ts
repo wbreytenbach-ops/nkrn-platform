@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+﻿const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface AiConversationMessage {
     role: "user" | "assistant";
@@ -38,6 +38,7 @@ function getHeaders(): HeadersInit {
 }
 
 export async function startAiHelp(input: {
+    language?: "en" | "af";
     moduleKey: "IT" | "Logistics" | "Funksieversorging";
     description: string;
     additionalContext?: string;
@@ -47,6 +48,7 @@ export async function startAiHelp(input: {
         method: "POST",
         headers: getHeaders(),
         body: JSON.stringify({
+            language: input.language ?? "af",
             moduleKey: input.moduleKey,
             description: input.description,
             additionalContext: input.additionalContext ?? null,

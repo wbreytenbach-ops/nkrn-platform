@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,6 +68,7 @@ public sealed class AiController : ControllerBase
             userID.Value,
             new AiTriageRequest
             {
+                Language = input.Language,
                 ModuleKey = module,
                 Description = description,
                 AdditionalContext = input.AdditionalContext,
