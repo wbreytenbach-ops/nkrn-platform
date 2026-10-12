@@ -34,7 +34,12 @@ namespace NKRN.API.Controllers
             if (!await _context.Users.AnyAsync(
                     user => user.UserID == userID &&
                             user.IsActive &&
-                            user.RoleID == 3,
+                            (user.RoleID == 3 ||
+                             _context.ModulePermissions.Any(permission =>
+                                 permission.UserID == user.UserID &&
+                                 permission.ModuleKey.ToLower() == "logistics" &&
+                                 permission.CanView &&
+                                 permission.CanAdmin)),
                     cancellationToken))
             {
                 return Forbid();
