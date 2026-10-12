@@ -226,3 +226,58 @@ html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-contro
 html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control .text-zinc-700 {
   color: #5f6368 !important;
 }
+
+
+/* Tygies One AI Help contrast — scoped fix
+   Keep the AI panel legible in both themes without changing other workspace pages. */
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help {
+  background-color: #9b1c31 !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,.22) !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help,
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help * {
+  color: #ffffff !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help input,
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help textarea {
+  background-color: #303134 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(255,255,255,.25) !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help input::placeholder,
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help textarea::placeholder {
+  color: #e5e7eb !important;
+  -webkit-text-fill-color: #e5e7eb !important;
+  opacity: 1 !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help div[class*="bg-black/"] {
+  background-color: rgba(0,0,0,.22) !important;
+  border-color: rgba(255,255,255,.16) !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help button:first-of-type {
+  background-color: #7f1727 !important;
+  border-color: rgba(255,255,255,.35) !important;
+  color: #ffffff !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help button[class*="bg-green-500/10"] {
+  background-color: #166534 !important;
+  border-color: rgba(255,255,255,.2) !important;
+  color: #ffffff !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help button[class*="bg-red-500/12"] {
+  background-color: #991b1b !important;
+  border-color: rgba(255,255,255,.2) !important;
+  color: #ffffff !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help button[class*="bg-[#d7a31f]/10"] {
+  background-color: #7f1727 !important;
+  border-color: rgba(255,255,255,.35) !important;
+  color: #ffffff !important;
+}
+html.tygies-workspace-active body .workspace-content .nkrn-control .nkrn-ai-help button[class*="bg-white/6"] {
+  background-color: rgba(255,255,255,.10) !important;
+  border-color: rgba(255,255,255,.25) !important;
+  color: #ffffff !important;
+}
