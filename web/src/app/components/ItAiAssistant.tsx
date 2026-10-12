@@ -178,7 +178,7 @@ export default function ItAiAssistant({
     }
 
     return (
-        <div className="mt-4 rounded-2xl border border-[#d7a31f]/20 bg-[#d7a31f]/5 p-4">
+        <div className="nkrn-ai-help mt-4 rounded-2xl border border-white/20 bg-[#9b1c31] p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p className="text-sm font-semibold text-zinc-100">
