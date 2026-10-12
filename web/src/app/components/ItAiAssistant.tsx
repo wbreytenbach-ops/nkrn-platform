@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLanguage } from "../language";
 import {
     completeAiHelp,
     startAiHelp,
@@ -41,6 +42,7 @@ export default function ItAiAssistant({
     onResolved,
     onLogRequest,
 }: Props) {
+    const { language } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [savingOutcome, setSavingOutcome] = useState(false);
     const [result, setResult] = useState<AiTriageResult | null>(null);
@@ -72,6 +74,7 @@ export default function ItAiAssistant({
 
         try {
             const response = await startAiHelp({
+                language,
                 moduleKey,
                 description,
                 additionalContext,
@@ -178,13 +181,13 @@ export default function ItAiAssistant({
     }
 
     return (
-        <div className="mt-4 rounded-2xl border border-[#d7a31f]/20 bg-[#d7a31f]/5 p-4">
+        <div className="mt-4 rounded-2xl border border-[#d7a31f]/20 bg-[#9b1c31] p-4 nkrn-ai-help">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <p className="text-sm font-semibold text-zinc-100">
+                    <p className="text-sm font-semibold text-white">
                         NKRN AI-hulp
                     </p>
-                    <p className="mt-1 text-xs leading-5 text-zinc-400">
+                    <p className="mt-1 text-xs leading-5 text-white">
                         {intro}
                     </p>
                 </div>
@@ -197,33 +200,33 @@ export default function ItAiAssistant({
                         loading ||
                         description.trim().length < 5
                     }
-                    className="shrink-0 rounded-xl border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:bg-[#d7a31f]/15 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="nkrn-ai-primary shrink-0 rounded-xl border border-[#e7b42b] bg-[#e7b42b] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:border-[#f2c94c] hover:bg-[#f2c94c] disabled:cursor-not-allowed disabled:border-[#9ca3af] disabled:bg-[#d1d5db] disabled:text-white disabled:opacity-100"
                 >
                     {loading ? "Besig om na te gaan…" : "Kry AI-hulp"}
                 </button>
             </div>
 
             {error && (
-                <p role="alert" className="mt-3 text-sm text-red-300">
+                <p role="alert" className="mt-3 text-sm text-white">
                     {error}
                 </p>
             )}
 
             {result && (
                 <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-                    <p className="text-sm leading-6 text-zinc-200">
+                    <p className="text-sm leading-6 text-white">
                         {result.userMessage}
                     </p>
 
                     {result.troubleshootingSteps.length > 0 && (
                         <div>
-                            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-white">
                                 Probeer dit
                             </p>
-                            <ol className="space-y-2 text-sm text-zinc-300">
+                            <ol className="space-y-2 text-sm text-white">
                                 {result.troubleshootingSteps.map((step, index) => (
                                     <li key={`${index}-${step}`} className="flex gap-3">
-                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-zinc-400">
+                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-white">
                                             {index + 1}
                                         </span>
                                         <span className="pt-0.5">{step}</span>
@@ -235,8 +238,8 @@ export default function ItAiAssistant({
 
                     <div className="grid gap-3 text-xs sm:grid-cols-2">
                         <div className="rounded-xl border border-white/10 bg-black/10 p-3">
-                            <span className="text-zinc-500">Kategorie</span>
-                            <p className="mt-1 text-sm text-zinc-200">
+                            <span className="text-white">Kategorie</span>
+                            <p className="mt-1 text-sm text-white">
                                 {result.suggestedCategory ??
                                     (moduleKey === "IT"
                                         ? "IT-span sal klassifiseer"
@@ -245,10 +248,10 @@ export default function ItAiAssistant({
                         </div>
 
                         <div className="rounded-xl border border-white/10 bg-black/10 p-3">
-                            <span className="text-zinc-500">Prioriteit</span>
+                            <span className="text-white">Prioriteit</span>
                             <p
                                 className={`mt-1 text-sm ${
-                                    isCritical ? "font-semibold text-red-300" : "text-zinc-200"
+                                    isCritical ? "font-semibold text-white" : "text-white"
                                 }`}
                             >
                                 {priorityLabel[result.suggestedPriority] ??
@@ -258,7 +261,7 @@ export default function ItAiAssistant({
                     </div>
 
                     <div className="rounded-xl border border-white/10 bg-black/10 p-3">
-                        <label className="text-xs text-zinc-500">
+                        <label className="text-xs text-white">
                             Jy kan ook antwoord wat gebeur het
                         </label>
                         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -266,13 +269,13 @@ export default function ItAiAssistant({
                                 value={responseText}
                                 onChange={(event) => setResponseText(event.target.value)}
                                 placeholder="bv. Ek het reggekom / Dit werk nog nie"
-                                className="nkrn-input min-w-0 flex-1 rounded-xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white outline-none"
+                                className="nkrn-input min-w-0 flex-1 rounded-xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white placeholder:text-white outline-none"
                             />
                             <button
                                 type="button"
                                 onClick={() => void handleNaturalResponse()}
                                 disabled={savingOutcome || !responseText.trim()}
-                                className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-zinc-200 disabled:opacity-50"
+                                className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-white disabled:opacity-50"
                             >
                                 Stuur antwoord
                             </button>
@@ -284,7 +287,7 @@ export default function ItAiAssistant({
                             type="button"
                             onClick={() => void resolved("Ek het reggekom.")}
                             disabled={savingOutcome}
-                            className="rounded-xl border border-green-400/20 bg-green-500/10 px-4 py-2.5 text-sm font-medium text-green-300 disabled:opacity-50"
+                            className="rounded-xl border border-green-400/20 bg-green-500/10 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
                         >
                             Ek het reggekom
                         </button>
@@ -295,8 +298,8 @@ export default function ItAiAssistant({
                             disabled={savingOutcome}
                             className={`rounded-xl border px-4 py-2.5 text-sm font-medium disabled:opacity-50 ${
                                 isCritical
-                                    ? "border-red-400/25 bg-red-500/12 text-red-300"
-                                    : "border-[#d7a31f]/30 bg-[#d7a31f]/10 text-[#e7b42b]"
+                                    ? "border-red-400/25 bg-red-500/12 text-white"
+                                    : "border-[#d7a31f]/30 bg-[#d7a31f]/10 text-white"
                             }`}
                         >
                             {isCritical

@@ -16,14 +16,14 @@ function applyTheme(theme: ThemePreference) {
 export default function LanguageSwitcher() {
     const { language, setLanguage } = useLanguage();
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [theme, setTheme] = useState<ThemePreference>("system");
+    const [theme, setTheme] = useState<ThemePreference>("light");
     const settingsLabel = language === "af" ? "Instellings" : "Settings";
     const languageLabel = language === "af" ? "Taal" : "Language";
     const themeLabel = language === "af" ? "Tema" : "Theme";
 
     useEffect(() => {
         const saved = localStorage.getItem("nkrn-theme");
-        const preference: ThemePreference = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+        const preference: ThemePreference = saved === "light" || saved === "dark" || saved === "system" ? saved : "light";
         applyTheme(preference);
         const media = window.matchMedia("(prefers-color-scheme: light)");
         const updateSystemTheme = () => {
@@ -45,12 +45,12 @@ export default function LanguageSwitcher() {
                 type="button"
                 onClick={() => {
                     const saved = localStorage.getItem("nkrn-theme");
-                    setTheme(saved === "light" || saved === "dark" || saved === "system" ? saved : "system");
+                    setTheme(saved === "light" || saved === "dark" || saved === "system" ? saved : "light");
                     setSettingsOpen((open) => !open);
                 }}
                 aria-expanded={settingsOpen}
                 aria-controls="nkrn-user-settings"
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-950/85 px-3 py-2 text-xs font-semibold text-zinc-200 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:border-[#d7a31f]/35 hover:text-white"
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-950/85 px-3 py-2 text-xs font-semibold text-zinc-200 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:border-[#b91c2b]/35 hover:text-white"
             >
                 <span aria-hidden="true">⚙</span>
                 {settingsLabel}
@@ -81,7 +81,7 @@ export default function LanguageSwitcher() {
                         onChange={(event) => setLanguage(event.target.value as "en" | "af")}
                         aria-label={languageLabel}
                         data-nkrn-i18n-ignore
-                        className="mb-4 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-[#d7a31f]/60"
+                        className="mb-4 w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-[#b91c2b]/60"
                     >
                         <option value="af">Afrikaans</option>
                         <option value="en">English</option>
@@ -94,7 +94,7 @@ export default function LanguageSwitcher() {
                         onChange={(event) => changeTheme(event.target.value as ThemePreference)}
                         aria-label={themeLabel}
                         data-nkrn-i18n-ignore
-                        className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-[#d7a31f]/60"
+                        className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-[#b91c2b]/60"
                     >
                         <option value="system">{language === "af" ? "Stelsel" : "System"}</option>
                         <option value="light">{language === "af" ? "Lig" : "Light"}</option>

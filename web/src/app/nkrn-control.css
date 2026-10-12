@@ -3,7 +3,6 @@
    Hybrid glass operational design system
    ========================================================= */
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap");
 
 :root {
   --nkrn-bg: #060708;
@@ -15,9 +14,9 @@
   --nkrn-text: #ffffff;
   --nkrn-muted: #9f9fa7;
   --nkrn-muted-dark: #696970;
-  --nkrn-gold: #d7a31f;
-  --nkrn-gold-bright: #e7b42b;
-  --nkrn-gold-soft: rgba(215, 163, 31, 0.12);
+  --nkrn-gold: #b91c2b;
+  --nkrn-gold-bright: #d8273a;
+  --nkrn-gold-soft: rgba(185, 28, 43, 0.12);
   --nkrn-red: #ef233c;
   --nkrn-orange: #f59e0b;
   --nkrn-green: #22c55e;
@@ -39,7 +38,7 @@
   left: clamp(18px, 3vw, 46px);
   bottom: 18px;
   z-index: 1;
-  color: rgba(215, 163, 31, .18);
+  color: rgba(185, 28, 43, .18);
   font-family: "Outfit", Arial, sans-serif;
   font-size: 12px;
   font-weight: 900;
@@ -76,7 +75,7 @@
   border: 1px solid rgba(255, 255, 255, .11) !important;
   border-radius: 26px !important;
   background:
-    linear-gradient(145deg, rgba(255,255,255,.072), rgba(255,255,255,.024) 48%, rgba(215,163,31,.018)),
+    linear-gradient(145deg, rgba(255,255,255,.072), rgba(255,255,255,.024) 48%, rgba(185, 28, 43,.018)),
     rgba(10, 11, 13, .70) !important;
   box-shadow:
     0 22px 70px rgba(0,0,0,.30),
@@ -93,7 +92,7 @@
   width: 86px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--nkrn-gold), rgba(215,163,31,0));
+  background: linear-gradient(90deg, var(--nkrn-gold), rgba(185, 28, 43,0));
   opacity: .95;
 }
 
@@ -157,9 +156,9 @@
 .nkrn-input:focus,
 .nkrn-select:focus,
 .nkrn-control textarea:focus {
-  border-color: rgba(215, 163, 31, .72) !important;
+  border-color: rgba(185, 28, 43, .72) !important;
   background: rgba(15,16,18,.82) !important;
-  box-shadow: 0 0 0 3px rgba(215,163,31,.08) !important;
+  box-shadow: 0 0 0 3px rgba(185, 28, 43,.08) !important;
 }
 
 /* Buttons */
@@ -286,7 +285,7 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 12% 8%, rgba(215,163,31,.055), transparent 28%),
+    radial-gradient(circle at 12% 8%, rgba(185, 28, 43,.055), transparent 28%),
     radial-gradient(circle at 88% 30%, rgba(255,255,255,.028), transparent 26%);
 }
 
@@ -368,20 +367,20 @@
 }
 
 /* Q4 additions are scoped to the new operational surfaces. */
-.q4-home { background: radial-gradient(ellipse at 80% 10%, #d7a31f12, transparent 45%), #09090b; }
+.q4-home { background: radial-gradient(ellipse at 80% 10%, #b91c2b12, transparent 45%), #09090b; }
 .q4-nav { border: 1px solid #ffffff20; border-radius: .75rem; padding: .65rem 1rem; font-size: .85rem; }
 .q4-nav:disabled { color: #a1a1aa; cursor: not-allowed; }
-.q4-nav[aria-current], .q4-nav:hover:enabled { border-color: #d7a31f80; color: #e7b42b; background: #d7a31f15; }
-.q4-module { border-top: 2px solid #d7a31f80; transition: transform .15s, border-color .15s; }
-.q4-module:hover { transform: translateY(-3px); border-color: #d7a31f; }
-.q4-home :focus-visible, .q4-logistics :focus-visible { outline: 2px solid #e7b42b; outline-offset: 4px; }
+.q4-nav[aria-current], .q4-nav:hover:enabled { border-color: #b91c2b80; color: #d8273a; background: #b91c2b15; }
+.q4-module { border-top: 2px solid #b91c2b80; transition: transform .15s, border-color .15s; }
+.q4-module:hover { transform: translateY(-3px); border-color: #b91c2b; }
+.q4-home :focus-visible, .q4-logistics :focus-visible { outline: 2px solid #d8273a; outline-offset: 4px; }
 .q4-logistics section[id] { scroll-margin-top: 5rem; }
 @media (prefers-reduced-motion: reduce) { .q4-module { transition: none; } .q4-module:hover { transform: none; } }
 
 /* NKRN FINAL PREMIUM LOGISTICS */
 .q4-logistics {
   background:
-    radial-gradient(circle at 82% 4%, rgba(215,163,31,.075), transparent 27%),
+    radial-gradient(circle at 82% 4%, rgba(185, 28, 43,.075), transparent 27%),
     radial-gradient(circle at 12% 32%, rgba(255,255,255,.025), transparent 22%),
     #060708 !important;
 }
@@ -394,16 +393,16 @@
 }
 
 .q4-logistics .nkrn-panel:hover {
-  border-color: rgba(215,163,31,.20) !important;
+  border-color: rgba(185, 28, 43,.20) !important;
   box-shadow:
     0 34px 100px rgba(0,0,0,.38),
-    0 0 0 1px rgba(215,163,31,.025),
+    0 0 0 1px rgba(185, 28, 43,.025),
     inset 0 1px 0 rgba(255,255,255,.07) !important;
 }
 
 .q4-logistics header.nkrn-panel {
   background:
-    linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.025) 50%, rgba(215,163,31,.025)),
+    linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.025) 50%, rgba(185, 28, 43,.025)),
     rgba(8,9,11,.82) !important;
 }
 
@@ -411,11 +410,11 @@
   min-height: 40px;
 }
 
-.q4-logistics button[class*="bg-[#d7a31f]"],
-.q4-logistics button[class*="border-[#d7a31f]"] {
+.q4-logistics button[class*="bg-[#b91c2b]"],
+.q4-logistics button[class*="border-[#b91c2b]"] {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.05),
-    0 10px 30px rgba(215,163,31,.06);
+    0 10px 30px rgba(185, 28, 43,.06);
 }
 
 .q4-logistics .nkrn-input,
@@ -428,7 +427,7 @@
 .q4-logistics .nkrn-select:focus,
 .q4-logistics textarea:focus {
   box-shadow:
-    0 0 0 3px rgba(215,163,31,.09),
+    0 0 0 3px rgba(185, 28, 43,.09),
     0 14px 36px rgba(0,0,0,.18) !important;
 }
 
@@ -444,7 +443,7 @@
 /* NKRN RELEASE FINAL PREMIUM */
 .nkrn-control {
   background:
-    radial-gradient(circle at 88% 3%, rgba(215,163,31,.055), transparent 26%),
+    radial-gradient(circle at 88% 3%, rgba(185, 28, 43,.055), transparent 26%),
     radial-gradient(circle at 8% 38%, rgba(255,255,255,.022), transparent 22%),
     #060708;
 }
@@ -466,7 +465,7 @@
 .nkrn-control input:focus-visible,
 .nkrn-control textarea:focus-visible,
 .nkrn-control select:focus-visible {
-  outline: 2px solid rgba(231,180,43,.65);
+  outline: 2px solid rgba(216, 39, 58,.65);
   outline-offset: 2px;
 }
 
@@ -525,7 +524,7 @@ html[data-theme="light"] textarea {
   border-color: rgba(15,23,42,.18) !important;
 }
 
-html[data-theme="light"] .nkrn-control .text-white,
+html[data-theme="light"] .nkrn-control .text-white:not([class*="bg-red-"]):not([class*="bg-[#d7a31f]"]):not([class*="bg-[#e7b42b]"]):not([class*="bg-black/"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-violet-"]),
 html[data-theme="light"] .nkrn-control .text-zinc-100,
 html[data-theme="light"] .nkrn-control .text-zinc-200,
 html[data-theme="light"] .nkrn-control .text-zinc-300 {
@@ -539,9 +538,7 @@ html[data-theme="light"] .nkrn-control .text-zinc-600 {
 }
 
 html[data-theme="light"] .nkrn-control [class*="bg-zinc-950"],
-html[data-theme="light"] .nkrn-control [class*="bg-zinc-900"],
-html[data-theme="light"] .nkrn-control [class*="bg-black/"],
-html[data-theme="light"] .nkrn-control [class*="bg-white/"] {
+html[data-theme="light"] .nkrn-control [class*="bg-zinc-900"] {
   background-color: rgba(255,255,255,.82) !important;
 }
 
@@ -650,3 +647,710 @@ html[data-theme="light"] .nkrn-control header img[src*="wit-logo-tygies.png"] {
   opacity: 1 !important;
 }
 
+
+
+/* =========================================================
+   TYGIES ONE — shared visual system
+   Brand: Tygerpoort red, white and charcoal; yellow is reserved.
+   These rules apply across requester, technician, admin and
+   special-permission module screens without changing workflows.
+   ========================================================= */
+:root {
+  --tygies-red: #b91c2b;
+  --tygies-red-hover: #a31624;
+  --tygies-red-soft: rgba(185, 28, 43, .12);
+  --tygies-charcoal: #18181b;
+  --tygies-white: #ffffff;
+}
+
+.nkrn-control {
+  accent-color: var(--tygies-red);
+}
+
+.nkrn-control .nkrn-panel {
+  border-radius: 20px !important;
+  border-color: rgba(255, 255, 255, .10) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.nkrn-control .nkrn-panel::after {
+  background: linear-gradient(90deg, var(--tygies-red), transparent) !important;
+}
+
+.nkrn-control button,
+.nkrn-control a,
+.nkrn-control input,
+.nkrn-control select,
+.nkrn-control textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nkrn-control button:disabled {
+  cursor: not-allowed !important;
+  opacity: .58;
+  transform: none !important;
+}
+
+.nkrn-control button:focus-visible,
+.nkrn-control a:focus-visible,
+.nkrn-control input:focus-visible,
+.nkrn-control select:focus-visible,
+.nkrn-control textarea:focus-visible {
+  outline: 2px solid var(--tygies-red) !important;
+  outline-offset: 3px;
+}
+
+.nkrn-control .nkrn-input,
+.nkrn-control .nkrn-select,
+.nkrn-control input:not([type="checkbox"]):not([type="radio"]),
+.nkrn-control select,
+.nkrn-control textarea {
+  border-radius: 12px !important;
+}
+
+.nkrn-control table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.nkrn-control table thead th {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+
+.nkrn-control table tbody tr {
+  transition: background-color .14s ease;
+}
+
+.nkrn-control table tbody tr:hover {
+  background-color: rgba(255, 255, 255, .025);
+}
+
+.nkrn-control [class*="text-[#d7a31f]"],
+.nkrn-control [class*="text-[#e7b42b]"] {
+  color: var(--tygies-red) !important;
+}
+
+.nkrn-control [class*="bg-[#d7a31f]"] {
+  background-color: var(--tygies-red) !important;
+}
+
+.nkrn-control [class*="border-[#d7a31f]"] {
+  border-color: var(--tygies-red) !important;
+}
+
+.nkrn-control [class*="ring-[#d7a31f]"] {
+  --tw-ring-color: var(--tygies-red) !important;
+}
+
+html[data-theme="light"] .nkrn-control {
+  color-scheme: light;
+  background: #f5f6f8 !important;
+}
+
+html[data-theme="light"] .nkrn-control .nkrn-panel {
+  border-radius: 18px !important;
+  border-color: #e1e4e8 !important;
+}
+
+html[data-theme="light"] .nkrn-control [class*="text-[#d7a31f]"],
+html[data-theme="light"] .nkrn-control [class*="text-[#e7b42b]"] {
+  color: var(--tygies-red) !important;
+}
+
+html[data-theme="light"] .nkrn-control [class*="bg-[#d7a31f]"] {
+  background-color: var(--tygies-red) !important;
+}
+
+html[data-theme="light"] .nkrn-control table tbody tr:hover {
+  background-color: #f8f1f2;
+}
+
+@media (max-width: 640px) {
+  .nkrn-control .nkrn-panel {
+    border-radius: 16px !important;
+  }
+
+  .nkrn-control table {
+    font-size: .82rem;
+  }
+
+  .nkrn-control table th,
+  .nkrn-control table td {
+    padding-left: .6rem;
+    padding-right: .6rem;
+  }
+}
+
+
+/* =========================================================
+   TYGIES ONE — unified school operations interface
+   Workspace-inspired: clear hierarchy, calm surfaces, accessible
+   controls and consistent layouts across every role/module.
+   Existing component hooks are intentionally preserved.
+   ========================================================= */
+:root {
+  --tygies-red: #b91c2b;
+  --tygies-red-hover: #9f1724;
+  --tygies-red-soft: #fbeaec;
+  --tygies-charcoal: #202124;
+  --tygies-surface: #ffffff;
+  --tygies-canvas: #f6f8fc;
+  --tygies-line: #e0e3e7;
+  --tygies-muted: #5f6368;
+  --tygies-radius: 16px;
+  --tygies-shadow: 0 1px 2px rgba(60, 64, 67, .08), 0 2px 6px rgba(60, 64, 67, .05);
+}
+
+.nkrn-control {
+  min-height: 100vh;
+  isolation: isolate;
+  color: #202124;
+  background: var(--tygies-canvas) !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.nkrn-control::before,
+.nkrn-control::after {
+  display: none !important;
+  content: none !important;
+}
+
+.nkrn-control h1,
+.nkrn-control h2,
+.nkrn-control h3 {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: -.025em;
+  color: inherit;
+}
+
+.nkrn-control h1 { font-size: clamp(1.65rem, 2.7vw, 2.25rem) !important; line-height: 1.2 !important; font-weight: 700 !important; }
+.nkrn-control h2 { font-size: clamp(1.1rem, 1.8vw, 1.4rem) !important; line-height: 1.3 !important; font-weight: 650 !important; }
+.nkrn-control h3 { font-size: 1rem !important; line-height: 1.4 !important; font-weight: 650 !important; }
+.nkrn-control p[class*="uppercase"],
+.nkrn-control label[class*="uppercase"] { letter-spacing: .08em !important; font-weight: 700 !important; }
+
+.nkrn-control .nkrn-panel,
+.nkrn-control .nkrn-panel:hover {
+  border: 1px solid var(--tygies-line) !important;
+  border-radius: var(--tygies-radius) !important;
+  background: var(--tygies-surface) !important;
+  box-shadow: var(--tygies-shadow) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.nkrn-control .nkrn-panel::before,
+.nkrn-control .nkrn-panel::after { display: none !important; content: none !important; }
+
+.nkrn-control .nkrn-panel:hover {
+  border-color: #c8cdd3 !important;
+  box-shadow: 0 2px 5px rgba(60, 64, 67, .1), 0 4px 12px rgba(60, 64, 67, .06) !important;
+}
+
+.nkrn-control .nkrn-hero {
+  padding-top: clamp(22px, 3vw, 36px) !important;
+  padding-bottom: clamp(22px, 3vw, 36px) !important;
+  border-radius: var(--tygies-radius) !important;
+}
+
+.nkrn-control .nkrn-hero::before { content: none !important; display: none !important; }
+.nkrn-control .nkrn-hero h1 { max-width: 900px; font-size: clamp(1.8rem, 3.2vw, 2.8rem) !important; line-height: 1.12 !important; }
+.nkrn-control .nkrn-hero img { filter: none !important; }
+
+.nkrn-control .nkrn-input,
+.nkrn-control .nkrn-select,
+.nkrn-control input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.nkrn-control select,
+.nkrn-control textarea {
+  min-height: 42px;
+  border: 1px solid #c9cdd2 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: #202124 !important;
+  padding: .65rem .8rem !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.nkrn-control input::placeholder,
+.nkrn-control textarea::placeholder { color: #70757a !important; opacity: 1; }
+
+.nkrn-control .nkrn-input:focus,
+.nkrn-control .nkrn-select:focus,
+.nkrn-control input:focus,
+.nkrn-control select:focus,
+.nkrn-control textarea:focus {
+  border-color: var(--tygies-red) !important;
+  box-shadow: 0 0 0 2px rgba(185, 28, 43, .13) !important;
+  outline: none !important;
+}
+
+.nkrn-control button,
+.nkrn-control a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nkrn-control button {
+  min-height: 38px;
+  border-radius: 9px !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease !important;
+}
+
+.nkrn-control button:hover:not(:disabled) { transform: none !important; }
+.nkrn-control button:active:not(:disabled) { transform: none !important; }
+.nkrn-control button[type="submit"] {
+  background: var(--tygies-red) !important;
+  border-color: var(--tygies-red) !important;
+  color: #fff !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+.nkrn-control button[type="submit"]:hover:not(:disabled) { background: var(--tygies-red-hover) !important; }
+.nkrn-control button:disabled { opacity: .55; cursor: not-allowed !important; }
+
+.nkrn-control table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.nkrn-control table thead { background: #f8f9fa !important; }
+.nkrn-control table thead th {
+  padding-top: .8rem;
+  padding-bottom: .8rem;
+  color: #5f6368;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--tygies-line);
+}
+.nkrn-control table tbody td { border-bottom: 1px solid #edf0f2; }
+.nkrn-control table tbody tr:last-child td { border-bottom: 0; }
+.nkrn-control table tbody tr:hover { background: #f8f9fa !important; }
+.nkrn-control span[class*="rounded-full"] { letter-spacing: .015em; text-transform: none; font-size: .75rem !important; }
+
+.nkrn-control .nkrn-stats { gap: 14px !important; }
+.nkrn-control .nkrn-stats > div {
+  min-height: 120px;
+  border: 1px solid var(--tygies-line) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: var(--tygies-shadow) !important;
+  backdrop-filter: none !important;
+}
+.nkrn-control .nkrn-stats > div::before { display: none !important; }
+.nkrn-control .nkrn-stats p[class*="text-4xl"] {
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: clamp(2rem, 3.5vw, 2.8rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.1;
+}
+
+.nkrn-control [class*="bg-zinc-950"],
+.nkrn-control [class*="bg-zinc-900"] { background-color: #fff !important; }
+.nkrn-control [class*="border-white/"],
+.nkrn-control [class*="border-zinc-"] { border-color: var(--tygies-line) !important; }
+.nkrn-control .text-white:not([class*="bg-red-"]):not([class*="bg-[#b91c2b]"]):not([class*="bg-[#a31624]"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-violet-"]):not([class*="bg-orange-"]):not([class*="bg-amber-"]):not([class*="bg-black"]) { color: #202124 !important; }
+.nkrn-control .text-zinc-100,
+.nkrn-control .text-zinc-200,
+.nkrn-control .text-zinc-300 { color: #303134 !important; }
+.nkrn-control .text-zinc-400,
+.nkrn-control .text-zinc-500,
+.nkrn-control .text-zinc-600 { color: #5f6368 !important; }
+.nkrn-control [class*="text-[#d7a31f]"],
+.nkrn-control [class*="text-[#e7b42b]"] { color: var(--tygies-red) !important; }
+.nkrn-control [class*="bg-[#d7a31f]"],
+.nkrn-control [class*="bg-[#e7b42b]"] { background-color: var(--tygies-red) !important; color: #fff !important; }
+.nkrn-control [class*="border-[#d7a31f]"],
+.nkrn-control [class*="border-[#e7b42b]"] { border-color: var(--tygies-red) !important; }
+
+.nkrn-control button:focus-visible,
+.nkrn-control a:focus-visible,
+.nkrn-control input:focus-visible,
+.nkrn-control select:focus-visible,
+.nkrn-control textarea:focus-visible {
+  outline: 2px solid var(--tygies-red) !important;
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] .nkrn-control {
+  color: #e8eaed !important;
+  background: #202124 !important;
+}
+html[data-theme="dark"] .nkrn-control .nkrn-panel,
+html[data-theme="dark"] .nkrn-control .nkrn-stats > div {
+  background: #292a2d !important;
+  border-color: #3c4043 !important;
+  color: #e8eaed !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.24) !important;
+}
+html[data-theme="dark"] .nkrn-control .nkrn-input,
+html[data-theme="dark"] .nkrn-control .nkrn-select,
+html[data-theme="dark"] .nkrn-control input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+html[data-theme="dark"] .nkrn-control select,
+html[data-theme="dark"] .nkrn-control textarea { background: #202124 !important; color: #e8eaed !important; border-color: #5f6368 !important; }
+html[data-theme="dark"] .nkrn-control .text-white,
+html[data-theme="dark"] .nkrn-control .text-zinc-100,
+html[data-theme="dark"] .nkrn-control .text-zinc-200,
+html[data-theme="dark"] .nkrn-control .text-zinc-300 { color: #e8eaed !important; }
+html[data-theme="dark"] .nkrn-control .text-zinc-400,
+html[data-theme="dark"] .nkrn-control .text-zinc-500,
+html[data-theme="dark"] .nkrn-control .text-zinc-600 { color: #bdc1c6 !important; }
+html[data-theme="dark"] .nkrn-control [class*="bg-zinc-950"],
+html[data-theme="dark"] .nkrn-control [class*="bg-zinc-900"] { background-color: #292a2d !important; }
+html[data-theme="dark"] .nkrn-control [class*="border-white/"],
+html[data-theme="dark"] .nkrn-control [class*="border-zinc-"] { border-color: #3c4043 !important; }
+html[data-theme="dark"] .nkrn-control table thead { background: #303134 !important; }
+html[data-theme="dark"] .nkrn-control table thead th { color: #bdc1c6; border-color: #3c4043; }
+html[data-theme="dark"] .nkrn-control table tbody td { border-color: #3c4043; }
+html[data-theme="dark"] .nkrn-control table tbody tr:hover { background: #303134 !important; }
+html[data-theme="dark"] .nkrn-control .nkrn-input::placeholder,
+html[data-theme="dark"] .nkrn-control textarea::placeholder { color: #9aa0a6 !important; }
+
+@media (max-width: 640px) {
+  .nkrn-control .nkrn-panel { border-radius: 12px !important; }
+  .nkrn-control button { min-height: 44px; }
+  .nkrn-control table { display: block; overflow-x: auto; max-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nkrn-control *, .nkrn-control *::before, .nkrn-control *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =========================================================
+   TYGIES ONE — responsive and accessible finishing layer
+   Shared across user, administration and restricted-role views.
+   Keep this layer presentational: no workflow or permission changes.
+   ========================================================= */
+.nkrn-control {
+  overflow-wrap: anywhere;
+}
+
+.nkrn-control :where(img, svg, video, canvas) {
+  max-width: 100%;
+}
+
+.nkrn-control :where(input, select, textarea, button) {
+  max-width: 100%;
+}
+
+.nkrn-control :where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--tygies-red);
+}
+
+.nkrn-control :where(label) {
+  line-height: 1.45;
+}
+
+.nkrn-control :where(textarea) {
+  min-height: 104px;
+  resize: vertical;
+}
+
+.nkrn-control :where(pre, code) {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.nkrn-control :where([role="alert"], [aria-live="polite"], [aria-live="assertive"]) {
+  overflow-wrap: anywhere;
+}
+
+.nkrn-control :where(a) {
+  text-underline-offset: .18em;
+}
+
+.nkrn-control :where(a, button, input, select, textarea, summary) {
+  scroll-margin-block: 1rem;
+}
+
+@media (max-width: 768px) {
+  .nkrn-control {
+    overflow-x: clip;
+  }
+
+  .nkrn-control :where(.nkrn-panel) {
+    min-width: 0;
+  }
+
+  .nkrn-control :where(table) {
+    min-width: 100%;
+  }
+
+  .nkrn-control :where(th, td) {
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .nkrn-control :where(input, select, textarea) {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .nkrn-control :where(h1) {
+    overflow-wrap: anywhere;
+  }
+
+  .nkrn-control :where(.nkrn-panel) {
+    padding-inline: clamp(.75rem, 4vw, 1rem);
+  }
+
+  .nkrn-control :where(button, [role="button"]) {
+    max-width: 100%;
+  }
+}
+
+/* Module navigation tabs use the same surface and contrast rules as the workspace. */
+.nkrn-control .q4-nav {
+  border: 1px solid var(--tygies-line) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #3c4043 !important;
+  padding: .65rem .9rem;
+  font-weight: 600;
+}
+
+.nkrn-control .q4-nav[aria-current],
+.nkrn-control .q4-nav[aria-current="page"],
+.nkrn-control .q4-nav:hover:enabled {
+  border-color: rgba(185, 28, 43, .42) !important;
+  background: #fbeaec !important;
+  color: var(--tygies-red) !important;
+}
+
+.nkrn-control .q4-nav:disabled {
+  color: #70757a !important;
+  background: #f1f3f4 !important;
+  cursor: not-allowed;
+}
+
+html[data-theme="dark"] .nkrn-control .q4-nav {
+  border-color: #3c4043 !important;
+  background: #292a2d !important;
+  color: #e8eaed !important;
+}
+
+html[data-theme="dark"] .nkrn-control .q4-nav[aria-current],
+html[data-theme="dark"] .nkrn-control .q4-nav[aria-current="page"],
+html[data-theme="dark"] .nkrn-control .q4-nav:hover:enabled {
+  border-color: rgba(239, 68, 68, .6) !important;
+  background: rgba(185, 28, 43, .18) !important;
+  color: #ffb4bc !important;
+}
+
+/* Tygies One global light-mode button contrast correction.
+   Keep existing button backgrounds/status colours; correct the foreground and
+   override legacy text-white utility classes inside buttons and button-like links. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control button,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control a[role="button"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control input[type="button"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control input[type="reset"] {
+  color: #202124 !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control button :is(span, strong, em, svg, small, label),
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control a[role="button"] :is(span, strong, em, svg, small) {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Filled action buttons retain high-contrast white text, including nested labels. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-red-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-emerald-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-green-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-blue-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-indigo-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-violet-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-orange-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#b91c2b]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#a31624]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#d7a31f]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#e7b42b]"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-red-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-emerald-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-green-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-blue-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-indigo-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-violet-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-orange-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#b91c2b]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#a31624]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#d7a31f]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control :is(
+  button, a[role="button"], input[type="button"], input[type="submit"]
+)[class*="bg-[#e7b42b]"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Native submit controls are primary actions throughout legacy modules. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control button[type="submit"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content .nkrn-control input[type="submit"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Dark-mode form-entry contrast: apply to every module and every request field.
+   Explicitly set text-fill as well as color so legacy utility classes cannot
+   leave typed text black on charcoal surfaces. */
+html.tygies-workspace-active[data-theme="dark"] .workspace-content .nkrn-control :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea,
+  .nkrn-input,
+  .nkrn-select
+) {
+  background-color: #202124 !important;
+  color: #f1f3f4 !important;
+  -webkit-text-fill-color: #f1f3f4 !important;
+  caret-color: #f1f3f4 !important;
+  border-color: #5f6368 !important;
+  color-scheme: dark;
+}
+
+html.tygies-workspace-active[data-theme="dark"] .workspace-content .nkrn-control :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  .nkrn-input
+)::placeholder {
+  color: #bdc1c6 !important;
+  -webkit-text-fill-color: #bdc1c6 !important;
+  opacity: 1 !important;
+}
+
+html.tygies-workspace-active[data-theme="dark"] .workspace-content .nkrn-control :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  .nkrn-input
+):disabled {
+  color: #bdc1c6 !important;
+  -webkit-text-fill-color: #bdc1c6 !important;
+  opacity: .75;
+}
+
+
+/* Tygies One light-mode button contrast hardening
+   Apply at the workspace boundary instead of relying on every legacy module
+   to place .nkrn-control around every control. Force nested labels/icons to
+   inherit the chosen foreground so Tailwind text utilities cannot override it. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="reset"], input[type="submit"]) {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="reset"], input[type="submit"]) :is(span, strong, em, small, label, svg, i) {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* Darker saturated action colours use white foreground text. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-red-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-rose-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-pink-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-green-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-emerald-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-teal-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-cyan-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-sky-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-blue-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-indigo-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-violet-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-purple-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#b91c2b]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#a31624]"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-red-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-rose-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-pink-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-green-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-emerald-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-teal-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-cyan-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-sky-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-blue-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-indigo-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-violet-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-purple-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#b91c2b]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#a31624]"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Yellow, amber and gold backgrounds need dark text for readable contrast. */
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-yellow-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-amber-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-orange-"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#d7a31f]"],
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#e7b42b]"] {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}
+
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-yellow-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-amber-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-orange-"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#d7a31f]"] *,
+html.tygies-workspace-active[data-theme="light"] .workspace-content :is(button, a[role="button"], input[type="button"], input[type="submit"])[class*="bg-[#e7b42b]"] * {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}

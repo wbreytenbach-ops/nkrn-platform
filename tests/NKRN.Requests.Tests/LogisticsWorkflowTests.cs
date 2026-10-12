@@ -185,7 +185,7 @@ public class LogisticsWorkflowTests
             result);
 
         Assert.Contains(
-            "Open NKRN Portal / Maak NKRN-portaal oop",
+            "Open Tygies 1 Portal / Maak Tygies 1-portaal oop",
             result);
 
         Assert.DoesNotContain(

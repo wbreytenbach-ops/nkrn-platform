@@ -19,9 +19,9 @@ namespace NKRN.API.Services
         public static string AddPortalButton(string body)
         {
             const string button = """
-                <div style="margin:24px 0;padding:16px 0;">
-                  <a href="https://portal.tygies.co.za" style="display:inline-block;background:#d7a31f;color:#171717;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold;padding:14px 22px;border-radius:6px;">Open NKRN Portal / Maak NKRN-portaal oop</a>
-                  <p style="font-family:Arial,sans-serif;font-size:12px;color:#666;">https://portal.tygies.co.za</p>
+                <div style="margin:24px 0;padding:18px 0 0;border-top:1px solid #e5e7eb;font-family:Arial,Helvetica,sans-serif;">
+                  <a href="https://portal.tygies.co.za" style="display:inline-block;background:#b91c2b;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold;padding:13px 20px;border-radius:7px;">Open Tygies 1 Portal / Maak Tygies 1-portaal oop</a>
+                  <p style="font-size:12px;color:#6b7280;margin-top:10px;">https://portal.tygies.co.za</p>
                 </div>
                 """;
             var position = body.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import "../nkrn-control.css";
 
@@ -19,6 +19,27 @@ interface LoggedInUser {
 
 export default function LoginPage() {
     const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
+        if (!token || !storedUser) return;
+
+        try {
+            JSON.parse(storedUser);
+            const requestedPath =
+                new URLSearchParams(window.location.search).get("next") ||
+                sessionStorage.getItem("tygies-return-path");
+            const safePath = requestedPath && requestedPath.startsWith("/") && !requestedPath.startsWith("//")
+                ? requestedPath
+                : "/";
+            sessionStorage.removeItem("tygies-return-path");
+            router.replace(safePath);
+        } catch {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+        }
+    }, [router]);
 
     const [email, setEmail] =
         useState("");
@@ -114,7 +135,14 @@ export default function LoginPage() {
                 )
             );
 
-            router.push("/");
+            const requestedPath =
+                new URLSearchParams(window.location.search).get("next") ||
+                sessionStorage.getItem("tygies-return-path");
+            const safePath = requestedPath && requestedPath.startsWith("/") && !requestedPath.startsWith("//")
+                ? requestedPath
+                : "/";
+            sessionStorage.removeItem("tygies-return-path");
+            router.replace(safePath);
         } catch (error) {
             console.error(
                 "Login error:",
@@ -132,7 +160,7 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="nkrn-control relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <main className="tygies-login-page relative min-h-screen overflow-hidden bg-zinc-950 text-white">
             {/* BACKGROUND */}
 
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -175,7 +203,7 @@ export default function LoginPage() {
                             </p>
 
                             <p className="mt-1 text-sm font-medium text-zinc-300">
-                                School Operations Platform
+                                Tygies One · School Operations Portal
                             </p>
                         </div>
                     </div>
@@ -214,12 +242,12 @@ export default function LoginPage() {
                                     Available now
                                 </p>
 
-                                <p className="mt-2 text-sm font-semibold text-zinc-200">
-                                    IT Desk
-                                </p>
-                                <p className="mt-2 text-sm font-semibold text-zinc-200">
-                                    Logistics
-                                </p>
+                                <ul className="mt-3 space-y-2 text-sm font-semibold text-zinc-200">
+                                    <li>IT-versoek / IT Request</li>
+                                    <li>Logistiek / Logistics</li>
+                                    <li>Funksieversorging / Event Support</li>
+                                    <li>Vervoer / Transport</li>
+                                </ul>
                             </div>
 
                             <div className="rounded-2xl border border-white/8 bg-white/3.5 p-4 backdrop-blur-xl">

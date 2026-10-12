@@ -1605,7 +1605,7 @@ function RequestRow({
                         key={`${request.requestID}-${item.code}`}
                         className="rounded-lg border border-white/8 bg-white/3 px-2.5 py-1.5 text-xs text-zinc-500"
                     >
-                        {item.requestedQuantity} Ã—{" "}
+                        {item.requestedQuantity} ×{" "}
                         {item.name}
                     </span>
                 ))}

@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import LogoutButton from "./components/LogoutButton";
 import { useLanguage } from "./language";
 import "./nkrn-control.css";
 
@@ -28,20 +26,9 @@ const modules: ModuleDefinition[] = [
     { key: "it", name: "IT Report", shortName: "IT", description: "Meld tegniese probleme aan en volg jou ondersteuningsversoeke.", status: "active", eyebrow: "Ondersteuning" },
     { key: "logistics", name: "Logistics", shortName: "LG", description: "Versoeke, aktiwiteite, instandhouding, lokale en die daaglikse werkplan.", status: "active", eyebrow: "Skoolbedryf" },
     { key: "funksieversorging", name: "Funksieversorging", shortName: "FV", description: "Berei funksies voor: versorging, tafeldekking en benodigdhede.", status: "active", eyebrow: "Funksievoorbereiding" },
-    { key: "transport", name: "Transport", shortName: "TR", description: "Vervoer en reisbeplanning.", status: "coming-soon", eyebrow: "Toekomstige module" },
+    { key: "transport", name: "Transport", shortName: "TR", description: "Vervoer en reisbeplanning.", status: "active", eyebrow: "Skoolvervoer" },
     { key: "curriculum", name: "Curriculum", shortName: "CU", description: "Kurrikulum en onderrigbeplanning.", status: "coming-soon", eyebrow: "Toekomstige module" },
 ];
-
-function getRoleName(roleID: number) {
-    switch (roleID) {
-        case 3:
-            return "Administrateur";
-        case 2:
-            return "Tegnikus";
-        default:
-            return "Personeellid";
-    }
-}
 
 function ModuleIcon({
     moduleKey,
@@ -149,6 +136,9 @@ export default function Home() {
     const [loading, setLoading] =
         useState(true);
 
+    const [transportConfirmOpen, setTransportConfirmOpen] =
+        useState(false);
+
     useEffect(() => {
         let cancelled = false;
 
@@ -223,6 +213,9 @@ export default function Home() {
         if (module.key === "logistics") {
             router.push("/Logistics");
         }
+        if (module.key === "transport") {
+            setTransportConfirmOpen(true);
+        }
     }
 
     if (loading) {
@@ -252,20 +245,7 @@ export default function Home() {
     return (
         <main className="nkrn-control q4-home min-h-screen text-white">
             <div className="relative z-10 mx-auto max-w-7xl px-5 py-8 sm:px-8">
-                <header className="nkrn-panel p-5 sm:p-7">
-                    <div className="flex flex-wrap items-center justify-between gap-5">
-                        <div className="flex items-center gap-4">
-                            <Image src="/wit-logo-tygies.png" alt="Laerskool Tygerpoort" width={130} height={52} priority />
-                            <div><p className="text-xs uppercase tracking-[.2em] text-[#e7b42b]">Laerskool Tygerpoort</p><h1 className="mt-2 text-2xl font-bold">Skoolbedryfsplatform</h1></div>
-                        </div>
-                        <div className="flex items-center gap-4"><div className="text-right text-sm"><p className="text-zinc-400">Aangemeld</p><p>{user.firstName} {user.lastName}</p><p className="text-zinc-400">{t(getRoleName(user.roleID))}</p></div><LogoutButton /></div>
-                    </div>
-                    <nav aria-label="Hoofnavigasie" className="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4">
-                        <button type="button" aria-current="page" className="q4-nav">Tuis</button>
-                        {modules.map(module => <button type="button" className="q4-nav" key={module.key} disabled={module.status !== "active"} onClick={() => openModule(module)}>{t(module.name)}</button>)}
-                    </nav>
-                </header>
-                <section className="py-12 sm:py-16">
+<section className="py-12 sm:py-16">
                     <p className="text-sm uppercase tracking-[.2em] text-[#e7b42b]">Jou skool. Jou werksruimte.</p>
                     <h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">Elke dag se werk,<br />op een plek.</h2>
                     <p className="mt-5 text-lg text-zinc-300">
@@ -273,15 +253,15 @@ export default function Home() {
                             ? `Welkom, ${user.firstName}. Kies ’n module om aan die gang te kom.`
                             : `Welcome, ${user.firstName}. Choose a module to get started.`}
                     </p>
-                    <p className="mt-6 inline-flex rounded-full border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-5 py-2 text-sm text-[#e7b42b]">
+                    <p className="q4-module-summary mt-6 inline-flex rounded-full border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-5 py-2 text-sm text-[#e7b42b]">
                         {language === "af"
-                            ? "3 aktiewe modules · 2 toekomstige modules"
-                            : "3 active modules · 2 future modules"}
+                            ? "4 aktiewe modules · 1 toekomstige module"
+                            : "4 active modules · 1 future module"}
                     </p>
                 </section>
                 <section aria-labelledby="active-modules">
                     <h2 id="active-modules" className="mb-5 text-xl font-semibold">Aktiewe modules</h2>
-                    <div className="grid gap-5 md:grid-cols-3">{modules.filter(module => module.status === "active").map(module => (
+                    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{modules.filter(module => module.status === "active").map(module => (
                         <button key={module.key} type="button" onClick={() => openModule(module)} className="q4-module nkrn-panel group p-7 text-left">
                             <div className="flex items-center justify-between"><ModuleIcon moduleKey={module.key} /><span className="text-xs text-[#e7b42b]">In werking</span></div>
                             <p className="mt-8 text-xs uppercase tracking-widest text-zinc-400">{t(module.eyebrow)}</p>
@@ -296,6 +276,47 @@ export default function Home() {
                         <button key={module.key} type="button" disabled className="flex cursor-not-allowed items-center justify-between rounded-2xl border border-white/10 bg-white/3 p-5 text-left"><span><span className="block font-semibold">{t(module.name)}</span><span className="mt-1 block text-sm text-zinc-400">{t(module.description)}</span></span><span className="ml-3 text-xs text-zinc-400">Binnekort</span></button>
                     ))}</div>
                 </section>
+                {transportConfirmOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+                        <section
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="transport-confirm-title"
+                            className="nkrn-panel w-full max-w-lg p-6 sm:p-8"
+                        >
+                            <p className="text-xs font-bold uppercase tracking-[.18em] text-[#e7b42b]">
+                                {language === "af" ? "Eksterne stelsel" : "External system"}
+                            </p>
+                            <h2 id="transport-confirm-title" className="mt-3 text-2xl font-bold">
+                                {language === "af" ? "Verlaat Tygies One?" : "Leave Tygies One?"}
+                            </h2>
+                            <p className="mt-4 leading-7 text-zinc-300">
+                                {language === "af"
+                                    ? "Transport maak ’n aparte stelsel oop wat buite Tygies One gehuisves word. Jy sal in ’n nuwe oortjie voortgaan; hierdie portaal bly oop."
+                                    : "Transport opens a separate system hosted outside Tygies One. It will open in a new tab, and this portal will remain open."}
+                            </p>
+                            <div className="mt-7 flex flex-wrap justify-end gap-3">
+                                <button
+                                    type="button"
+                                    className="rounded-xl border border-white/15 px-4 py-3 text-sm"
+                                    onClick={() => setTransportConfirmOpen(false)}
+                                >
+                                    {language === "af" ? "Kanselleer" : "Cancel"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="rounded-xl bg-[#d7a31f] px-4 py-3 text-sm font-bold text-black"
+                                    onClick={() => {
+                                        window.open("https://busbook.infinityfree.me/test/", "_blank", "noopener,noreferrer");
+                                        setTransportConfirmOpen(false);
+                                    }}
+                                >
+                                    {language === "af" ? "Gaan voort" : "Continue"}
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                )}
             </div>
         </main>
     );

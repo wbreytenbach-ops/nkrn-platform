@@ -278,6 +278,12 @@ function AdminDashboard() {
     const [showDone, setShowDone] =
         useState(false);
 
+    const [requestSearch, setRequestSearch] =
+        useState("");
+
+    const [requestStatus, setRequestStatus] =
+        useState("all");
+
     const [showUsers, setShowUsers] =
         useState(false);
 
@@ -1773,14 +1779,29 @@ setAdministrators(
                 )
         ).length;
 
-    const visibleRequests =
-        showDone
-            ? requests
-            : requests.filter(
-                  (request) =>
-                      request.statusID !==
-                      3
-              );
+    const visibleRequests = requests.filter((request) => {
+        const query = requestSearch.trim().toLocaleLowerCase();
+        const matchesSearch = !query || [
+            request.requestID,
+            request.title,
+            request.description,
+            request.priority,
+            request.statusName,
+            request.categoryName,
+            request.userName,
+            request.userEmail,
+            request.createdByName,
+            request.createdByEmail,
+        ].some((value) =>
+            String(value ?? "").toLocaleLowerCase().includes(query)
+        );
+        const matchesStatus =
+            requestStatus === "all" ||
+            String(request.statusID ?? "") === requestStatus;
+        const matchesCompletion =
+            showDone || request.statusID !== 3;
+        return matchesSearch && matchesStatus && matchesCompletion;
+    });
 
     // ========================================
     // PAGE
@@ -2532,6 +2553,55 @@ setAdministrators(
                                 ? "Versteek afgehandelde versoeke"
                                 : "Wys afgehandelde versoeke"}
                         </button>
+                    </div>
+
+                    {/* Request filters: search and status apply to the entire loaded queue. */}
+                    <div className={`${glassCard} mb-6 grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_260px]`}>
+                        <div>
+                            <label htmlFor="admin-request-search" className="mb-2 block text-sm font-medium text-zinc-200">
+                                Search requests
+                            </label>
+                            <input
+                                id="admin-request-search"
+                                type="search"
+                                value={requestSearch}
+                                onChange={(event) => setRequestSearch(event.target.value)}
+                                placeholder="Search title, requester, description, category or ID…"
+                                className={inputClass}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="admin-request-status" className="mb-2 block text-sm font-medium text-zinc-200">
+                                Filter by status
+                            </label>
+                            <select
+                                id="admin-request-status"
+                                value={requestStatus}
+                                onChange={(event) => setRequestStatus(event.target.value)}
+                                className={selectClass}
+                            >
+                                <option value="all">All statuses</option>
+                                {statuses.map((status) => (
+                                    <option key={status.statusID} value={String(status.statusID)}>
+                                        {itLabel(status.statusName)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        {(requestSearch || requestStatus !== "all") && (
+                            <div className="md:col-span-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setRequestSearch("");
+                                        setRequestStatus("all");
+                                    }}
+                                    className={buttonClass}
+                                >
+                                    Clear filters
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* ========================================
