@@ -1147,9 +1147,9 @@ export default function LogisticsManagementDashboard({
                 )}
 
                 <nav className="sticky top-2 z-20 mb-6 flex flex-wrap gap-2 rounded-2xl border border-white/15 bg-zinc-950/95 p-3" aria-label="Logistics-bestuur">{[["oorsig","Oorsig"],["versoeke","Versoeke"],["take","Take"],["werkplan","Werkplan"],["werkkaarte","Werkkaarte"]].map(([id,label]) => <a className="q4-nav" key={id} href={`#${id}`}>{label}</a>)}</nav>
-                <LogisticsBulkDelete isAdmin={user?.roleID === 3} onDeleted={loadLogistics} />
+                <LogisticsBulkDelete isAdmin={user?.roleID === 3 || user?.email?.trim().toLowerCase() === "logistiek@tygies.co.za"} onDeleted={loadLogistics} />
                 <LogisticsRequestInbox
-                    isAdmin={user?.roleID === 3}
+                    isAdmin={user?.roleID === 3 || user?.email?.trim().toLowerCase() === "logistiek@tygies.co.za"}
                     tasks={tasks}
                     departments={departments}
                     workers={workers}
