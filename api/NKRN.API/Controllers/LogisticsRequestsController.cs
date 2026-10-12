@@ -662,7 +662,16 @@ namespace NKRN.API.Controllers
         {
             var userID = GetLoggedInUserID();
             if (userID == null) return Unauthorized();
-            if (!await _context.Users.AnyAsync(u => u.UserID == userID && u.IsActive && u.RoleID == 3)) return Forbid();
+            if (!await _context.Users.AnyAsync(u =>
+                    u.UserID == userID &&
+                    u.IsActive &&
+                    (u.RoleID == 3 ||
+                     _context.ModulePermissions.Any(permission =>
+                         permission.UserID == u.UserID &&
+                         permission.ModuleKey.ToLower() == "logistics" &&
+                         permission.CanView &&
+                         permission.CanAdmin))))
+                return Forbid();
             var affected = await _context.Database.ExecuteSqlInterpolatedAsync($"""
                 UPDATE dbo.LogisticsRequests SET IsDeleted = 1, DeletedByUserID = {userID.Value},
                     DeletedAt = SYSUTCDATETIME(), UpdatedDate = SYSDATETIME()
