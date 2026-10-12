@@ -136,15 +136,16 @@ In SSMS on your PC, connect directly to **TYGIES-SQL**, using your authorised Wi
 1. Open the kit's `Database-Preflight.sql`, check the selected database, and execute it. Existing baseline tables must be present, and `DuplicateJobCardDates` must be zero. Missing upgrade columns/tables identify updates that still need applying; missing baseline tables or IT scheduling fields need investigation before proceeding.
 2. Right-click Tygerpoort_ITDesk -> Tasks -> Back Up. Select **Full**, enable **Copy-only backup**, choose a new backup file in the SQL server's backup directory, and enable checksum/verification as available. Record the successful result. The destination belongs to TYGIES-SQL and must be writable by the SQL service.
 3. Restore this backup to a **new test database name**, for example `Tygerpoort_ITDesk_Q4Check_20260915` if that name is unused. In the restore dialog, ensure both the destination database and physical data/log file paths are different from production. Leave the existing production database intact.
-4. The release build also has its extracted package on your PC, beside the release ZIP, under `package\database`. Apply the following four scripts individually and in order to the restored **test** database first. Stop on the first error:
+4. The release build also has its extracted package on your PC, beside the release ZIP, under `package\database`. Apply the following five scripts individually and in order to the restored **test** database first. Stop on the first error:
 
    - `20260811_AddUsersIsActive.sql`
    - `20260913_LogisticsAutomation.sql`
    - `20260914_Funksieversorging.sql`
    - `20260915_AddRequestCreatedByUserID.sql`
+   - `20261012_GrantLogisticsAdminToLogistiek.sql`
 
 5. Run the preflight again. Verify all upgrade fields/tables exist, the daily-card unique index is present, and duplicate daily-card dates remain zero. Compare request counts and original requester ownership with the pre-migration test copy. The requester migration fills CreatedByUserID without changing UserID.
-6. After successful test-copy verification, take a fresh copy-only production backup. Select **Tygerpoort_ITDesk** explicitly in SSMS and apply the same four scripts, individually, in the same order. Run the preflight again. Proceed to the application switch only after successful SQL results.
+6. After successful test-copy verification, take a fresh copy-only production backup. Select **Tygerpoort_ITDesk** explicitly in SSMS and apply the same five scripts, individually, in the same order. Run the preflight again. Proceed to the application switch only after successful SQL results.
 
 These scripts extend the existing schema. They do not create the original Logistics system or import Google Form history. Do not recreate the live database or run older EF baseline migrations as a substitute. A full database restore is not the normal application rollback, since it can discard requests submitted after the backup.
 
