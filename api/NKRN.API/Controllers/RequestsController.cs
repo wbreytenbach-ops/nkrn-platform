@@ -398,7 +398,7 @@ namespace NKRN.API.Controllers
                 var subject = $"New IT Request #{request.RequestID} - {request.Title}";
                 var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ??
                     "https://portal.tygies.co.za").TrimEnd('/');
-                var requestUrl = $"{frontendBaseUrl}/Admin?requestId={request.RequestID}";
+                var requestUrl = $"{frontendBaseUrl}/Tech?requestId={request.RequestID}";
                 var encodedRequestUrl = WebUtility.HtmlEncode(requestUrl);
                 var body = $"""
                     <html>
