@@ -298,6 +298,11 @@ function AdminDashboard() {
         let cancelled = false;
 
         async function initialiseDashboard() {
+            const linkedRequestID = new URLSearchParams(window.location.search).get("requestId");
+            if (linkedRequestID && /^\d+$/.test(linkedRequestID)) {
+                setRequestSearch(linkedRequestID);
+            }
+
             const storedUser =
                 localStorage.getItem("user");
 
