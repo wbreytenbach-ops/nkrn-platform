@@ -374,9 +374,20 @@ namespace NKRN.API.Controllers
                     .Select(u => u.Email)
                     .ToListAsync();
 
-                var recipients = administratorEmails.Append(requester.Email)
+                var jaronEmails = await _context.Users
+                    .Where(u => u.IsActive &&
+                                u.FirstName != null &&
+                                u.FirstName.Trim().ToLower() == "jaron" &&
+                                u.Email != null &&
+                                u.Email.Trim() != "")
+                    .Select(u => u.Email)
+                    .ToListAsync();
+
+                var recipients = administratorEmails
+                    .Concat(jaronEmails)
+                    .Append(requester.Email)
                     .Where(email => !string.IsNullOrWhiteSpace(email))
-                    .Select(email => email.Trim())
+                    .Select(email => email!.Trim())
                     .Distinct(StringComparer.OrdinalIgnoreCase);
 
                 var categoryName = await _context.Categories
