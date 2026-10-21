@@ -272,6 +272,9 @@ function AdminDashboard() {
     const [savingID, setSavingID] =
         useState<number | null>(null);
 
+    const [deletingRequestID, setDeletingRequestID] =
+        useState<number | null>(null);
+
     const [commentSavingID, setCommentSavingID] =
         useState<number | null>(null);
 
@@ -1442,6 +1445,72 @@ setAdministrators(
             );
         } finally {
             setSavingID(null);
+        }
+    }
+
+    // ========================================
+    // DELETE IT REQUEST
+    // ADMIN ONLY
+    // ========================================
+
+    async function deleteRequest(request: RequestItem) {
+        const confirmed = window.confirm(
+            language === "af"
+                ? `Wil jy IT-versoek #${request.requestID} permanent verwyder? Hierdie aksie kan nie ontdoen word nie.`
+                : `Permanently delete IT request #${request.requestID}? This cannot be undone.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setDeletingRequestID(request.requestID);
+            setError("");
+            setSuccessMessage("");
+
+            const response = await fetch(
+                `${API_URL}/api/Requests/${request.requestID}`,
+                {
+                    method: "DELETE",
+                    headers: getAuthHeaders(),
+                }
+            );
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error(
+                        language === "af"
+                            ? "Jy het nie toestemming om hierdie versoek te verwyder nie."
+                            : "You are not authorised to delete this request."
+                    );
+                }
+                throw new Error(
+                    language === "af"
+                        ? "Die versoek kon nie verwyder word nie."
+                        : "The request could not be deleted."
+                );
+            }
+
+            setRequests(current => current.filter(
+                item => item.requestID !== request.requestID
+            ));
+            setComments(current => {
+                const next = { ...current };
+                delete next[request.requestID];
+                return next;
+            });
+            setSuccessMessage(
+                language === "af"
+                    ? `IT-versoek #${request.requestID} is verwyder.`
+                    : `IT request #${request.requestID} was deleted.`
+            );
+        } catch (deleteError) {
+            setError(
+                deleteError instanceof Error
+                    ? deleteError.message
+                    : (language === "af" ? "Verwydering het misluk." : "Deletion failed.")
+            );
+        } finally {
+            setDeletingRequestID(null);
         }
     }
 
@@ -2700,6 +2769,16 @@ setAdministrators(
                                                                 itLabel(request.priority)
                                                             }
                                                         </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteRequest(request)}
+                                                            disabled={deletingRequestID === request.requestID}
+                                                            className="rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            {deletingRequestID === request.requestID
+                                                                ? (language === "af" ? "Verwyder…" : "Deleting…")
+                                                                : (language === "af" ? "Verwyder" : "Delete")}
+                                                        </button>
                                                     </div>
 
                                                     <h3 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
