@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../language";
 import {
     completeAiHelp,
@@ -23,11 +23,11 @@ interface Props {
     onLogRequest?: (sessionID: string | null) => void | Promise<void>;
 }
 
-const priorityLabel: Record<string, string> = {
-    Low: "Laag",
-    Medium: "Medium",
-    High: "Hoog",
-    Critical: "Kritiek",
+const priorityLabel: Record<string, Record<"en" | "af", string>> = {
+    Low: { en: "Low", af: "Laag" },
+    Medium: { en: "Medium", af: "Medium" },
+    High: { en: "High", af: "Hoog" },
+    Critical: { en: "Critical", af: "Kritiek" },
 };
 
 export default function ItAiAssistant({
@@ -43,44 +43,68 @@ export default function ItAiAssistant({
     onLogRequest,
 }: Props) {
     const { language } = useLanguage();
+    const requestIdRef = useRef(0);
     const [loading, setLoading] = useState(false);
     const [savingOutcome, setSavingOutcome] = useState(false);
     const [result, setResult] = useState<AiTriageResult | null>(null);
+    const [resultLanguage, setResultLanguage] = useState<"en" | "af" | null>(null);
+    const visibleResult = resultLanguage === language ? result : null;
     const [error, setError] = useState("");
     const [responseText, setResponseText] = useState("");
 
-    const isCritical = result?.suggestedPriority === "Critical";
+    useEffect(() => {
+        // Invalidate any in-flight analysis started in the previous language.
+        requestIdRef.current += 1;
+    }, [language]);
+
+    const isCritical = visibleResult?.suggestedPriority === "Critical";
 
     const intro = useMemo(() => {
         if (moduleKey === "Logistics") {
-            return "Beskryf wat fout is of wat benodig word. NKRN bepaal die waarskynlike soort versoek en prioriteit.";
+            return language === "en"
+                ? "Describe what is wrong or what is needed. NKRN estimates the likely request type and priority."
+                : "Beskryf wat fout is of wat benodig word. NKRN bepaal die waarskynlike soort versoek en prioriteit.";
         }
 
         if (moduleKey === "Funksieversorging") {
-            return "NKRN kan die besonderhede nagaan voordat jy die versoek indien.";
+            return language === "en"
+                ? "NKRN can review the details before you submit the request."
+                : "NKRN kan die besonderhede nagaan voordat jy die versoek indien.";
         }
 
-        return "Laat NKRN eers die probleem ontleed en probeer help.";
-    }, [moduleKey]);
+        return language === "en"
+            ? "Let NKRN analyse the problem and try to help first."
+            : "Laat NKRN eers die probleem ontleed en probeer help.";
+    }, [language, moduleKey]);
 
     async function analyse() {
         if (description.trim().length < 5) {
-            setError("Beskryf eers waarmee jy hulp nodig het.");
+            setError(
+                language === "en"
+                    ? "Please describe what you need help with first."
+                    : "Beskryf eers waarmee jy hulp nodig het."
+            );
             return;
         }
+
+        const requestId = ++requestIdRef.current;
+        const requestedLanguage = language;
 
         setLoading(true);
         setError("");
 
         try {
             const response = await startAiHelp({
-                language,
+                language: requestedLanguage,
                 moduleKey,
                 description,
                 additionalContext,
             });
 
+            if (requestIdRef.current !== requestId) return;
+
             setResult(response);
+            setResultLanguage(requestedLanguage);
             onSessionStarted?.(response.sessionID);
 
             if (response.suggestedTitle) {
@@ -95,12 +119,19 @@ export default function ItAiAssistant({
                 onSuggestedCategory?.(response.suggestedCategory);
             }
         } catch (requestError) {
+            if (requestIdRef.current !== requestId) return;
+
             console.error("NKRN AI help failed.", requestError);
             setError(
-                "NKRN AI is nie tans beskikbaar nie. Jy kan steeds die versoek indien."
+                requestedLanguage === "en"
+                    ? "NKRN AI is currently unavailable. You can still submit the request."
+                    : "NKRN AI is nie tans beskikbaar nie. Jy kan steeds die versoek indien."
             );
         } finally {
-            setLoading(false);
+            // An older request must not change a newer request's loading state.
+            if (requestIdRef.current === requestId) {
+                setLoading(false);
+            }
         }
     }
 
@@ -124,7 +155,11 @@ export default function ItAiAssistant({
             onResolved?.();
         } catch (outcomeError) {
             console.error("Unable to save AI outcome.", outcomeError);
-            setError("Die uitkoms kon nie gestoor word nie. Probeer weer.");
+            setError(
+                language === "en"
+                    ? "The outcome could not be saved. Please try again."
+                    : "Die uitkoms kon nie gestoor word nie. Probeer weer."
+            );
         } finally {
             setSavingOutcome(false);
         }
@@ -148,7 +183,11 @@ export default function ItAiAssistant({
             await onLogRequest?.(result.sessionID);
         } catch (outcomeError) {
             console.error("Unable to continue AI request flow.", outcomeError);
-            setError("Die versoek kon nie vanaf die AI-hulp voortgaan nie.");
+            setError(
+                language === "en"
+                    ? "The request could not continue from AI help."
+                    : "Die versoek kon nie vanaf die AI-hulp voortgaan nie."
+            );
         } finally {
             setSavingOutcome(false);
         }
@@ -160,10 +199,10 @@ export default function ItAiAssistant({
         if (!value) return;
 
         const resolvedWords =
-            /\b(reggekom|reg gekom|opgelos|werk nou|dit werk|sukses|dankie)\b/i;
+            /\b(resolved|fixed|working now|it works|works now|sorted|thank you|thanks|reggekom|reg gekom|opgelos|werk nou|dit werk|sukses|dankie)\b/i;
 
         const logWords =
-            /\b(werk nie|nie reggekom|nie opgelos|log|dien|versoek|help nog|steeds nie)\b/i;
+            /\b(still not working|does not work|not fixed|not resolved|still broken|log a request|submit a request|need more help|werk nie|nie reggekom|nie opgelos|dien|versoek|help nog|steeds nie)\b/i;
 
         if (logWords.test(value)) {
             await logRequest(responseText);
@@ -176,7 +215,9 @@ export default function ItAiAssistant({
         }
 
         setError(
-            "Ek is nie seker watter uitkoms jy bedoel nie. Kies asseblief een van die twee opsies hieronder."
+            language === "en"
+                ? "I am not sure which outcome you mean. Please choose one of the two options below."
+                : "Ek is nie seker watter uitkoms jy bedoel nie. Kies asseblief een van die twee opsies hieronder."
         );
     }
 
@@ -185,24 +226,24 @@ export default function ItAiAssistant({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p className="text-sm font-semibold text-white">
-                        NKRN AI-hulp
+                        {language === "en" ? "NKRN AI Help" : "NKRN AI-hulp"}
                     </p>
-                    <p className="mt-1 text-xs leading-5 text-white">
-                        {intro}
-                    </p>
+                    <p className="mt-1 text-xs leading-5 text-white">{intro}</p>
                 </div>
 
                 <button
                     type="button"
                     onClick={analyse}
-                    disabled={
-                        disabled ||
-                        loading ||
-                        description.trim().length < 5
-                    }
+                    disabled={disabled || loading || description.trim().length < 5}
                     className="nkrn-ai-primary shrink-0 rounded-xl border border-[#e7b42b] bg-[#e7b42b] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:border-[#f2c94c] hover:bg-[#f2c94c] disabled:cursor-not-allowed disabled:border-[#9ca3af] disabled:bg-[#d1d5db] disabled:text-white disabled:opacity-100"
                 >
-                    {loading ? "Besig om na te gaan…" : "Kry AI-hulp"}
+                    {loading
+                        ? language === "en"
+                            ? "Checking…"
+                            : "Besig om na te gaan…"
+                        : language === "en"
+                          ? "Get AI help"
+                          : "Kry AI-hulp"}
                 </button>
             </div>
 
@@ -212,19 +253,17 @@ export default function ItAiAssistant({
                 </p>
             )}
 
-            {result && (
+            {visibleResult && (
                 <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-                    <p className="text-sm leading-6 text-white">
-                        {result.userMessage}
-                    </p>
+                    <p className="text-sm leading-6 text-white">{visibleResult.userMessage}</p>
 
-                    {result.troubleshootingSteps.length > 0 && (
+                    {visibleResult.troubleshootingSteps.length > 0 && (
                         <div>
                             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-white">
-                                Probeer dit
+                                {language === "en" ? "Try these steps" : "Probeer dit"}
                             </p>
                             <ol className="space-y-2 text-sm text-white">
-                                {result.troubleshootingSteps.map((step, index) => (
+                                {visibleResult.troubleshootingSteps.map((step, index) => (
                                     <li key={`${index}-${step}`} className="flex gap-3">
                                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-white">
                                             {index + 1}
@@ -238,37 +277,51 @@ export default function ItAiAssistant({
 
                     <div className="grid gap-3 text-xs sm:grid-cols-2">
                         <div className="rounded-xl border border-white/10 bg-black/10 p-3">
-                            <span className="text-white">Kategorie</span>
+                            <span className="text-white">
+                                {language === "en" ? "Category" : "Kategorie"}
+                            </span>
                             <p className="mt-1 text-sm text-white">
-                                {result.suggestedCategory ??
+                                {visibleResult.suggestedCategory ??
                                     (moduleKey === "IT"
-                                        ? "IT-span sal klassifiseer"
-                                        : "Word by indiening bevestig")}
+                                        ? language === "en"
+                                            ? "IT team will classify this"
+                                            : "IT-span sal klassifiseer"
+                                        : language === "en"
+                                          ? "Confirmed when submitted"
+                                          : "Word by indiening bevestig")}
                             </p>
                         </div>
 
                         <div className="rounded-xl border border-white/10 bg-black/10 p-3">
-                            <span className="text-white">Prioriteit</span>
+                            <span className="text-white">
+                                {language === "en" ? "Priority" : "Prioriteit"}
+                            </span>
                             <p
                                 className={`mt-1 text-sm ${
                                     isCritical ? "font-semibold text-white" : "text-white"
                                 }`}
                             >
-                                {priorityLabel[result.suggestedPriority] ??
-                                    result.suggestedPriority}
+                                {priorityLabel[visibleResult.suggestedPriority]?.[language] ??
+                                    visibleResult.suggestedPriority}
                             </p>
                         </div>
                     </div>
 
                     <div className="rounded-xl border border-white/10 bg-black/10 p-3">
                         <label className="text-xs text-white">
-                            Jy kan ook antwoord wat gebeur het
+                            {language === "en"
+                                ? "You can also describe what happened"
+                                : "Jy kan ook antwoord wat gebeur het"}
                         </label>
                         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                             <input
                                 value={responseText}
                                 onChange={(event) => setResponseText(event.target.value)}
-                                placeholder="bv. Ek het reggekom / Dit werk nog nie"
+                                placeholder={
+                                    language === "en"
+                                        ? "e.g. It is fixed / It still does not work"
+                                        : "bv. Ek het reggekom / Dit werk nog nie"
+                                }
                                 className="nkrn-input min-w-0 flex-1 rounded-xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white placeholder:text-white outline-none"
                             />
                             <button
@@ -277,7 +330,7 @@ export default function ItAiAssistant({
                                 disabled={savingOutcome || !responseText.trim()}
                                 className="rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-white disabled:opacity-50"
                             >
-                                Stuur antwoord
+                                {language === "en" ? "Send response" : "Stuur antwoord"}
                             </button>
                         </div>
                     </div>
@@ -285,16 +338,26 @@ export default function ItAiAssistant({
                     <div className="flex flex-col gap-2 sm:flex-row">
                         <button
                             type="button"
-                            onClick={() => void resolved("Ek het reggekom.")}
+                            onClick={() =>
+                                void resolved(
+                                    language === "en" ? "It is fixed." : "Ek het reggekom."
+                                )
+                            }
                             disabled={savingOutcome}
                             className="rounded-xl border border-green-400/20 bg-green-500/10 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
                         >
-                            Ek het reggekom
+                            {language === "en" ? "It is fixed" : "Ek het reggekom"}
                         </button>
 
                         <button
                             type="button"
-                            onClick={() => void logRequest("Dit werk steeds nie. Dien die versoek in.")}
+                            onClick={() =>
+                                void logRequest(
+                                    language === "en"
+                                        ? "It still does not work. Submit the request."
+                                        : "Dit werk steeds nie. Dien die versoek in."
+                                )
+                            }
                             disabled={savingOutcome}
                             className={`rounded-xl border px-4 py-2.5 text-sm font-medium disabled:opacity-50 ${
                                 isCritical
@@ -303,8 +366,12 @@ export default function ItAiAssistant({
                             }`}
                         >
                             {isCritical
-                                ? "Dien dringende versoek in"
-                                : "Dit werk steeds nie – dien versoek in"}
+                                ? language === "en"
+                                    ? "Submit urgent request"
+                                    : "Dien dringende versoek in"
+                                : language === "en"
+                                  ? "It still does not work – submit request"
+                                  : "Dit werk steeds nie – dien versoek in"}
                         </button>
                     </div>
                 </div>
