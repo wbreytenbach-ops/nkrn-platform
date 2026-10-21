@@ -444,6 +444,50 @@ namespace NKRN.API.Controllers
         }
 
         // ========================================
+        // DELETE REQUEST
+        // ADMIN ONLY
+        // ========================================
+
+        [Authorize(Roles = "3")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteRequest(int id)
+        {
+            var loggedInUserID = GetLoggedInUserID();
+            if (loggedInUserID == null)
+                return Unauthorized();
+
+            var isActiveAdmin = await _context.Users.AnyAsync(u =>
+                u.UserID == loggedInUserID.Value &&
+                u.IsActive &&
+                u.RoleID == 3);
+
+            if (!isActiveAdmin)
+                return Forbid();
+
+            var request = await _context.Requests
+                .FirstOrDefaultAsync(r => r.RequestID == id);
+
+            if (request == null)
+                return NotFound($"Request #{id} was not found.");
+
+            // Remove dependent comments explicitly so deletion does not
+            // depend on database cascade-delete configuration.
+            var comments = await _context.RequestComments
+                .Where(c => c.RequestID == id)
+                .ToListAsync();
+
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            _context.RequestComments.RemoveRange(comments);
+            _context.Requests.Remove(request);
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return NoContent();
+        }
+
+        // ========================================
         // UPDATE REQUEST
         // TECHNICIAN + ADMIN ONLY
         // ========================================
