@@ -310,7 +310,8 @@ function AdminDashboard() {
                 localStorage.getItem("token");
 
             if (!storedUser || !token) {
-                router.replace("/login");
+                const returnPath = window.location.pathname + window.location.search;
+                router.replace(`/login?next=${encodeURIComponent(returnPath)}`);
                 return;
             }
 
