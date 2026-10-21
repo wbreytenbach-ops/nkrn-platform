@@ -385,6 +385,10 @@ namespace NKRN.API.Controllers
                     .FirstOrDefaultAsync() ?? "Unknown";
 
                 var subject = $"New IT Request #{request.RequestID} - {request.Title}";
+                var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ??
+                    "https://portal.tygies.co.za").TrimEnd('/');
+                var requestUrl = $"{frontendBaseUrl}/Admin?requestId={request.RequestID}";
+                var encodedRequestUrl = WebUtility.HtmlEncode(requestUrl);
                 var body = $"""
                     <html>
                     <body style="font-family: Arial, sans-serif; color: #222;">
@@ -402,6 +406,7 @@ namespace NKRN.API.Controllers
                         <p><strong>Category:</strong> {WebUtility.HtmlEncode(categoryName)}</p>
                         <p><strong>Status:</strong> Logged</p>
                         <p><strong>Created:</strong> {request.CreatedDate}</p>
+                        <p><a href="{encodedRequestUrl}" style="display:inline-block;padding:10px 16px;background:#991b1b;color:#fff;text-decoration:none;border-radius:6px;">Open request in Tygies One</a></p>
                         <hr />
                         <p>The requester can sign in to view this request under My Requests.
                         Status updates will be emailed to the requester.</p>
