@@ -3,7 +3,7 @@
 import { itLabel } from "../it-labels";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../language";
 
@@ -83,6 +83,7 @@ export default function TechPage() {
 
     const [selectedRequest, setSelectedRequest] =
         useState<RequestModel | null>(null);
+    const deepLinkOpened = useRef(false);
 
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState("");
@@ -119,7 +120,8 @@ export default function TechPage() {
             const storedUser = localStorage.getItem("user");
 
             if (!token || !storedUser) {
-                router.replace("/login");
+                const returnPath = window.location.pathname + window.location.search;
+                router.replace(`/login?next=${encodeURIComponent(returnPath)}`);
                 return;
             }
 
@@ -491,6 +493,23 @@ export default function TechPage() {
     // =========================================================
     // FILTERED REQUESTS
     // =========================================================
+
+    useEffect(() => {
+        if (deepLinkOpened.current || requests.length === 0) return;
+
+        const linkedRequestID = new URLSearchParams(window.location.search).get("requestId");
+        if (!linkedRequestID || !/^\d+$/.test(linkedRequestID)) return;
+
+        const linkedRequest = requests.find(
+            (request) => request.requestID === Number(linkedRequestID)
+        );
+
+        if (linkedRequest) {
+            deepLinkOpened.current = true;
+            setSearch(linkedRequestID);
+            void selectRequest(linkedRequest);
+        }
+    }, [requests]);
 
     const filteredRequests = useMemo(() => {
         return requests.filter((request) => {
