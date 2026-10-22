@@ -69,7 +69,9 @@ namespace NKRN.API.Controllers
             var users = await _context.Users
                 .Where(u =>
                     u.IsActive &&
-                    (u.RoleID == 2 || u.RoleID == 3))
+                    (u.RoleID == 2 || u.RoleID == 3 ||
+                     (u.FirstName != null &&
+                      u.FirstName.Trim().ToLower() == "jaron")))
                 .OrderBy(u => u.FirstName)
                 .ThenBy(u => u.LastName)
                 .ToListAsync();
