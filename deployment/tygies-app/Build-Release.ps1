@@ -223,7 +223,8 @@ try {
     Write-Host 'RELEASE PACKAGE READY' -ForegroundColor Green
     Write-Host "ZIP: $releaseZip"
     Write-Host "SHA256: $hash"
-    Write-Host 'Next: deploy this single ZIP with deployment\tygies-app\Deploy-FrontendRelease.ps1.'
+    Write-Host 'Next: install the API with Deploy-Release.ps1, then deploy the frontend from this same ZIP with Deploy-FrontendRelease.ps1.'
+    Write-Host "SHA256 file: $releaseZip.sha256.txt"
     Write-Host 'No files on the live server or database have been changed by this script.'
 }
 finally {
