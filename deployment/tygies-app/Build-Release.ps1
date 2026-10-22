@@ -214,6 +214,11 @@ try {
     # ZipFile includes .next and all runtime files. No source/config overlays from the live server.
     [System.IO.Compression.ZipFile]::CreateFromDirectory($packageRoot, $releaseZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
     $hash = (Get-FileHash -LiteralPath $releaseZip -Algorithm SHA256).Hash
+    [System.IO.File]::WriteAllText(
+        ($releaseZip + '.sha256.txt'),
+        ($hash + '  ' + [System.IO.Path]::GetFileName($releaseZip) + [Environment]::NewLine),
+        [System.Text.UTF8Encoding]::new($false)
+    )
     Write-Host ''
     Write-Host 'RELEASE PACKAGE READY' -ForegroundColor Green
     Write-Host "ZIP: $releaseZip"
