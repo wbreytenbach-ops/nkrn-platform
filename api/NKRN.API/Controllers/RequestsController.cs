@@ -60,18 +60,7 @@ namespace NKRN.API.Controllers
             IQueryable<Request> query = _context.Requests;
 
             if (!isTechnicianOrAdmin)
-            {
-                var isJaron = string.Equals(
-                    loggedInUser.FirstName?.Trim(),
-                    "Jaron",
-                    StringComparison.OrdinalIgnoreCase);
-
-                if (!isJaron)
-                    return Forbid();
-
-                // Jaron can see only IT requests explicitly assigned to this account.
-                query = query.Where(r => r.AssignedTo == loggedInUserID.Value);
-            }
+                return Forbid();
 
             var requests = await query
                 .OrderByDescending(r => r.CreatedDate)
@@ -164,16 +153,8 @@ namespace NKRN.API.Controllers
                 User.IsInRole("2") ||
                 User.IsInRole("3");
 
-            var isJaronAssignedRequest = request.AssignedTo == loggedInUserID.Value &&
-                await _context.Users.AnyAsync(u =>
-                    u.UserID == loggedInUserID.Value &&
-                    u.IsActive &&
-                    u.FirstName != null &&
-                    u.FirstName.Trim().ToLower() == "jaron");
-
             if (!isTechnicianOrAdmin &&
-                request.UserID != loggedInUserID.Value &&
-                !isJaronAssignedRequest)
+                request.UserID != loggedInUserID.Value)
             {
                 return Forbid();
             }
@@ -409,17 +390,7 @@ namespace NKRN.API.Controllers
                     .Select(u => u.Email)
                     .ToListAsync();
 
-                var jaronEmails = await _context.Users
-                    .Where(u => u.IsActive &&
-                                u.FirstName != null &&
-                                u.FirstName.Trim().ToLower() == "jaron" &&
-                                u.Email != null &&
-                                u.Email.Trim() != "")
-                    .Select(u => u.Email)
-                    .ToListAsync();
-
                 var recipients = administratorEmails
-                    .Concat(jaronEmails)
                     .Append(requester.Email)
                     .Where(email => !string.IsNullOrWhiteSpace(email))
                     .Select(email => email!.Trim())
