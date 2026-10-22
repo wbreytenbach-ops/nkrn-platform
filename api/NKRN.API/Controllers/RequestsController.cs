@@ -42,11 +42,38 @@ namespace NKRN.API.Controllers
         // TECHNICIAN + ADMIN ONLY
         // ========================================
 
-        [Authorize(Roles = "2,3")]
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Request>>> GetRequests()
         {
-            var requests = await _context.Requests
+            var loggedInUserID = GetLoggedInUserID();
+            if (loggedInUserID == null)
+                return Unauthorized();
+
+            var loggedInUser = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserID == loggedInUserID.Value && u.IsActive);
+
+            if (loggedInUser == null)
+                return Unauthorized();
+
+            var isTechnicianOrAdmin = loggedInUser.RoleID == 2 || loggedInUser.RoleID == 3;
+            IQueryable<Request> query = _context.Requests;
+
+            if (!isTechnicianOrAdmin)
+            {
+                var isJaron = string.Equals(
+                    loggedInUser.FirstName?.Trim(),
+                    "Jaron",
+                    StringComparison.OrdinalIgnoreCase);
+
+                if (!isJaron)
+                    return Forbid();
+
+                // Jaron can see only IT requests explicitly assigned to this account.
+                query = query.Where(r => r.AssignedTo == loggedInUserID.Value);
+            }
+
+            var requests = await query
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
@@ -137,8 +164,16 @@ namespace NKRN.API.Controllers
                 User.IsInRole("2") ||
                 User.IsInRole("3");
 
+            var isJaronAssignedRequest = request.AssignedTo == loggedInUserID.Value &&
+                await _context.Users.AnyAsync(u =>
+                    u.UserID == loggedInUserID.Value &&
+                    u.IsActive &&
+                    u.FirstName != null &&
+                    u.FirstName.Trim().ToLower() == "jaron");
+
             if (!isTechnicianOrAdmin &&
-                request.UserID != loggedInUserID.Value)
+                request.UserID != loggedInUserID.Value &&
+                !isJaronAssignedRequest)
             {
                 return Forbid();
             }
