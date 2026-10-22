@@ -2496,8 +2496,7 @@ setAdministrators(
                                                                     {systemUser.roleID ===
                                                                     3
                                                                         ? "Administrateur"
-                                                                        : (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                                                        : systemUser.roleID === 2
                                                                         ? "Tegnikus"
                                                                         : "Personeellid"}
                                                                 </span>
