@@ -331,15 +331,18 @@ export default function TechPage() {
         [getHeaders]
     );
 
-    async function selectRequest(request: RequestModel) {
-        setSelectedRequest(request);
-        setEditAssignedTo(request.assignedTo);
-        setEditStatusID(request.statusID);
-        setEditPriority(request.priority);
-        setNewComment("");
+    const selectRequest = useCallback(
+        async (request: RequestModel) => {
+            setSelectedRequest(request);
+            setEditAssignedTo(request.assignedTo);
+            setEditStatusID(request.statusID);
+            setEditPriority(request.priority);
+            setNewComment("");
 
-        await loadComments(request.requestID);
-    }
+            await loadComments(request.requestID);
+        },
+        [loadComments]
+    );
 
     // =========================================================
     // SAVE REQUEST
@@ -505,12 +508,17 @@ export default function TechPage() {
             (request) => request.requestID === Number(linkedRequestID)
         );
 
-        if (linkedRequest) {
+        if (!linkedRequest) return;
+
+        // Defer UI updates until after this effect completes.
+        const timer = window.setTimeout(() => {
             deepLinkOpened.current = true;
             setSearch(linkedRequestID);
             void selectRequest(linkedRequest);
-        }
-    }, [requests]);
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [requests, selectRequest]);
 
     const filteredRequests = useMemo(() => {
         return requests.filter((request) => {
