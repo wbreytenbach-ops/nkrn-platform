@@ -166,6 +166,14 @@ The current installer updates the API in place only. It saves an IIS configurati
 
 The API stage retains the existing production `web.config`, appsettings, token storage and application data with their existing permissions. Published API files are overlaid, and the API launch target is updated to `NKRN.API.dll` while existing environment variables and IIS custom configuration remain.
 
+After the API installation succeeds, deploy the matching frontend from the **same verified ZIP**. This restarts `AuroraFrontend` briefly, preserves the production `.env.local`, verifies the build ID and HTTP 200 health response, and restores the previous frontend automatically if its health check fails:
+
+```powershell
+& (Join-Path $kitRoot 'Deploy-FrontendRelease.ps1') -ZipPath $releaseZip -Session $session
+```
+
+Stop if either deployment script reports an error or rollback. Do not proceed to live checks until both the API and frontend deployments have succeeded.
+
 An installation error triggers an attempted application rollback. If rollback also errors, keep the output and inspect the saved deployment state before further changes. No database rollback is attempted automatically.
 
 ## 8. Check the live release
