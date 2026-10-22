@@ -407,8 +407,8 @@ function AdminDashboard() {
                         setTechnicians(
                             loadedUsers.filter(
                                 (systemUser) =>
-                                    systemUser.roleID ===
-                                    2
+                                    (systemUser.roleID === 2 ||
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
                             )
                         );
 
@@ -768,8 +768,8 @@ function AdminDashboard() {
                     setTechnicians(
                         updatedUsers.filter(
                             (systemUser) =>
-                                systemUser.roleID ===
-                                2
+                                (systemUser.roleID === 2 ||
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
                         )
                     );
 
@@ -981,8 +981,8 @@ function AdminDashboard() {
         )
         .filter(
             (systemUser) =>
-                systemUser.roleID ===
-                2
+                (systemUser.roleID === 2 ||
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
         )
 );
 setAdministrators(
@@ -1059,8 +1059,8 @@ setAdministrators(
                     setTechnicians(
                         updatedUsers.filter(
                             (systemUser) =>
-                                systemUser.roleID ===
-                                2
+                                (systemUser.roleID === 2 ||
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
                         )
                     );
 
@@ -2496,8 +2496,8 @@ setAdministrators(
                                                                     {systemUser.roleID ===
                                                                     3
                                                                         ? "Administrateur"
-                                                                        : systemUser.roleID ===
-                                                                          2
+                                                                        : (systemUser.roleID === 2 ||
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
                                                                         ? "Tegnikus"
                                                                         : "Personeellid"}
                                                                 </span>
