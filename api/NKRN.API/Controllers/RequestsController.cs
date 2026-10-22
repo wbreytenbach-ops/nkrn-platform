@@ -933,11 +933,6 @@ namespace NKRN.API.Controllers
 
                         if (assignedTechnician != null)
                         {
-                            var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ??
-                                "https://portal.tygies.co.za").TrimEnd('/');
-                            var requestUrl = $"{frontendBaseUrl}/Tech?requestId={existingRequest.RequestID}";
-                            var encodedRequestUrl = WebUtility.HtmlEncode(requestUrl);
-
                             var subject =
                                 $"IT Request #{existingRequest.RequestID} Assignment Updated";
 
@@ -954,8 +949,6 @@ namespace NKRN.API.Controllers
                                     <p>
                                         The assignment for this IT support request has been updated through the Tygerpoort IT Desk.
                                     </p>
-
-                                    <p><a href="{encodedRequestUrl}" style="display:inline-block;padding:10px 16px;background:#991b1b;color:#fff;text-decoration:none;border-radius:6px;">Open request in Tygies One</a></p>
 
                                     <hr />
 
@@ -1004,11 +997,6 @@ namespace NKRN.API.Controllers
                                     <hr />
 
                                     <p>
-                                        Please log in to the Tygerpoort IT Desk
-                                        to view and manage this request.
-                                    </p>
-
-                                    <p>
                                         <strong>Tygerpoort IT Desk</strong><br />
                                         Technical Support Portal
                                     </p>
@@ -1017,36 +1005,16 @@ namespace NKRN.API.Controllers
                                 </html>
                                 """;
 
-                            var jaronEmails = await _context.Users.AsNoTracking()
-                                .Where(u =>
-                                    u.IsActive &&
-                                    u.FirstName != null &&
-                                    u.FirstName.Trim().ToLower() == "jaron" &&
-                                    u.Email != null &&
-                                    u.Email.Trim() != "")
-                                .Select(u => u.Email!)
-                                .ToListAsync();
-
-                            var recipients = jaronEmails
-                                .Append(assignedTechnician.Email.Trim())
-                                .Distinct(StringComparer.OrdinalIgnoreCase)
-                                .ToList();
-
-                            foreach (var recipient in recipients)
+                            if (!string.IsNullOrWhiteSpace(assignedTechnician.Email))
                             {
-                                try
-                                {
-                                    await _emailService.SendEmailAsync(recipient, subject, body);
-                                }
-                                catch (Exception recipientException)
-                                {
-                                    Console.WriteLine(
-                                        $"Assignment notification failed for {recipient} on request #{existingRequest.RequestID}: {recipientException.Message}");
-                                }
-                            }
+                                await _emailService.SendEmailAsync(
+                                    assignedTechnician.Email.Trim(),
+                                    subject,
+                                    body);
 
-                            Console.WriteLine(
-                                $"Assignment notifications processed for request #{existingRequest.RequestID}. Assigned to {assignedTechnician.Email}.");
+                                Console.WriteLine(
+                                    $"Assignment notification sent to assigned user {assignedTechnician.Email} for request #{existingRequest.RequestID}.");
+                            }
                         }
                         else
                         {
@@ -1222,36 +1190,13 @@ namespace NKRN.API.Controllers
                                 </html>
                                 """;
 
-                            var jaronEmails = await _context.Users.AsNoTracking()
-                                .Where(u =>
-                                    u.IsActive &&
-                                    u.FirstName != null &&
-                                    u.FirstName.Trim().ToLower() == "jaron" &&
-                                    u.Email != null &&
-                                    u.Email.Trim() != "")
-                                .Select(u => u.Email!)
-                                .ToListAsync();
-
-                            var recipients = jaronEmails
-                                .Append(requester.Email.Trim())
-                                .Distinct(StringComparer.OrdinalIgnoreCase)
-                                .ToList();
-
-                            foreach (var recipient in recipients)
-                            {
-                                try
-                                {
-                                    await _emailService.SendEmailAsync(recipient, subject, body);
-                                }
-                                catch (Exception recipientException)
-                                {
-                                    Console.WriteLine(
-                                        $"Status notification failed for {recipient} on request #{existingRequest.RequestID}: {recipientException.Message}");
-                                }
-                            }
+                            await _emailService.SendEmailAsync(
+                                requester.Email.Trim(),
+                                subject,
+                                body);
 
                             Console.WriteLine(
-                                $"Status notifications processed for request #{existingRequest.RequestID}. New status: {statusName}");
+                                $"Status notification sent to requester {requester.Email} for request #{existingRequest.RequestID}. New status: {statusName}");
                         }
                         else
                         {
