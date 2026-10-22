@@ -28,6 +28,7 @@ public class FunksieversorgingRequestsController : ControllerBase
         "kultuur@tygies.co.za"
     };
     private readonly NkrnAiService _aiService;
+    private readonly ILogger<FunksieversorgingRequestsController> _logger;
 
     private static readonly HashSet<string> AllowedVenues =
         new(StringComparer.OrdinalIgnoreCase)
@@ -88,13 +89,15 @@ public class FunksieversorgingRequestsController : ControllerBase
         EmailService emailService,
         IConfiguration configuration,
         IWebHostEnvironment environment,
-        NkrnAiService aiService)
+        NkrnAiService aiService,
+        ILogger<FunksieversorgingRequestsController> logger)
     {
         _context = context;
         _emailService = emailService;
         _configuration = configuration;
         _environment = environment;
         _aiService = aiService;
+        _logger = logger;
     }
 
     [HttpGet("access")]
@@ -435,21 +438,35 @@ public class FunksieversorgingRequestsController : ControllerBase
             aiAnalysis,
             HttpContext.RequestAborted);
 
-        var notification = await TrySendNotificationAsync(
-            requestID,
-            requester.FirstName,
-            requester.LastName,
-            requester.Email,
-            request.NeededDate.Date,
-            functionName,
-            venue.Equals("Ander", StringComparison.OrdinalIgnoreCase)
-                ? otherVenue ?? "Ander"
-                : venue,
-            request.Attendance,
-            notes,
-            leadTimeWarning,
-            resolvedItems
-        );
+        (DateTime? SentAt, string? Error) notification = (null, null);
+        try
+        {
+            notification = await TrySendNotificationAsync(
+                requestID,
+                requester.FirstName,
+                requester.LastName,
+                requester.Email,
+                request.NeededDate.Date,
+                functionName,
+                venue.Equals("Ander", StringComparison.OrdinalIgnoreCase)
+                    ? otherVenue ?? "Ander"
+                    : venue,
+                request.Attendance,
+                notes,
+                leadTimeWarning,
+                resolvedItems
+            );
+        }
+        catch (Exception ex)
+        {
+            // The request is already committed. A notification or notification-audit
+            // failure must not make the staff member believe that submission failed.
+            _logger.LogError(
+                ex,
+                "Funksieversorging request {RequestID} was saved, but post-save notification processing failed.",
+                requestID);
+            notification = (null, "Die versoek is gestoor, maar die e-poskennisgewing kon nie verwerk word nie.");
+        }
 
         return Ok(new FunksieversorgingRequestResponse
         {
