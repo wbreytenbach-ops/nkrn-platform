@@ -48,8 +48,16 @@ namespace NKRN.API.Controllers
                 User.IsInRole("2") ||
                 User.IsInRole("3");
 
+            var isJaronAssignedRequest = request.AssignedTo == loggedInUserID.Value &&
+                await _context.Users.AnyAsync(u =>
+                    u.UserID == loggedInUserID.Value &&
+                    u.IsActive &&
+                    u.FirstName != null &&
+                    u.FirstName.Trim().ToLower() == "jaron");
+
             if (!isTechnicianOrAdmin &&
-                request.UserID != loggedInUserID.Value)
+                request.UserID != loggedInUserID.Value &&
+                !isJaronAssignedRequest)
             {
                 return Forbid();
             }
@@ -167,8 +175,16 @@ namespace NKRN.API.Controllers
                 User.IsInRole("2") ||
                 User.IsInRole("3");
 
+            var isJaronAssignedRequest = request.AssignedTo == loggedInUserID.Value &&
+                await _context.Users.AnyAsync(u =>
+                    u.UserID == loggedInUserID.Value &&
+                    u.IsActive &&
+                    u.FirstName != null &&
+                    u.FirstName.Trim().ToLower() == "jaron");
+
             if (!isTechnicianOrAdmin &&
-                request.UserID != loggedInUserID.Value)
+                request.UserID != loggedInUserID.Value &&
+                !isJaronAssignedRequest)
             {
                 return Forbid();
             }
