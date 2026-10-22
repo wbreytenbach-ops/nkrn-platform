@@ -939,7 +939,7 @@ namespace NKRN.API.Controllers
                             var encodedRequestUrl = WebUtility.HtmlEncode(requestUrl);
 
                             var subject =
-                                $"IT Request #{existingRequest.RequestID} Assigned to You";
+                                $"IT Request #{existingRequest.RequestID} Assignment Updated";
 
                             var body = $"""
                                 <html>
@@ -948,7 +948,7 @@ namespace NKRN.API.Controllers
                                     <h2>IT Support Request Assigned</h2>
 
                                     <p>
-                                        Hello {assignedTechnician.FirstName},
+                                        Hello,
                                     </p>
 
                                     <p>
@@ -983,6 +983,11 @@ namespace NKRN.API.Controllers
                                     </p>
 
                                     <p>
+                                        <strong>Assigned to:</strong>
+                                        {assignedTechnician.FirstName} {assignedTechnician.LastName}
+                                    </p>
+
+                                    <p>
                                         <strong>Category ID:</strong>
                                         {existingRequest.CategoryID}
                                     </p>
@@ -1013,15 +1018,36 @@ namespace NKRN.API.Controllers
                                 </html>
                                 """;
 
-                            await _emailService.SendEmailAsync(
-                                assignedTechnician.Email,
-                                subject,
-                                body
-                            );
+                            var jaronEmails = await _context.Users.AsNoTracking()
+                                .Where(u =>
+                                    u.IsActive &&
+                                    u.FirstName != null &&
+                                    u.FirstName.Trim().ToLower() == "jaron" &&
+                                    u.Email != null &&
+                                    u.Email.Trim() != "")
+                                .Select(u => u.Email!)
+                                .ToListAsync();
+
+                            var recipients = jaronEmails
+                                .Append(assignedTechnician.Email.Trim())
+                                .Distinct(StringComparer.OrdinalIgnoreCase)
+                                .ToList();
+
+                            foreach (var recipient in recipients)
+                            {
+                                try
+                                {
+                                    await _emailService.SendEmailAsync(recipient, subject, body);
+                                }
+                                catch (Exception recipientException)
+                                {
+                                    Console.WriteLine(
+                                        $"Assignment notification failed for {recipient} on request #{existingRequest.RequestID}: {recipientException.Message}");
+                                }
+                            }
 
                             Console.WriteLine(
-                                $"Assignment email sent to {assignedTechnician.Email} for Request #{existingRequest.RequestID}."
-                            );
+                                $"Assignment notifications processed for request #{existingRequest.RequestID}. Assigned to {assignedTechnician.Email}.");
                         }
                         else
                         {
