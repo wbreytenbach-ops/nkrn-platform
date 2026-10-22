@@ -128,7 +128,11 @@ export default function TechPage() {
             try {
                 const parsedUser = JSON.parse(storedUser) as User;
 
-                if (parsedUser.roleID !== 2 && parsedUser.roleID !== 3) {
+                const isJaronViewer =
+                    parsedUser.roleID === 1 &&
+                    parsedUser.firstName?.trim().toLowerCase() === "jaron";
+
+                if (parsedUser.roleID !== 2 && parsedUser.roleID !== 3 && !isJaronViewer) {
                     router.replace("/requests");
                     return;
                 }
@@ -250,6 +254,7 @@ export default function TechPage() {
                 usersData.filter(
                     (item) =>
                         item.roleID === 2 ||
+                        item.firstName?.trim().toLowerCase() === "jaron" ||
                         (user?.roleID === 3 && item.roleID === 3)
                 )
             );
@@ -1397,6 +1402,7 @@ export default function TechPage() {
                                         )}
                                     </div>
 
+                                    {user.roleID !== 1 && (
                                     <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                                         <input
                                             value={
@@ -1431,11 +1437,13 @@ export default function TechPage() {
                                             Voeg kommentaar by
                                         </button>
                                     </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* MANAGEMENT PANEL */}
 
+                            {user.roleID !== 1 && (
                             <aside className="w-full xl:w-90">
                                 <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
                                     <p className="mb-5 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
@@ -1638,6 +1646,7 @@ export default function TechPage() {
                                     </div>
                                 </div>
                             </aside>
+                            )}
                         </div>
                     </section>
                 )}
