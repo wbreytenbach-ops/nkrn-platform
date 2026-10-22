@@ -952,8 +952,7 @@ namespace NKRN.API.Controllers
                                     </p>
 
                                     <p>
-                                        An IT support request has been assigned
-                                        to you through the Tygerpoort IT Desk.
+                                        The assignment for this IT support request has been updated through the Tygerpoort IT Desk.
                                     </p>
 
                                     <p><a href="{encodedRequestUrl}" style="display:inline-block;padding:10px 16px;background:#991b1b;color:#fff;text-decoration:none;border-radius:6px;">Open request in Tygies One</a></p>
