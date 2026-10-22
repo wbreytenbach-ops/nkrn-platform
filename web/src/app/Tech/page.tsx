@@ -128,11 +128,7 @@ export default function TechPage() {
             try {
                 const parsedUser = JSON.parse(storedUser) as User;
 
-                const isJaronViewer =
-                    parsedUser.roleID === 1 &&
-                    parsedUser.firstName?.trim().toLowerCase() === "jaron";
-
-                if (parsedUser.roleID !== 2 && parsedUser.roleID !== 3 && !isJaronViewer) {
+                if (parsedUser.roleID !== 2 && parsedUser.roleID !== 3) {
                     router.replace("/requests");
                     return;
                 }
