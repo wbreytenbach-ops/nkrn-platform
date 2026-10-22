@@ -406,6 +406,13 @@ export default function FunksieversorgingLanding() {
             return;
         }
 
+        // Short notice is a reminder only; it must never prevent submission.
+        if (workingDaysUntil(neededDate) < 3) {
+            window.alert(
+                "Herinnering: Funksieversorging-versoeke moet verkieslik minstens drie werksdae voor die funksie ingedien word. Jou versoek sal steeds voortgaan en kan administratief bevestig word."
+            );
+        }
+
         setMessage("");
         setStep(2);
     }
