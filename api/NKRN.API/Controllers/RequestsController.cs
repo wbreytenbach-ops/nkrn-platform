@@ -933,6 +933,11 @@ namespace NKRN.API.Controllers
 
                         if (assignedTechnician != null)
                         {
+                            var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ??
+                                "https://portal.tygies.co.za").TrimEnd('/');
+                            var requestUrl = $"{frontendBaseUrl}/Tech?requestId={existingRequest.RequestID}";
+                            var encodedRequestUrl = WebUtility.HtmlEncode(requestUrl);
+
                             var subject =
                                 $"IT Request #{existingRequest.RequestID} Assigned to You";
 
@@ -950,6 +955,8 @@ namespace NKRN.API.Controllers
                                         An IT support request has been assigned
                                         to you through the Tygerpoort IT Desk.
                                     </p>
+
+                                    <p><a href="{encodedRequestUrl}" style="display:inline-block;padding:10px 16px;background:#991b1b;color:#fff;text-decoration:none;border-radius:6px;">Open request in Tygies One</a></p>
 
                                     <hr />
 
@@ -1068,6 +1075,11 @@ namespace NKRN.API.Controllers
                             !string.IsNullOrWhiteSpace(
                                 requester.Email))
                         {
+                            var frontendBaseUrl = (_configuration["Frontend:BaseUrl"] ??
+                                "https://portal.tygies.co.za").TrimEnd('/');
+                            var requestUrl = $"{frontendBaseUrl}/Tech?requestId={existingRequest.RequestID}";
+                            var encodedRequestUrl = WebUtility.HtmlEncode(requestUrl);
+
                             var statusName =
                                 GetStatusName(
                                     existingRequest.StatusID
@@ -1122,7 +1134,7 @@ namespace NKRN.API.Controllers
                                     <h2>{heading}</h2>
 
                                     <p>
-                                        Hello {requester.FirstName},
+                                        Hello,
                                     </p>
 
                                     <p>
@@ -1169,6 +1181,8 @@ namespace NKRN.API.Controllers
 
                                     <hr />
 
+                                    <p><a href="{encodedRequestUrl}" style="display:inline-block;padding:10px 16px;background:#991b1b;color:#fff;text-decoration:none;border-radius:6px;">Open request in Tygies One</a></p>
+
                                     <p>
                                         You can log in to the Tygerpoort IT Desk
                                         to view the latest status of your request.
@@ -1183,15 +1197,36 @@ namespace NKRN.API.Controllers
                                 </html>
                                 """;
 
-                            await _emailService.SendEmailAsync(
-                                requester.Email,
-                                subject,
-                                body
-                            );
+                            var jaronEmails = await _context.Users.AsNoTracking()
+                                .Where(u =>
+                                    u.IsActive &&
+                                    u.FirstName != null &&
+                                    u.FirstName.Trim().ToLower() == "jaron" &&
+                                    u.Email != null &&
+                                    u.Email.Trim() != "")
+                                .Select(u => u.Email!)
+                                .ToListAsync();
+
+                            var recipients = jaronEmails
+                                .Append(requester.Email.Trim())
+                                .Distinct(StringComparer.OrdinalIgnoreCase)
+                                .ToList();
+
+                            foreach (var recipient in recipients)
+                            {
+                                try
+                                {
+                                    await _emailService.SendEmailAsync(recipient, subject, body);
+                                }
+                                catch (Exception recipientException)
+                                {
+                                    Console.WriteLine(
+                                        $"Status notification failed for {recipient} on request #{existingRequest.RequestID}: {recipientException.Message}");
+                                }
+                            }
 
                             Console.WriteLine(
-                                $"Status email sent to {requester.Email} for Request #{existingRequest.RequestID}. New status: {statusName}"
-                            );
+                                $"Status notifications processed for request #{existingRequest.RequestID}. New status: {statusName}");
                         }
                         else
                         {
