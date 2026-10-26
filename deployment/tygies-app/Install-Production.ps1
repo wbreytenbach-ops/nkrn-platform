@@ -2,10 +2,9 @@
 <#
     Tygies One Windows production installer
     Run after extracting the matching GitHub Actions installer ZIP.
-    Requires Google OAuth Web Client ID with https://portal.tygies.co.za
-    already listed among authorised JavaScript origins.
-    It does not execute SQL migrations, overwrite production appsettings,
-    or delete any existing user requests.
+    Keeps the existing email-based Tygies One login.
+    Does not execute SQL migrations, overwrite live appsettings,
+    or delete existing user requests.
 #>
 [CmdletBinding()]
 param(
@@ -47,27 +46,18 @@ finally { $archive.Dispose() }
 
 if ($manifest.publicApiUrl -ne 'https://portal.tygies.co.za' -or
     $manifest.commit -notmatch '^[a-f0-9]{40}$' -or
-    $manifest.branch -ne 'fix/tygies-one-logistics-access-20261026') {
+    $manifest.branch -ne 'fix/logistics-sound-and-email-login-20261026') {
     throw 'The release ZIP is not the expected Tygies One production build.'
 }
 
 Write-Host ''
 Write-Host '===============================================' -ForegroundColor Cyan
-Write-Host ' TYGIES ONE - GOOGLE SSO PRODUCTION INSTALLER' -ForegroundColor Cyan
+Write-Host ' TYGIES ONE - LOGISTICS / SOUND INSTALLER' -ForegroundColor Cyan
 Write-Host '===============================================' -ForegroundColor Cyan
 Write-Host "Commit: $($manifest.commit)"
 Write-Host "Target: $Server / portal.tygies.co.za"
 Write-Host 'No SQL migrations will be run.'
 Write-Host ''
-
-$googleClientId = (Read-Host 'Paste the Google OAuth Web Client ID (.apps.googleusercontent.com)').Trim()
-if ($googleClientId -notmatch '^[0-9]+-[a-z0-9-]+[.]apps[.]googleusercontent[.]com$') {
-    throw 'Invalid Google OAuth Web Client ID. No changes were made.'
-}
-
-Write-Host 'Google Cloud must list https://portal.tygies.co.za as an authorised JavaScript origin.' -ForegroundColor Yellow
-$confirmed = Read-Host 'Type YES once that origin is configured'
-if ($confirmed -cne 'YES') { throw 'Cancelled before any production changes.' }
 
 $credential = Get-Credential -UserName 'TYGERPOORTLAB\wilcob' -Message "Connect to $Server for Tygies One installation"
 $session = New-PSSession -ComputerName $Server -Credential $credential
@@ -115,23 +105,28 @@ try {
     }
 
     Write-Host 'Updating the API...' -ForegroundColor Cyan
-    Invoke-Command -Session $session -ArgumentList $remoteRoot, $remotePackage, $googleClientId -ScriptBlock {
-        param($root, $package, $clientId)
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'Deploy-Release.ps1') -Action Install -PackageRoot $package -GoogleClientId $clientId
+    Invoke-Command -Session $session -ArgumentList $remoteRoot, $remotePackage -ScriptBlock {
+        param($root, $package)
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'Deploy-Release.ps1') -Action Install -PackageRoot $package
         if ($LASTEXITCODE -ne 0) { throw 'API installation failed.' }
     }
     $apiInstalled = $true
 
-    # Ensure the SSO client is served from the API BEFORE changing the login page.
-    $checkedClientId = Invoke-Command -Session $session -ScriptBlock {
+    # Keep existing email login working before deploying the new frontend.
+    $authRoute = Invoke-Command -Session $session -ScriptBlock {
         $ErrorActionPreference = 'Stop'
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $response = Invoke-WebRequest -Uri 'https://portal.tygies.co.za/api/Auth/google/config' -UseBasicParsing -TimeoutSec 20
-        if ($response.StatusCode -ne 200) { throw 'Google config endpoint not healthy.' }
-        ($response.Content | ConvertFrom-Json).clientId
+        try {
+            Invoke-WebRequest -Uri 'https://portal.tygies.co.za/api/Auth/login' -UseBasicParsing -TimeoutSec 20 | Out-Null
+            return 200
+        }
+        catch {
+            if ($_.Exception.Response) { return [int]$_.Exception.Response.StatusCode }
+            throw
+        }
     }
-    if ($checkedClientId -ne $googleClientId) {
-        throw 'SSO client ID was not loaded by the production API.'
+    if ($authRoute -ne 405) {
+        throw "Existing email login endpoint was not found after API install (HTTP $authRoute)."
     }
 
     Write-Host 'Updating the frontend...' -ForegroundColor Cyan
@@ -154,7 +149,7 @@ try {
 
     Write-Host ''
     Write-Host 'INSTALLATION SUCCESSFUL - API + FRONTEND + AUTOMATION' -ForegroundColor Green
-    Write-Host 'Google sign-in still requires an actual browser test with an authorised school account.' -ForegroundColor Yellow
+    Write-Host 'Confirm email sign-in and Logistics sound notifications in the live portal.' -ForegroundColor Yellow
     Start-Process 'https://portal.tygies.co.za/login'
 }
 catch {
