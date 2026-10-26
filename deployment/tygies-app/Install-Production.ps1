@@ -68,7 +68,10 @@ Write-Host ''
     Write-Host 'Checking the IT notification database migration...' -ForegroundColor Cyan
     $migrationArchive = [IO.Compression.ZipFile]::OpenRead($ReleaseZip)
     try {
-        $sqlEntry = $migrationArchive.GetEntry('database/20261026_ITRequestMentions.sql')
+        $sqlEntry = $migrationArchive.GetEntry('database\20261026_ITRequestMentions.sql')
+        if (-not $sqlEntry) {
+            $sqlEntry = $migrationArchive.GetEntry('database/20261026_ITRequestMentions.sql')
+        }
         if (-not $sqlEntry) { throw 'The release is missing the required notification migration.' }
         $sqlReader = [IO.StreamReader]::new($sqlEntry.Open(), [Text.Encoding]::UTF8)
         try { $sqlText = $sqlReader.ReadToEnd() }
