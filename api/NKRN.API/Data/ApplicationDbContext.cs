@@ -24,6 +24,8 @@ namespace NKRN.API.Data
 
         public DbSet<RequestComment> RequestComments { get; set; }
 
+        public DbSet<ITRequestMention> ITRequestMentions { get; set; }
+
 
         // ============================================================
         // MODULE PERMISSIONS
