@@ -155,7 +155,11 @@ public sealed class RequestCommentsController(ApplicationDbContext context) : Co
                 return BadRequest(new { message = $"Message must include {mention}." });
         }
 
-        await using var tx = await context.Database.BeginTransactionAsync();
+        // SQL Server commits the comment and notifications atomically.
+        // The project's InMemory test provider does not support transactions.
+        await using var tx = context.Database.IsRelational()
+            ? await context.Database.BeginTransactionAsync()
+            : null;
         var comment = new RequestComment
         {
             RequestID = input.RequestID,
@@ -178,7 +182,7 @@ public sealed class RequestCommentsController(ApplicationDbContext context) : Co
             });
         }
         if (recipients.Count > 0) await context.SaveChangesAsync();
-        await tx.CommitAsync();
+        if (tx != null) await tx.CommitAsync();
 
         var saved = await context.RequestComments.AsNoTracking()
             .Where(c => c.CommentID == comment.CommentID)
