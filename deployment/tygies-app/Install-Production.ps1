@@ -60,6 +60,52 @@ Write-Host "Target: $Server / portal.tygies.co.za"
 Write-Host 'New IT mention notifications require one safe, idempotent SQL table migration.' -ForegroundColor Yellow
 Write-Host ''
 
+# Verify database access and apply the new idempotent table migration before
+# transferring or stopping anything on the production application server.
+# The persistent notification feature needs a new table. Run the migration
+    # directly from this PC to SQL to avoid the remoting double-hop problem.
+    # The script is bundled in the SHA256-verified release ZIP.
+    Write-Host 'Checking the IT notification database migration...' -ForegroundColor Cyan
+    $migrationArchive = [IO.Compression.ZipFile]::OpenRead($ReleaseZip)
+    try {
+        $sqlEntry = $migrationArchive.GetEntry('database/20261026_ITRequestMentions.sql')
+        if (-not $sqlEntry) { throw 'The release is missing the required notification migration.' }
+        $sqlReader = [IO.StreamReader]::new($sqlEntry.Open(), [Text.Encoding]::UTF8)
+        try { $sqlText = $sqlReader.ReadToEnd() }
+        finally { $sqlReader.Dispose() }
+    }
+    finally { $migrationArchive.Dispose() }
+
+    Add-Type -AssemblyName System.Data
+    $builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
+    $builder['Data Source'] = 'TYGIES-SQL'
+    $builder['Initial Catalog'] = 'Tygerpoort_ITDesk'
+    $builder['Integrated Security'] = $true
+    $builder['Connect Timeout'] = 12
+    $builder['Application Name'] = 'TygiesOne-Installer'
+    $db = New-Object System.Data.SqlClient.SqlConnection($builder.ConnectionString)
+    try {
+        $db.Open()
+        $databaseName = $db.Database
+        if ($databaseName -cne 'Tygerpoort_ITDesk') {
+            throw "Wrong database selected: $databaseName"
+        }
+        $command = $db.CreateCommand()
+        $command.CommandTimeout = 60
+        $command.CommandText = $sqlText
+        [void]$command.ExecuteNonQuery()
+        $command.CommandText = "SELECT CASE WHEN OBJECT_ID(N'dbo.ITRequestMentions', N'U') IS NOT NULL THEN 1 ELSE 0 END"
+        if ([int]$command.ExecuteScalar() -ne 1) {
+            throw 'ITRequestMentions table verification failed.'
+        }
+        Write-Host 'IT mention notifications schema is ready.' -ForegroundColor Green
+    }
+    catch {
+        throw ("Database migration could not be verified. Production app was not updated. " + $_.Exception.Message)
+    }
+    finally { $db.Dispose() }
+
+
 $credential = Get-Credential -UserName 'TYGERPOORTLAB\wilcob' -Message "Connect to $Server for Tygies One installation"
 $session = New-PSSession -ComputerName $Server -Credential $credential
 $release = [string]$manifest.release
@@ -104,49 +150,6 @@ try {
             }
         }
     }
-
-    # The persistent notification feature needs a new table. Run the migration
-    # directly from this PC to SQL to avoid the remoting double-hop problem.
-    # The script is bundled in the SHA256-verified release ZIP.
-    Write-Host 'Checking the IT notification database migration...' -ForegroundColor Cyan
-    $migrationArchive = [IO.Compression.ZipFile]::OpenRead($ReleaseZip)
-    try {
-        $sqlEntry = $migrationArchive.GetEntry('database/20261026_ITRequestMentions.sql')
-        if (-not $sqlEntry) { throw 'The release is missing the required notification migration.' }
-        $sqlReader = [IO.StreamReader]::new($sqlEntry.Open(), [Text.Encoding]::UTF8)
-        try { $sqlText = $sqlReader.ReadToEnd() }
-        finally { $sqlReader.Dispose() }
-    }
-    finally { $migrationArchive.Dispose() }
-
-    Add-Type -AssemblyName System.Data
-    $builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
-    $builder['Data Source'] = 'TYGIES-SQL'
-    $builder['Initial Catalog'] = 'Tygerpoort_ITDesk'
-    $builder['Integrated Security'] = $true
-    $builder['Connect Timeout'] = 12
-    $builder['Application Name'] = 'TygiesOne-Installer'
-    $db = New-Object System.Data.SqlClient.SqlConnection($builder.ConnectionString)
-    try {
-        $db.Open()
-        $databaseName = $db.Database
-        if ($databaseName -cne 'Tygerpoort_ITDesk') {
-            throw "Wrong database selected: $databaseName"
-        }
-        $command = $db.CreateCommand()
-        $command.CommandTimeout = 60
-        $command.CommandText = $sqlText
-        [void]$command.ExecuteNonQuery()
-        $command.CommandText = "SELECT CASE WHEN OBJECT_ID(N'dbo.ITRequestMentions', N'U') IS NOT NULL THEN 1 ELSE 0 END"
-        if ([int]$command.ExecuteScalar() -ne 1) {
-            throw 'ITRequestMentions table verification failed.'
-        }
-        Write-Host 'IT mention notifications schema is ready.' -ForegroundColor Green
-    }
-    catch {
-        throw ("Database migration could not be verified. Production app was not updated. " + $_.Exception.Message)
-    }
-    finally { $db.Dispose() }
 
     Write-Host 'Updating the API...' -ForegroundColor Cyan
     Invoke-Command -Session $session -ArgumentList $remoteRoot, $remotePackage -ScriptBlock {
