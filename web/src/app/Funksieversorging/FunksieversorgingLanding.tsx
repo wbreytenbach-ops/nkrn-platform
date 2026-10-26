@@ -1498,7 +1498,7 @@ function DiningGrid({
                                             : "text-zinc-700"
                                     }`}
                                 >
-                                    {isSelected ? "✓" : "â—‹"}
+                                    {isSelected ? "✓" : "\u25CB"}
                                 </span>
                             </div>
                         </button>
