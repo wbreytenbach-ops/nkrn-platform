@@ -955,7 +955,7 @@ public class FunksieversorgingRequestsController : ControllerBase
         }
 
         var subject =
-            $"Funksieversorging: Versoek #{requestID} ontvang \u2013 {functionName}";
+            FunksieversorgingEmailSubjects.Received(requestID, functionName);
 
         var printUrl = CreatePrintUrl(requestID);
 
@@ -1058,7 +1058,7 @@ public class FunksieversorgingRequestsController : ControllerBase
             };
 
         var subject =
-            $"Funksieversorging: Versoek #{requestID} \u2013 {statusLabel}";
+            FunksieversorgingEmailSubjects.StatusChanged(requestID, statusLabel);
 
         var printUrl = CreatePrintUrl(requestID);
         var body = $"""
