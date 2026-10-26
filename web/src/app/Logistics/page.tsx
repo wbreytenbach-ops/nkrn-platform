@@ -58,29 +58,11 @@ export default function LogisticsPage() {
 
                 setUser(loggedInUser);
 
-                // Security contact receives a read-only Security-only workspace.
-                if (
-                    loggedInUser.email?.trim().toLowerCase() ===
-                    "jwerner@tygies.co.za"
-                ) {
-                    setSecurityAccess(true);
-                    return;
-                }
-
-                // NKRN-admins retain their management permissions.
-                if (loggedInUser.roleID === 3) {
-                    setManagementAccess(true);
-                    return;
-                }
-
-                // This endpoint already respects Logistics ModulePermissions.
-                // Keep the existing access-control logic unchanged.
+                // Use the API's current DB authorization. A successful
+                // LogisticsTasks read only proves CanView, not management.
                 const response = await fetch(
-                    `${API_URL}/api/LogisticsTasks?includeArchived=false`,
-                    {
-                        headers: authHeaders(),
-                        cache: "no-store",
-                    }
+                    `${API_URL}/api/LogisticsRequests/access`,
+                    { headers: authHeaders(), cache: "no-store" }
                 );
 
                 if (response.status === 401) {
@@ -90,23 +72,21 @@ export default function LogisticsPage() {
                     return;
                 }
 
-                if (cancelled) {
-                    return;
+                if (!response.ok) {
+                    throw new Error(
+                        `Unable to check Logistics access (${response.status}).`
+                    );
                 }
 
-                if (response.ok) {
-                    setManagementAccess(true);
-                    return;
-                }
+                const access = (await response.json()) as {
+                    canManage: boolean;
+                    canSubmit: boolean;
+                    isSecurityReviewer: boolean;
+                };
+                if (cancelled) return;
 
-                if (response.status === 403) {
-                    setManagementAccess(false);
-                    return;
-                }
-
-                throw new Error(
-                    `Kon nie Logistiek-toegang bepaal nie (${response.status}).`
-                );
+                setSecurityAccess(access.isSecurityReviewer);
+                setManagementAccess(!access.isSecurityReviewer && access.canManage);
             } catch (accessError) {
                 console.error(
                     "Kon nie Logistiek-toegang bepaal nie:",
@@ -202,20 +182,43 @@ export default function LogisticsPage() {
         );
     }
 
-    if (managementAccess && adminRequestMode) {
+    if (adminRequestMode) {
         return (
             <LogisticsTeacherPortal
                 user={user}
+                startWithNewRequest
                 onBackToManagement={() => setAdminRequestMode(false)}
             />
         );
     }
 
+    // Keep the primary action visible even while the manager dashboard is
+    // loading or one of its independent data requests fails.
+    const newRequestAction = (
+        <div className="nkrn-control bg-zinc-950 px-5 pt-5 text-white sm:px-8">
+            <div className="mx-auto flex max-w-7xl justify-end">
+                <button
+                    type="button"
+                    onClick={() => setAdminRequestMode(true)}
+                    className="rounded-xl border border-[#d7a31f]/60 bg-[#d7a31f]/20 px-5 py-3 text-sm font-bold text-[#ffe19b] shadow-sm hover:bg-[#d7a31f]/30"
+                >
+                    + Nuwe logistieke versoek / New Logistics request
+                </button>
+            </div>
+        </div>
+    );
+
     return managementAccess ? (
-        <LogisticsManagementDashboard
-            onCreateRequest={() => setAdminRequestMode(true)}
-        />
+        <>
+            {newRequestAction}
+            <LogisticsManagementDashboard
+                onCreateRequest={() => setAdminRequestMode(true)}
+            />
+        </>
     ) : (
-        <LogisticsTeacherPortal user={user} />
+        <>
+            {newRequestAction}
+            <LogisticsTeacherPortal user={user} />
+        </>
     );
 }
