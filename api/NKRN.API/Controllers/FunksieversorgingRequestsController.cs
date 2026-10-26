@@ -24,9 +24,16 @@ public class FunksieversorgingRequestsController : ControllerBase
     private readonly IWebHostEnvironment _environment;
     private static readonly string[] DefaultNotificationEmails =
     {
-        "svanwyk@tygies.co.za",
-        "kultuur@tygies.co.za"
+        "svanwyk@tygies.co.za"
     };
+
+    // Never send Funksieversorging notifications to this retired recipient,
+    // even if an older production configuration still contains the address.
+    private static readonly HashSet<string> ExcludedNotificationEmails =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "kultuur@tygies.co.za"
+        };
     private readonly NkrnAiService _aiService;
     private readonly ILogger<FunksieversorgingRequestsController> _logger;
 
@@ -696,7 +703,9 @@ public class FunksieversorgingRequestsController : ControllerBase
             recipients.Add(address);
         }
 
-        return recipients.ToList();
+        return recipients
+            .Where(address => !ExcludedNotificationEmails.Contains(address))
+            .ToList();
     }
 
     private HashSet<string> GetNotificationRecipients(
@@ -707,7 +716,8 @@ public class FunksieversorgingRequestsController : ControllerBase
                 GetNotificationEmails(),
                 StringComparer.OrdinalIgnoreCase);
 
-        if (!string.IsNullOrWhiteSpace(requesterEmail))
+        if (!string.IsNullOrWhiteSpace(requesterEmail) &&
+            !ExcludedNotificationEmails.Contains(requesterEmail.Trim()))
         {
             recipients.Add(requesterEmail.Trim());
         }
