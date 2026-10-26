@@ -809,6 +809,8 @@ export default function LogisticsTeacherPortal({
                 const soundDescription = [
                     `Klank vir funksie / Sound for function: #${created.requestID}`,
                     `Funksie / Function: ${description.trim()}`,
+                    `Datum / Date: ${activityDate}`,
+                    `Tyd / Time: ${startTime} - ${endTime}`,
                     soundSummary,
                 ].join("\n\n");
 
