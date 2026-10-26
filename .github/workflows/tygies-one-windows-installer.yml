@@ -72,6 +72,24 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $releases = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -Filter 'NKRN-*.zip' -File -Recurse
           if (@($releases).Count -ne 1) { throw "Expected one release ZIP, got $(@($releases).Count)" }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $inner = [IO.Compression.ZipFile]::OpenRead($releases[0].FullName)
+          try {
+            $needed = @(
+              'release.json',
+              'api\NKRN.API.dll',
+              'frontend\server.js',
+              'frontend\.next\BUILD_ID',
+              'database\20261026_ITRequestMentions.sql'
+            )
+            foreach ($entry in $needed) {
+              if (-not $inner.GetEntry($entry)) {
+                throw "Windows release ZIP missing mandatory entry: $entry"
+              }
+            }
+          }
+          finally { $inner.Dispose() }
+
           $staging = Join-Path $env:RUNNER_TEMP 'TygiesOne-Installer'
           New-Item -ItemType Directory -Path $staging -Force | Out-Null
           Copy-Item $releases[0].FullName -Destination $staging
