@@ -128,6 +128,73 @@ public class LogisticsWorkflowTests
     }
 
     [Fact]
+    public async Task Sound_requests_are_sent_to_IT_and_Breytenbach_not_general_logistics()
+    {
+        using var app = new TestApp();
+        using var scope = app.Server.Services.CreateScope();
+
+        await Service(
+            scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
+            app.Email)
+            .NotifyAsync(
+                new LogisticsRequestResponse
+                {
+                    RequestID = 17,
+                    RequestType = "Sound",
+                    RequestedByEmail = "teacher@example.invalid",
+                    RequestedByName = "Teacher",
+                    Description = "Sound: Microphone + HDMI\\nTwo microphones\\n<do not trust>",
+                    Status = "Logged",
+                    Priority = "Medium"
+                },
+                true);
+
+        Assert.Equal(3, app.Email.Messages.Count);
+        Assert.Contains(app.Email.Messages, m => m.To == "teacher@example.invalid");
+        Assert.Contains(app.Email.Messages, m => m.To == "it@tygies.co.za");
+        Assert.Contains(app.Email.Messages, m => m.To == "wbreytenbach@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages, m => m.To == "logistiek@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages, m => m.To == "terreinbestuur@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages, m => m.To == "msmit@tygies.co.za");
+        Assert.DoesNotContain(app.Email.Messages, m => m.To == "jwerner@tygies.co.za");
+
+        Assert.All(app.Email.Messages, message =>
+        {
+            Assert.Contains("Sound request received", message.Subject);
+            Assert.Contains("Microphone + HDMI", message.Body);
+            Assert.Contains("<br />", message.Body);
+            Assert.Contains("&lt;do not trust&gt;", message.Body);
+            Assert.DoesNotContain("<do not trust>", message.Body);
+        });
+    }
+
+    [Fact]
+    public async Task Sound_request_recipient_is_not_emailed_twice()
+    {
+        using var app = new TestApp();
+        using var scope = app.Server.Services.CreateScope();
+
+        await Service(
+            scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
+            app.Email)
+            .NotifyAsync(new LogisticsRequestResponse
+            {
+                RequestID = 18,
+                RequestType = "Sound",
+                RequestedByEmail = "IT@TYGIES.CO.ZA",
+                Status = "Logged"
+            }, true);
+
+        Assert.Equal(2, app.Email.Messages.Count);
+        Assert.Contains(app.Email.Messages,
+            message => message.To.Equals("it@tygies.co.za",
+                StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(app.Email.Messages,
+            message => message.To.Equals("wbreytenbach@tygies.co.za",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task Security_request_notification_includes_security_contact()
     {
         using var app=new TestApp();
