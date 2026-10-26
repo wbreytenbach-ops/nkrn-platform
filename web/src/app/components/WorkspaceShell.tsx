@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import ITNotificationBell from "./ITNotificationBell";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
@@ -128,7 +129,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
                 <header className="workspace-topbar">
                     <button type="button" className="workspace-mobile-menu" onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-controls="tygies-workspace-navigation" aria-label={mobileOpen ? (af ? "Sluit navigasie" : "Close navigation") : (af ? "Maak navigasie oop" : "Open navigation")}>{mobileOpen ? "×" : "☰"}</button>
                     <div className="workspace-page-context"><span>{af ? "Laerskool Tygerpoort" : "Laerskool Tygerpoort"}</span><strong>{visibleNavigation.find((item) => isActive(item.href))?.[af ? "labelAf" : "labelEn"] ?? "Tygies One"}</strong></div>
-                    <div className="workspace-topbar-right"><span className="workspace-secure-dot" /> <span>{af ? "Veilige werkruimte" : "Secure workspace"}</span></div>
+                    <div className="workspace-topbar-right"><ITNotificationBell roleID={roleID} /><span className="workspace-secure-dot" /> <span>{af ? "Werkruimte" : "Workspace"}</span></div>
                 </header>
                 <div className="workspace-content">{children}</div>
             </div>
