@@ -46,7 +46,7 @@ finally { $archive.Dispose() }
 
 if ($manifest.publicApiUrl -ne 'https://portal.tygies.co.za' -or
     $manifest.commit -notmatch '^[a-f0-9]{40}$' -or
-    $manifest.branch -ne 'fix/logistics-sound-and-email-login-20261026') {
+    $manifest.branch -ne 'fix/it-chat-mentions-jaron-20261026') {
     throw 'The release ZIP is not the expected Tygies One production build.'
 }
 
