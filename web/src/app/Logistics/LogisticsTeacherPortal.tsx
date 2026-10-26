@@ -378,14 +378,16 @@ export default function LogisticsTeacherPortal({
     }, [loadPortal]);
 
     useEffect(() => {
-        if (!requestOpen) return;
+        // Managers enter with the form already open. Wait for the portal's
+        // initial data load before scrolling/focusing the rendered form.
+        if (!requestOpen || loading) return;
 
         const requestSection = requestModalRef.current;
         if (!requestSection) return;
 
         requestSection.scrollIntoView({ behavior: "smooth", block: "start" });
         requestSection.focus({ preventScroll: true });
-    }, [requestOpen]);
+    }, [requestOpen, loading]);
 
     const activeRequests = useMemo(
         () =>
