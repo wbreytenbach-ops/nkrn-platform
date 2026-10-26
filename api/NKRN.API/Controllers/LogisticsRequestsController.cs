@@ -243,7 +243,8 @@ namespace NKRN.API.Controllers
                     "Event",
                     "Maintenance",
                     "General",
-                    "Security"
+                    "Security",
+                    "Sound"
                 },
                 activityCategories = new[]
                 {
@@ -328,7 +329,7 @@ namespace NKRN.API.Controllers
             }
 
             var supportedRequestTypes = new HashSet<string>(
-                new[] { "Event", "Maintenance", "General", "Security" },
+                new[] { "Event", "Maintenance", "General", "Security", "Sound" },
                 StringComparer.OrdinalIgnoreCase);
 
             if (!supportedRequestTypes.Contains(request.RequestType.Trim()))
@@ -1730,6 +1731,7 @@ namespace NKRN.API.Controllers
                     "Maintenance" => "Instandhouding",
                     "General" => "Algemeen",
                     "Security" => "Sekuriteit",
+                    "Sound" => "Klank / Sound",
                     _ => "Logistics"
                 };
 
