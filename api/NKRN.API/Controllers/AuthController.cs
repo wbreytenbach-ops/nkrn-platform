@@ -1,7 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Google.Apis.Auth;
 using NKRN.API.Data;
 using NKRN.API.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -30,114 +29,155 @@ namespace NKRN.API.Controllers
         // LOGIN
         // ============================================================
 
-
-        // Google Identity Services credential verification. Client ID is configured
-        // on the API host, not bundled into source or frontend build.
-        [HttpGet("google/config")]
-        [AllowAnonymous]
-        public IActionResult GoogleConfig()
-        {
-            var clientId = _configuration["GoogleAuth:ClientId"]?.Trim();
-            if (string.IsNullOrWhiteSpace(clientId))
-                return StatusCode(503, new { message = "Google sign-in has not been configured by IT." });
-            return Ok(new { clientId });
-        }
-
-        [HttpPost("google")]
-        [AllowAnonymous]
-        public async Task<IActionResult> LoginWithGoogle([FromBody] GoogleLoginRequest input)
-        {
-            if (input == null || string.IsNullOrWhiteSpace(input.Credential))
-                return BadRequest(new { message = "Google sign-in credential is required." });
-
-            var clientId = _configuration["GoogleAuth:ClientId"]?.Trim();
-            if (string.IsNullOrWhiteSpace(clientId))
-                return StatusCode(503, new { message = "Google sign-in has not been configured by IT." });
-
-            GoogleJsonWebSignature.Payload payload;
-            try
-            {
-                payload = await GoogleJsonWebSignature.ValidateAsync(
-                    input.Credential,
-                    new GoogleJsonWebSignature.ValidationSettings
-                    {
-                        Audience = new[] { clientId },
-                        HostedDomain = "tygies.co.za"
-                    });
-            }
-            catch (Exception)
-            {
-                return Unauthorized(new { message = "Google sign-in could not be verified." });
-            }
-
-            var email = payload.Email?.Trim().ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(payload.Subject) ||
-                payload.EmailVerified != true ||
-                string.IsNullOrWhiteSpace(email) ||
-                !email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase) ||
-                !string.Equals(payload.HostedDomain, "tygies.co.za", StringComparison.OrdinalIgnoreCase))
-                return Unauthorized(new
-                {
-                    message = "Use your verified Tygerpoort Google Workspace account."
-                });
-
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u =>
-                u.Email != null && u.Email.ToLower() == email && u.IsActive);
-            if (user == null)
-                return Unauthorized(new
-                {
-                    message = "Your account is not active in Tygies One. Contact IT."
-                });
-
-            return CreateTokenResponse(user);
-        }
-
-        // Never issue a JWT from a plain email, even for a pre-existing user.
         [HttpPost("login")]
-        public IActionResult LegacyLogin() => StatusCode(410, new
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            message = "Email-only login is disabled. Use Sign in with Google."
-        });
+            if (loginRequest == null ||
+                string.IsNullOrWhiteSpace(loginRequest.Email))
+            {
+                return BadRequest(new
+                {
+                    message = "Email address is required."
+                });
+            }
 
-        private IActionResult CreateTokenResponse(User user)
-        {
-            var configuredJwtKey = _configuration["Jwt:Key"] ?? string.Empty;
-            var configuredIssuer = _configuration["Jwt:Issuer"] ?? string.Empty;
-            var configuredAudience = _configuration["Jwt:Audience"] ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(configuredJwtKey) ||
-                string.IsNullOrWhiteSpace(configuredIssuer) ||
-                string.IsNullOrWhiteSpace(configuredAudience))
-                return StatusCode(503, new { message = "Authentication is not configured." });
+            string email = loginRequest.Email.Trim().ToLower();
+
+            if (!email.EndsWith("@tygies.co.za"))
+            {
+                return Unauthorized(new
+                {
+                    message = "Only @tygies.co.za email addresses are allowed."
+                });
+            }
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Email != null &&
+                    u.Email.ToLower() == email);
+
+            if (user == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "No Tygerpoort IT Desk account was found for this email address."
+                });
+            }
+
+            if (!user.IsActive)
+            {
+                return Unauthorized(new
+                {
+                    message =
+                        "This account has been deactivated. Please contact an administrator."
+                });
+            }
+
+            // ========================================================
+            // NORMALISE POSSIBLY NULL DATABASE VALUES
+            // ========================================================
+
+            string userEmail = user.Email ?? string.Empty;
+            string firstName = user.FirstName ?? string.Empty;
+            string lastName = user.LastName ?? string.Empty;
+
+            int userID = user.UserID;
+            int roleID = user.RoleID ?? 1;
+
+            // ========================================================
+            // CREATE JWT
+            // ========================================================
+
+            string configuredJwtKey =
+                _configuration["Jwt:Key"] ?? string.Empty;
+
+            string configuredIssuer =
+                _configuration["Jwt:Issuer"] ?? string.Empty;
+
+            string configuredAudience =
+                _configuration["Jwt:Audience"] ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(configuredJwtKey))
+            {
+                return StatusCode(500, new
+                {
+                    message = "JWT key has not been configured."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(configuredIssuer))
+            {
+                return StatusCode(500, new
+                {
+                    message = "JWT issuer has not been configured."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(configuredAudience))
+            {
+                return StatusCode(500, new
+                {
+                    message = "JWT audience has not been configured."
+                });
+            }
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(configuredJwtKey));
-            var signing = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var firstName = user.FirstName ?? string.Empty;
-            var lastName = user.LastName ?? string.Empty;
-            var email = user.Email ?? string.Empty;
-            var roleID = user.RoleID ?? 1;
+            var credentials = new SigningCredentials(
+                key,
+                SecurityAlgorithms.HmacSha256);
+
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
-                new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.GivenName, firstName),
-                new Claim(ClaimTypes.Surname, lastName),
-                new Claim(ClaimTypes.Role, roleID.ToString()),
-                new Claim("nkrn_auth", "google_workspace"),
-                new Claim("nkrn_auth_version", "2")
+                new Claim(
+                    ClaimTypes.NameIdentifier,
+                    userID.ToString()),
+
+                new Claim(
+                    ClaimTypes.Email,
+                    userEmail),
+
+                new Claim(
+                    ClaimTypes.GivenName,
+                    firstName),
+
+                new Claim(
+                    ClaimTypes.Surname,
+                    lastName),
+
+                new Claim(
+                    ClaimTypes.Role,
+                    roleID.ToString())
             };
+
             var token = new JwtSecurityToken(
                 issuer: configuredIssuer,
                 audience: configuredAudience,
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(8),
-                signingCredentials: signing);
+                signingCredentials: credentials);
+
+            string tokenString =
+                new JwtSecurityTokenHandler()
+                    .WriteToken(token);
+
+            // ========================================================
+            // RETURN USER + TOKEN
+            // ========================================================
 
             return Ok(new
             {
-                token = new JwtSecurityTokenHandler().WriteToken(token),
-                user = new { userID = user.UserID, firstName, lastName, email, roleID }
+                token = tokenString,
+
+                user = new
+                {
+                    userID = userID,
+                    firstName = firstName,
+                    lastName = lastName,
+                    email = userEmail,
+                    roleID = roleID
+                }
             });
         }
 
@@ -310,11 +350,6 @@ namespace NKRN.API.Controllers
     public class LoginRequest
     {
         public string Email { get; set; } = string.Empty;
-    }
-
-    public class GoogleLoginRequest
-    {
-        public string Credential { get; set; } = string.Empty;
     }
 
     // ================================================================
