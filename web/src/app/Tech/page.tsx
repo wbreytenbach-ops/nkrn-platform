@@ -240,6 +240,7 @@ export default function TechPage() {
                     (item) =>
                         item.roleID === 2 ||
                         item.firstName?.trim().toLowerCase() === "jaron" ||
+                        !item.email?.toLowerCase().endsWith("@tygies.co.za") ||
                         (user?.roleID === 3 && item.roleID === 3)
                 )
             );
