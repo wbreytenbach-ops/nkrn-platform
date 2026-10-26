@@ -51,15 +51,6 @@ interface RequestItem {
     googleCalendarEventID: string | null;
 }
 
-interface RequestComment {
-    commentID: number;
-    requestID: number;
-    userID: number;
-    commentText: string;
-    createdDate: string | null;
-    user?: User | null;
-}
-
 interface Status {
     statusID: number;
     statusName: string;
@@ -215,14 +206,6 @@ function AdminDashboard() {
     const [statuses, setStatuses] =
         useState<Status[]>([]);
 
-    const [comments, setComments] =
-        useState<
-            Record<number, RequestComment[]>
-        >({});
-
-    const [commentText, setCommentText] =
-        useState<Record<number, string>>({});
-
     // ========================================
     // USER MANAGEMENT
     // ========================================
@@ -275,9 +258,6 @@ function AdminDashboard() {
         useState<number | null>(null);
 
     const [deletingRequestID, setDeletingRequestID] =
-        useState<number | null>(null);
-
-    const [commentSavingID, setCommentSavingID] =
         useState<number | null>(null);
 
     const [showDone, setShowDone] =
@@ -534,76 +514,6 @@ function AdminDashboard() {
                     }
                 }
 
-                // ========================================
-                // LOAD COMMENTS
-                // ========================================
-
-                const commentResults =
-                    await Promise.all(
-                        requestData.map(
-                            async (request) => {
-                                try {
-                                    const response =
-                                        await fetch(
-                                            `${API_URL}/api/RequestComments/request/${request.requestID}`,
-                                            {
-                                                method:
-                                                    "GET",
-                                                headers:
-                                                    getAuthHeaders(),
-                                                cache:
-                                                    "no-store",
-                                            }
-                                        );
-
-                                    if (
-                                        !response.ok
-                                    ) {
-                                        return {
-                                            requestID:
-                                                request.requestID,
-                                            comments:
-                                                [],
-                                        };
-                                    }
-
-                                    const data: RequestComment[] =
-                                        await response.json();
-
-                                    return {
-                                        requestID:
-                                            request.requestID,
-                                        comments:
-                                            data,
-                                    };
-                                } catch {
-                                    return {
-                                        requestID:
-                                            request.requestID,
-                                        comments: [],
-                                    };
-                                }
-                            }
-                        )
-                    );
-
-                if (!cancelled) {
-                    const commentMap: Record<
-                        number,
-                        RequestComment[]
-                    > = {};
-
-                    commentResults.forEach(
-                        (result) => {
-                            commentMap[
-                                result.requestID
-                            ] =
-                                result.comments;
-                        }
-                    );
-
-                    setComments(commentMap);
-                }
             } catch (dashboardError) {
                 console.error(
                     "Unable to load admin dashboard:",
@@ -1506,11 +1416,6 @@ setAdministrators(
             setRequests(current => current.filter(
                 item => item.requestID !== request.requestID
             ));
-            setComments(current => {
-                const next = { ...current };
-                delete next[request.requestID];
-                return next;
-            });
             setSuccessMessage(
                 language === "af"
                     ? `IT-versoek #${request.requestID} is verwyder.`
@@ -1524,100 +1429,6 @@ setAdministrators(
             );
         } finally {
             setDeletingRequestID(null);
-        }
-    }
-
-    // ========================================
-    // ADD COMMENT
-    // ========================================
-
-    async function addComment(
-        requestID: number
-    ) {
-        if (!user) {
-            return;
-        }
-
-        const text =
-            commentText[requestID]?.trim() ??
-            "";
-
-        if (!text) {
-            setError(
-                "Tik eers jou kommentaar in."
-            );
-
-            return;
-        }
-
-        try {
-            setCommentSavingID(requestID);
-            setError("");
-            setSuccessMessage("");
-
-            const response = await fetch(
-                `${API_URL}/api/RequestComments`,
-                {
-                    method: "POST",
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({
-                        requestID,
-                        userID: user.userID,
-                        commentText: text,
-                    }),
-                }
-            );
-
-            if (!response.ok) {
-                const responseText =
-                    await response.text();
-
-                console.error(
-                    "Comment API error:",
-                    responseText
-                );
-
-                throw new Error(
-                    "Die kommentaar kon nie bygevoeg word nie."
-                );
-            }
-
-            const newComment: RequestComment =
-                await response.json();
-
-            setComments((currentComments) => ({
-                ...currentComments,
-
-                [requestID]: [
-                    ...(currentComments[
-                        requestID
-                    ] ?? []),
-
-                    newComment,
-                ],
-            }));
-
-            setCommentText((currentText) => ({
-                ...currentText,
-                [requestID]: "",
-            }));
-
-            setSuccessMessage(
-                `Kommentaar is by versoek #${requestID} gevoeg.`
-            );
-        } catch (commentError) {
-            console.error(
-                "Unable to add comment:",
-                commentError
-            );
-
-            setError(
-                commentError instanceof Error
-                    ? commentError.message
-                    : `Kommentaar kon nie by versoek #${requestID} gevoeg word nie.`
-            );
-        } finally {
-            setCommentSavingID(null);
         }
     }
 
@@ -2716,12 +2527,6 @@ setAdministrators(
 
                         {visibleRequests.map(
                             (request) => {
-                                const requestComments =
-                                    comments[
-                                        request
-                                            .requestID
-                                    ] ?? [];
-
                                 const assignedUser =
                                     users.find(
                                         (
@@ -3277,131 +3082,6 @@ setAdministrators(
 
                                             <ITRequestConversation requestID={request.requestID} compact />
 
-                                            {/* ========================================
-                                                COMMENTS
-                                            ======================================== */}
-
-                                            <div className="mt-7 border-t border-white/10 pt-7">
-                                                <div className="mb-5">
-                                                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-600">
-                                                        Kommunikasie
-                                                    </p>
-
-                                                    <h4 className="mt-1 text-lg font-semibold">
-                                                        Kommentaar en vordering
-                                                    </h4>
-
-                                                    <p className="mt-1 text-sm text-zinc-500">
-                                                        {
-                                                            requestComments.length
-                                                        }{" "}
-                                                        comment
-                                                        {requestComments.length ===
-                                                        1
-                                                            ? ""
-                                                            : "s"}
-                                                    </p>
-                                                </div>
-
-                                                {requestComments.length ===
-                                                0 ? (
-                                                    <div className="mb-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-zinc-600">
-                                                        Daar is nog geen kommentaar op hierdie versoek nie.
-                                                    </div>
-                                                ) : (
-                                                    <div className="mb-5 space-y-3">
-                                                        {requestComments.map(
-                                                            (
-                                                                comment
-                                                            ) => (
-                                                                <div
-                                                                    key={
-                                                                        comment.commentID
-                                                                    }
-                                                                    className="rounded-2xl border border-white/10 bg-black/20 p-4"
-                                                                >
-                                                                    <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                                                                        <p className="text-sm font-medium text-zinc-200">
-                                                                            {comment.user
-                                                                                ? `${comment.user.firstName} ${comment.user.lastName}`
-                                                                                : `Gebruiker #${comment.userID}`}
-                                                                        </p>
-
-                                                                        <p className="text-xs text-zinc-600">
-                                                                            {formatDateTime(
-                                                                                comment.createdDate
-                                                                            )}
-                                                                        </p>
-                                                                    </div>
-
-                                                                    <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-400">
-                                                                        {
-                                                                            comment.commentText
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                <div>
-                                                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                        Voeg ’n vorderingsnota by
-                                                    </label>
-
-                                                    <textarea
-                                                        value={
-                                                            commentText[
-                                                                request
-                                                                    .requestID
-                                                            ] ??
-                                                            ""
-                                                        }
-                                                        onChange={(
-                                                            event
-                                                        ) =>
-                                                            setCommentText(
-                                                                (
-                                                                    current
-                                                                ) => ({
-                                                                    ...current,
-                                                                    [request.requestID]:
-                                                                        event
-                                                                            .target
-                                                                            .value,
-                                                                })
-                                                            )
-                                                        }
-                                                        placeholder="Voeg ’n vorderingsnota by…"
-                                                        rows={
-                                                            3
-                                                        }
-                                                        className={`${inputClass} resize-none`}
-                                                    />
-
-                                                    <div className="mt-3 flex justify-end">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                addComment(
-                                                                    request.requestID
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                commentSavingID ===
-                                                                request.requestID
-                                                            }
-                                                            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                                        >
-                                                            {commentSavingID ===
-                                                            request.requestID
-                                                                ? "Besig om by te voeg…"
-                                                                : "Voeg kommentaar by"}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </article>
                                 );
