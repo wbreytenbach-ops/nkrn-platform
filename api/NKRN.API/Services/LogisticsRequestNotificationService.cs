@@ -248,6 +248,11 @@ public class LogisticsRequestNotificationService(
         var intro = created
             ? "Die versoek is suksesvol aangemeld."
             : "Die versoek se status of prioriteit is opgedateer.";
+        // Encode before adding HTML line breaks so mic/HDMI/sound notes
+        // remain readable without allowing HTML injection.
+        var formattedDetails = E(request.Description)
+            .Replace("\r\n", "\n")
+            .Replace("\n", "<br />");
 
         return $"""
             <html>
@@ -259,7 +264,7 @@ public class LogisticsRequestNotificationService(
                 <p><strong>Soort:</strong> {E(request.RequestType)}</p>
                 <p><strong>Kategorie:</strong> {E(request.ActivityCategory ?? "Nie van toepassing nie")}</p>
                 <p><strong>Opsomming:</strong> {E(request.Title)}</p>
-                <p><strong>Besonderhede:</strong><br />{E(request.Description)}</p>
+                <p><strong>Besonderhede:</strong><br />{formattedDetails}</p>
                 <p><strong>Ligging:</strong> {E(location)}</p>
                 <p><strong>Status:</strong> {E(LogisticsWorkflow.StatusLabel(request.Status))}</p>
                 <p><strong>Prioriteit:</strong> {E(LogisticsWorkflow.PriorityLabel(request.Priority))}</p>
