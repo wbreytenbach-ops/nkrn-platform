@@ -201,9 +201,11 @@ function requestLocation(request: LogisticsRequest) {
 export default function LogisticsTeacherPortal({
     user,
     onBackToManagement,
+    startWithNewRequest = false,
 }: {
     user: NKRNUser;
     onBackToManagement?: () => void;
+    startWithNewRequest?: boolean;
 }) {
     const router = useRouter();
     const { language } = useLanguage();
@@ -224,7 +226,12 @@ export default function LogisticsTeacherPortal({
     });
 
     const [step, setStep] = useState(0);
-    const [requestOpen, setRequestOpen] = useState(false);
+    const [requestOpen, setRequestOpen] = useState(startWithNewRequest);
+    const [canChooseRequester, setCanChooseRequester] = useState(false);
+    const [requesters, setRequesters] = useState<Array<{
+        userID: number; firstName: string; lastName: string; email: string;
+    }>>([]);
+    const [requesterOverride, setRequesterOverride] = useState("");
     const requestModalRef = useRef<HTMLDivElement>(null);
     const [submitting, setSubmitting] = useState(false);
 
@@ -247,6 +254,31 @@ export default function LogisticsTeacherPortal({
     const [selectedEquipment, setSelectedEquipment] = useState<number[]>([]);
     const [maintenanceTypeID, setMaintenanceTypeID] = useState("");
     const [maintenanceAction, setMaintenanceAction] = useState<"Repair" | "Replace" | "Unsure">("Unsure");
+
+    useEffect(() => {
+        if (!startWithNewRequest) return;
+        let cancelled = false;
+
+        async function loadRequesters() {
+            try {
+                const response = await fetch(
+                    `${API_URL}/api/LogisticsRequests/requesters`,
+                    { headers: authHeaders(), cache: "no-store" }
+                );
+                if (!cancelled && response.ok) {
+                    const users = await response.json() as Array<{
+                        userID: number; firstName: string; lastName: string; email: string;
+                    }>;
+                    setRequesters(users);
+                    setCanChooseRequester(true);
+                }
+            } catch (requesterError) {
+                console.error("Unable to load Logistics requester selection.", requesterError);
+            }
+        }
+        void loadRequesters();
+        return () => { cancelled = true; };
+    }, [startWithNewRequest]);
 
     const [checkingAvailability, setCheckingAvailability] = useState(false);
     const [availabilityMessage, setAvailabilityMessage] = useState("");
@@ -362,6 +394,7 @@ export default function LogisticsTeacherPortal({
     }, [bookings, selectedMapLocationID]);
 
     function resetRequestForm() {
+        setRequesterOverride("");
         setRequestType("Event");
         setActivityCategory("Other");
         setDescription("");
@@ -607,6 +640,7 @@ export default function LogisticsTeacherPortal({
                 method: "POST",
                 headers: authHeaders(),
                 body: JSON.stringify({
+                    requestedByUserID: requesterOverride ? Number(requesterOverride) : null,
                     requestType,
                     activityCategory:
                         requestType === "Event" ? activityCategory : null,
@@ -1494,6 +1528,32 @@ export default function LogisticsTeacherPortal({
                                         interne status en prioriteit word
                                         outomaties deur die portaal hanteer.
                                     </p>
+
+                                    {canChooseRequester && (
+                                        <div className="mt-5">
+                                            <label htmlFor="logistics-requester" className="mb-2 block text-sm font-semibold text-zinc-200">
+                                                Versoek vir / Request for
+                                            </label>
+                                            <select
+                                                id="logistics-requester"
+                                                className="w-full rounded-xl border border-white/20 bg-zinc-900 p-3 text-sm text-white"
+                                                value={requesterOverride}
+                                                onChange={(event) => setRequesterOverride(event.target.value)}
+                                                disabled={submitting}
+                                            >
+                                                <option value="">Myself / Myself (my account)</option>
+                                                {requesters.filter((option) => option.userID !== user.userID).map((option) => (
+                                                    <option key={option.userID} value={option.userID}>
+                                                        {option.firstName} {option.lastName} — {option.email}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p className="mt-2 text-xs text-zinc-400">
+                                                Staff can see requests submitted on their behalf.
+                                                The system records which manager submitted the request.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {requestType === "Event" && (
@@ -2131,12 +2191,25 @@ export default function LogisticsTeacherPortal({
                                     </p>
 
                                     <p className="mt-1 text-sm font-medium text-zinc-200">
-                                        {user.firstName} {user.lastName}
+                                        {requesterOverride
+                                            ? (() => {
+                                                const selected = requesters.find((option) =>
+                                                    String(option.userID) === requesterOverride);
+                                                return selected
+                                                    ? `${selected.firstName} ${selected.lastName} (${selected.email})`
+                                                    : `${user.firstName} ${user.lastName}`;
+                                            })()
+                                            : `${user.firstName} ${user.lastName}`}
                                     </p>
 
-                                    <p className="text-xs text-zinc-600">
-                                        {user.email}
-                                    </p>
+                                    {!requesterOverride && (
+                                        <p className="text-xs text-zinc-600">{user.email}</p>
+                                    )}
+                                    {requesterOverride && (
+                                        <p className="mt-2 text-xs text-zinc-400">
+                                            Submitted by / Ingedien deur: {user.firstName} {user.lastName}
+                                        </p>
+                                    )}
 
                                     <p className="mt-2 text-xs leading-5 text-zinc-600">
                                         Die portaal koppel jou identiteit en die
