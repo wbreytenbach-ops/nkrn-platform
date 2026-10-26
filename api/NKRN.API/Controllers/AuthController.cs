@@ -1,8 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Net;
-using NKRN.API.Services;
+using Google.Apis.Auth;
 using NKRN.API.Data;
 using NKRN.API.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -18,150 +17,127 @@ namespace NKRN.API.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
-        private readonly EmailService _email;
-        private readonly EmailLoginChallengeStore _challenges;
 
         public AuthController(
             ApplicationDbContext context,
-            IConfiguration configuration,
-            EmailService email,
-            EmailLoginChallengeStore challenges)
+            IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;
-            _email = email;
-            _challenges = challenges;
         }
 
         // ============================================================
         // LOGIN
         // ============================================================
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+
+        // Google Identity Services credential verification. Client ID is configured
+        // on the API host, not bundled into source or frontend build.
+        [HttpGet("google/config")]
+        [AllowAnonymous]
+        public IActionResult GoogleConfig()
         {
-            if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email))
-                return BadRequest(new { message = "Email address is required." });
-
-            var email = loginRequest.Email.Trim().ToLowerInvariant();
-            if (!email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase))
-                return Unauthorized(new { message = "Only @tygies.co.za email addresses are allowed." });
-
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u =>
-                u.Email != null && u.Email.ToLower() == email && u.IsActive);
-
-            // Do not disclose whether an account exists to unauthenticated visitors.
-            if (user == null)
-                return Ok(new
-                {
-                    requiresVerification = true,
-                    challengeId = Guid.NewGuid().ToString("D"),
-                    message = "If your account is active, a verification code has been emailed."
-                });
-
-            if (!_challenges.TryCreate(email, out var challengeId, out var code))
-                return StatusCode(429, new
-                {
-                    message = "Too many sign-in codes requested. Please try again in 10 minutes."
-                });
-
-            try
-            {
-                var safeEmail = WebUtility.HtmlEncode(email);
-                await _email.SendEmailAsync(
-                    email,
-                    "Tygies One - your sign-in code / Aanmeldkode",
-                    $"""
-                    <html><body style="font-family:Arial,sans-serif;color:#222">
-                    <h2>Tygies One</h2>
-                    <p>Your verification code / Jou verifikasiekode:</p>
-                    <p style="font-size:28px;font-weight:bold;letter-spacing:5px">{code}</p>
-                    <p>This code expires in 5 minutes. Never share it.</p>
-                    <p>Hierdie kode verval oor 5 minute. Moenie dit deel nie.</p>
-                    <p>Account: {safeEmail}</p>
-                    <p>If you did not request this code, ignore this email.</p>
-                    </body></html>
-                    """);
-            }
-            catch
-            {
-                _challenges.Revoke(challengeId);
-                // Do not disclose SMTP credentials or internal failure details.
-                return StatusCode(503, new
-                {
-                    message = "Sign-in email is unavailable. Contact IT support."
-                });
-            }
-
-            return Ok(new
-            {
-                requiresVerification = true,
-                challengeId = challengeId.ToString("D"),
-                message = "Enter the 6-digit code sent to your Tygerpoort email."
-            });
+            var clientId = _configuration["GoogleAuth:ClientId"]?.Trim();
+            if (string.IsNullOrWhiteSpace(clientId))
+                return StatusCode(503, new { message = "Google sign-in has not been configured by IT." });
+            return Ok(new { clientId });
         }
 
-        [HttpPost("verify")]
-        public async Task<IActionResult> Verify([FromBody] VerifyLoginCodeRequest input)
+        [HttpPost("google")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginWithGoogle([FromBody] GoogleLoginRequest input)
         {
-            if (input == null ||
-                string.IsNullOrWhiteSpace(input.Email) ||
-                string.IsNullOrWhiteSpace(input.Code) ||
-                input.Code.Length != 6 ||
-                !Guid.TryParse(input.ChallengeId, out var challengeId))
-                return BadRequest(new { message = "A valid email and 6-digit code are required." });
+            if (input == null || string.IsNullOrWhiteSpace(input.Credential))
+                return BadRequest(new { message = "Google sign-in credential is required." });
 
-            var email = input.Email.Trim().ToLowerInvariant();
-            if (!email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase) ||
-                !_challenges.TryVerify(challengeId, email, input.Code))
-                return Unauthorized(new { message = "Code invalid or expired. Request a new code." });
+            var clientId = _configuration["GoogleAuth:ClientId"]?.Trim();
+            if (string.IsNullOrWhiteSpace(clientId))
+                return StatusCode(503, new { message = "Google sign-in has not been configured by IT." });
+
+            GoogleJsonWebSignature.Payload payload;
+            try
+            {
+                payload = await GoogleJsonWebSignature.ValidateAsync(
+                    input.Credential,
+                    new GoogleJsonWebSignature.ValidationSettings
+                    {
+                        Audience = new[] { clientId },
+                        HostedDomain = "tygies.co.za"
+                    });
+            }
+            catch (Exception)
+            {
+                return Unauthorized(new { message = "Google sign-in could not be verified." });
+            }
+
+            var email = payload.Email?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(payload.Subject) ||
+                payload.EmailVerified != true ||
+                string.IsNullOrWhiteSpace(email) ||
+                !email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(payload.HostedDomain, "tygies.co.za", StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(new
+                {
+                    message = "Use your verified Tygerpoort Google Workspace account."
+                });
 
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u =>
                 u.Email != null && u.Email.ToLower() == email && u.IsActive);
-            if (user == null) return Unauthorized();
+            if (user == null)
+                return Unauthorized(new
+                {
+                    message = "Your account is not active in Tygies One. Contact IT."
+                });
 
+            return CreateTokenResponse(user);
+        }
+
+        // Never issue a JWT from a plain email, even for a pre-existing user.
+        [HttpPost("login")]
+        public IActionResult LegacyLogin() => StatusCode(410, new
+        {
+            message = "Email-only login is disabled. Use Sign in with Google."
+        });
+
+        private IActionResult CreateTokenResponse(User user)
+        {
             var configuredJwtKey = _configuration["Jwt:Key"] ?? string.Empty;
             var configuredIssuer = _configuration["Jwt:Issuer"] ?? string.Empty;
             var configuredAudience = _configuration["Jwt:Audience"] ?? string.Empty;
             if (string.IsNullOrWhiteSpace(configuredJwtKey) ||
                 string.IsNullOrWhiteSpace(configuredIssuer) ||
                 string.IsNullOrWhiteSpace(configuredAudience))
-                return StatusCode(500, new { message = "Authentication has not been configured." });
+                return StatusCode(503, new { message = "Authentication is not configured." });
 
-            var userEmail = user.Email ?? string.Empty;
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(configuredJwtKey));
+            var signing = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
             var firstName = user.FirstName ?? string.Empty;
             var lastName = user.LastName ?? string.Empty;
+            var email = user.Email ?? string.Empty;
             var roleID = user.RoleID ?? 1;
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuredJwtKey));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
-                new Claim(ClaimTypes.Email, userEmail),
+                new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.GivenName, firstName),
                 new Claim(ClaimTypes.Surname, lastName),
                 new Claim(ClaimTypes.Role, roleID.ToString()),
-                // Old tokens without verified identity become invalid.
-                new Claim("nkrn_auth", "email_otp")
+                new Claim("nkrn_auth", "google_workspace"),
+                new Claim("nkrn_auth_version", "2")
             };
             var token = new JwtSecurityToken(
                 issuer: configuredIssuer,
                 audience: configuredAudience,
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(8),
-                signingCredentials: credentials);
+                signingCredentials: signing);
 
             return Ok(new
             {
                 token = new JwtSecurityTokenHandler().WriteToken(token),
-                user = new
-                {
-                    userID = user.UserID,
-                    firstName,
-                    lastName,
-                    email = userEmail,
-                    roleID
-                }
+                user = new { userID = user.UserID, firstName, lastName, email, roleID }
             });
         }
 
@@ -336,11 +312,9 @@ namespace NKRN.API.Controllers
         public string Email { get; set; } = string.Empty;
     }
 
-    public class VerifyLoginCodeRequest
+    public class GoogleLoginRequest
     {
-        public string Email { get; set; } = string.Empty;
-        public string ChallengeId { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
+        public string Credential { get; set; } = string.Empty;
     }
 
     // ================================================================
