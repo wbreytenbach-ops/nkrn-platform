@@ -143,7 +143,7 @@ public class LogisticsWorkflowTests
                     RequestType = "Sound",
                     RequestedByEmail = "teacher@example.invalid",
                     RequestedByName = "Teacher",
-                    Description = "Sound: Microphone + HDMI\\nTwo microphones\\n<do not trust>",
+                    Description = "Sound: Microphone + HDMI\nTwo microphones\n<do not trust>",
                     Status = "Logged",
                     Priority = "Medium"
                 },
