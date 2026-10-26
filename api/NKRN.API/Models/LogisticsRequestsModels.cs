@@ -8,6 +8,10 @@ namespace NKRN.API.Models
 
     public class CreateLogisticsRequestRequest
     {
+        // Optional: only Logistics managers/super admins may select someone
+        // other than themselves. Enforced on the API, not the browser.
+        public int? RequestedByUserID { get; set; }
+
         [Required]
         public string RequestType { get; set; } = string.Empty;
 
