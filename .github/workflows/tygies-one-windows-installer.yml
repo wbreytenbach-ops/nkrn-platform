@@ -3,7 +3,7 @@ name: Tygies One Windows Installer
 on:
   push:
     branches:
-      - fix/tygies-one-logistics-access-20261026
+      - fix/logistics-sound-and-email-login-20261026
   workflow_dispatch:
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          & .\deployment\tygies-app\Build-Release.ps1 -ProjectRoot $env:GITHUB_WORKSPACE -OutputRoot (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -AllowDetachedHead -SourceBranch 'fix/tygies-one-logistics-access-20261026'
+          & .\deployment\tygies-app\Build-Release.ps1 -ProjectRoot $env:GITHUB_WORKSPACE -OutputRoot (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -AllowDetachedHead -SourceBranch 'fix/logistics-sound-and-email-login-20261026'
           if ($LASTEXITCODE -ne 0) { throw 'Windows release build failed.' }
 
       - name: Assemble one installer ZIP
@@ -63,7 +63,7 @@ jobs:
       - name: Publish installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TygiesOne-GoogleSSO-Windows-Installer
+          name: TygiesOne-Logistics-Sound-Windows-Installer
           path: ${{ runner.temp }}/TygiesOne-Installer.zip
           if-no-files-found: error
           retention-days: 14
