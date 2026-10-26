@@ -3,7 +3,7 @@ name: Tygies One Windows Installer
 on:
   push:
     branches:
-      - fix/logistics-sound-and-email-login-20261026
+      - fix/it-chat-mentions-jaron-20261026
   workflow_dispatch:
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          & .\deployment\tygies-app\Build-Release.ps1 -ProjectRoot $env:GITHUB_WORKSPACE -OutputRoot (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -AllowDetachedHead -SourceBranch 'fix/logistics-sound-and-email-login-20261026'
+          & .\deployment\tygies-app\Build-Release.ps1 -ProjectRoot $env:GITHUB_WORKSPACE -OutputRoot (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -AllowDetachedHead -SourceBranch 'fix/it-chat-mentions-jaron-20261026'
           if ($LASTEXITCODE -ne 0) { throw 'Windows release build failed.' }
 
       - name: Assemble one installer ZIP
