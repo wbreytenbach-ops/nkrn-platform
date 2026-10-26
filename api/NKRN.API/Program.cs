@@ -1,4 +1,5 @@
 using System.Text;
+using System.Security.Claims;
 using NKRN.API.Data;
 using NKRN.API.Models;
 using NKRN.API.Services;
@@ -97,6 +98,35 @@ builder.Services
 
                 ClockSkew = TimeSpan.Zero
             };
+
+        // Reject legacy email-only tokens. Check active role each request so
+        // deactivation or permission changes take effect immediately.
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var identity = context.Principal;
+                if (identity?.FindFirst("nkrn_auth")?.Value != "google_workspace" ||
+                    identity.FindFirst("nkrn_auth_version")?.Value != "2")
+                {
+                    context.Fail("A verified Google sign-in is required.");
+                    return;
+                }
+
+                var id = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var role = identity.FindFirst(ClaimTypes.Role)?.Value;
+                if (!int.TryParse(id, out var userID) || !int.TryParse(role, out var roleID))
+                {
+                    context.Fail("Invalid user identity.");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+                var active = await db.Users.AsNoTracking()
+                    .AnyAsync(u => u.UserID == userID && u.IsActive && u.RoleID == roleID);
+                if (!active) context.Fail("Account inactive or permissions changed.");
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
