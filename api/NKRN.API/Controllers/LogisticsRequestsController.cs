@@ -108,6 +108,71 @@ namespace NKRN.API.Controllers
         }
 
         // ============================================================
+        // LOGISTICS ACCESS / REQUESTER OPTIONS
+        // Check the current database permissions rather than trusting the
+        // role stored in browser localStorage or a task-view response.
+        // ============================================================
+
+        [HttpGet("access")]
+        public async Task<IActionResult> GetAccess()
+        {
+            var userID = GetLoggedInUserID();
+            if (!userID.HasValue) return Unauthorized();
+
+            var actor = await _context.Users.AsNoTracking()
+                .Where(u => u.UserID == userID.Value && u.IsActive)
+                .Select(u => new { u.RoleID, u.Email })
+                .FirstOrDefaultAsync();
+
+            if (actor == null) return Unauthorized();
+
+            var securityOnly = await IsSecurityReviewerAsync();
+            var permission = await _context.ModulePermissions.AsNoTracking()
+                .Where(p => p.UserID == userID.Value &&
+                            p.ModuleKey.ToLower() == "logistics")
+                .Select(p => new { p.CanView, p.CanManage, p.CanAdmin })
+                .FirstOrDefaultAsync();
+
+            var manager = !securityOnly &&
+                (actor.RoleID == 3 ||
+                 (permission != null && permission.CanView &&
+                  (permission.CanManage || permission.CanAdmin)));
+            var administrator = !securityOnly &&
+                (actor.RoleID == 3 ||
+                 (permission != null && permission.CanView && permission.CanAdmin));
+
+            return Ok(new
+            {
+                canSubmit = true,
+                canManage = manager,
+                canAdmin = administrator,
+                canSubmitForOthers = manager,
+                isSecurityReviewer = securityOnly
+            });
+        }
+
+        [HttpGet("requesters")]
+        public async Task<IActionResult> GetRequesters()
+        {
+            if (await IsSecurityReviewerAsync() ||
+                !await CanManageLogisticsAsync()) return Forbid();
+
+            var requesters = await _context.Users.AsNoTracking()
+                .Where(u => u.IsActive && u.Email != null && u.Email != "")
+                .OrderBy(u => u.FirstName).ThenBy(u => u.LastName)
+                .Select(u => new
+                {
+                    u.UserID,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email
+                })
+                .ToListAsync();
+
+            return Ok(requesters);
+        }
+
+        // ============================================================
         // GET ONE REQUEST
         // Owner OR Logistics management.
         // ============================================================
@@ -227,6 +292,31 @@ namespace NKRN.API.Controllers
                 {
                     message = "Request information is required."
                 });
+            }
+
+            // A manager or super admin may submit on a staff member's behalf.
+            // Ordinary staff can only create requests in their own name.
+            var actualRequesterID = userID.Value;
+            if (request.RequestedByUserID.HasValue)
+            {
+                var chosenID = request.RequestedByUserID.Value;
+                if (chosenID <= 0)
+                    return BadRequest(new { message = "Invalid requester." });
+
+                if (chosenID != userID.Value)
+                {
+                    if (await IsSecurityReviewerAsync() ||
+                        !await CanManageLogisticsAsync())
+                        return Forbid();
+
+                    var chosenActive = await _context.Users.AsNoTracking()
+                        .AnyAsync(u => u.UserID == chosenID && u.IsActive &&
+                                       u.Email != null && u.Email != "");
+                    if (!chosenActive)
+                        return BadRequest(new { message = "Select an active requester." });
+
+                    actualRequesterID = chosenID;
+                }
             }
 
             if (string.IsNullOrWhiteSpace(request.RequestType))
@@ -372,7 +462,7 @@ namespace NKRN.API.Controllers
                     AddParameter(
                         command,
                         "@RequestedByUserID",
-                        userID.Value);
+                        actualRequesterID);
 
                     AddParameter(
                         command,
@@ -594,6 +684,25 @@ namespace NKRN.API.Controllers
                         CleanNullable(item.Notes));
 
                     await command.ExecuteNonQueryAsync();
+                }
+
+                // Preserve who actually submitted an on-behalf-of request.
+                // This reuses the existing request comments table; no migration.
+                if (actualRequesterID != userID.Value)
+                {
+                    await using var audit = connection.CreateCommand();
+                    audit.Transaction = transaction;
+                    audit.CommandText = """
+                        INSERT INTO dbo.LogisticsRequestComments
+                            (RequestID, UserID, Body)
+                        VALUES (@RequestID, @ActorID, @AuditMessage);
+                        """;
+                    AddParameter(audit, "@RequestID", requestID);
+                    AddParameter(audit, "@ActorID", userID.Value);
+                    AddParameter(audit, "@AuditMessage",
+                        "Versoek namens 'n ander personeellid ingedien / " +
+                        "Request submitted on behalf of another staff member.");
+                    await audit.ExecuteNonQueryAsync();
                 }
 
                 await transaction.CommitAsync();
