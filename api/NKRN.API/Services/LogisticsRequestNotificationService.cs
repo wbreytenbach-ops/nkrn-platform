@@ -21,6 +21,14 @@ public class LogisticsRequestNotificationService(
         "msmit@tygies.co.za"
     };
 
+    // Sound requests are independently tracked by Logistics but routed to IT.
+    // Do not send Sound-only notifications to the general Logistics list.
+    private static readonly string[] SoundRecipients =
+    {
+        "it@tygies.co.za",
+        "wbreytenbach@tygies.co.za"
+    };
+
     public async Task NotifyAsync(
         LogisticsRequestResponse request,
         bool created = false,
@@ -41,7 +49,12 @@ public class LogisticsRequestNotificationService(
                 recipients.Add(request.RequestedByEmail.Trim());
             }
 
-            foreach (var address in DefaultRecipients)
+            var soundRequest = string.Equals(
+                request.RequestType?.Trim(),
+                "Sound",
+                StringComparison.OrdinalIgnoreCase);
+
+            foreach (var address in soundRequest ? SoundRecipients : DefaultRecipients)
             {
                 if (!string.IsNullOrWhiteSpace(address))
                 {
@@ -57,10 +70,13 @@ public class LogisticsRequestNotificationService(
                 recipients.Add("jwerner@tygies.co.za");
             }
 
-            var heading = eventHeading ??
-                (created
-                    ? "Logistieke versoek ontvang"
-                    : "Logistieke versoek opgedateer");
+            var heading = soundRequest
+                ? (created ? "Klankversoek ontvang / Sound request received"
+                           : "Klankversoek opgedateer / Sound request updated")
+                : eventHeading ??
+                    (created
+                        ? "Logistieke versoek ontvang"
+                        : "Logistieke versoek opgedateer");
 
             var body = BuildEmailBody(request, heading, created);
 
