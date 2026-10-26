@@ -269,13 +269,21 @@ namespace NKRN.API.Controllers
             string email =
                 registerRequest.Email.Trim().ToLower();
 
-            if (!email.EndsWith("@tygies.co.za"))
+            var isSchoolAddress = email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase);
+            // An external IT contact is an assignment/email recipient only.
+            // Portal login remains restricted to @tygies.co.za addresses.
+            if (!isSchoolAddress)
             {
-                return BadRequest(new
+                if (!registerRequest.ExternalITContact || registerRequest.RoleID != 1 ||
+                    !System.Net.Mail.MailAddress.TryCreate(email, out var parsed) ||
+                    !string.Equals(parsed.Address, email, StringComparison.OrdinalIgnoreCase) ||
+                    email.Length > 100)
                 {
-                    message =
-                        "Only @tygies.co.za email addresses are allowed."
-                });
+                    return BadRequest(new
+                    {
+                        message = "External IT contacts must have a valid email and User role. They cannot sign in."
+                    });
+                }
             }
 
             var existingUser =
@@ -365,5 +373,6 @@ namespace NKRN.API.Controllers
         public string Email { get; set; } = string.Empty;
 
         public int RoleID { get; set; } = 1;
+        public bool ExternalITContact { get; set; } = false;
     }
 }

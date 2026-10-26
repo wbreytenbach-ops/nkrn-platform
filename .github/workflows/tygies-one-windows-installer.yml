@@ -1,0 +1,110 @@
+name: Tygies One Windows Installer
+
+on:
+  push:
+    branches:
+      - fix/it-chat-mentions-jaron-20261026
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-release:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout exact branch revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Validate Windows installer syntax and migration
+        shell: pwsh
+        run: |
+          $files = @(
+            '.\\deployment\\tygies-app\\Install-Production.ps1',
+            '.\\deployment\\tygies-app\\Deploy-Release.ps1',
+            '.\\deployment\\tygies-app\\Deploy-FrontendRelease.ps1',
+            '.\\deployment\\tygies-app\\Build-Release.ps1'
+          )
+          foreach ($file in $files) {
+            $tokens = $null; $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $file).Path, [ref]$tokens, [ref]$parseErrors
+            ) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              throw "PowerShell syntax error in ${file}: $($parseErrors | Out-String)"
+            }
+          }
+          $migration = Get-Content '.\\api\\NKRN.API\\Database\\20261026_ITRequestMentions.sql' -Raw
+          if ($migration -notmatch 'OBJECT_ID' -or $migration -notmatch 'CREATE TABLE dbo.ITRequestMentions') {
+            throw 'Missing idempotent IT mentions migration.'
+          }
+
+      - name: Build and validate API tests
+        shell: pwsh
+        run: |
+          dotnet test .\tests\NKRN.Requests.Tests\NKRN.Requests.Tests.csproj --configuration Release
+          if ($LASTEXITCODE -ne 0) { throw 'API tests failed.' }
+
+      - name: Build verified Windows API + frontend
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\deployment\tygies-app\Build-Release.ps1 -ProjectRoot $env:GITHUB_WORKSPACE -OutputRoot (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -AllowDetachedHead -SourceBranch 'fix/it-chat-mentions-jaron-20261026'
+          if ($LASTEXITCODE -ne 0) { throw 'Windows release build failed.' }
+
+      - name: Assemble one installer ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $releases = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -Filter 'NKRN-*.zip' -File -Recurse
+          if (@($releases).Count -ne 1) { throw "Expected one release ZIP, got $(@($releases).Count)" }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $inner = [IO.Compression.ZipFile]::OpenRead($releases[0].FullName)
+          try {
+            $needed = @(
+              'release.json',
+              'api\NKRN.API.dll',
+              'frontend\server.js',
+              'frontend\.next\BUILD_ID',
+              'database\20261026_ITRequestMentions.sql'
+            )
+            foreach ($entry in $needed) {
+              if (-not $inner.GetEntry($entry)) {
+                throw "Windows release ZIP missing mandatory entry: $entry"
+              }
+            }
+          }
+          finally { $inner.Dispose() }
+
+          $staging = Join-Path $env:RUNNER_TEMP 'TygiesOne-Installer'
+          New-Item -ItemType Directory -Path $staging -Force | Out-Null
+          Copy-Item $releases[0].FullName -Destination $staging
+          Copy-Item .\deployment\tygies-app\Install-Production.ps1 (Join-Path $staging 'Install-TygiesOne.ps1')
+          Copy-Item .\deployment\tygies-app\Deploy-Release.ps1 $staging
+          Copy-Item .\deployment\tygies-app\Deploy-FrontendRelease.ps1 $staging
+          $sum = (Get-FileHash $releases[0].FullName -Algorithm SHA256).Hash
+          Set-Content -Path (Join-Path $staging 'SHA256.txt') -Value $sum
+          Compress-Archive -Path (Join-Path $staging '*') -DestinationPath (Join-Path $env:RUNNER_TEMP 'TygiesOne-Installer.zip')
+          Write-Output "One installer ZIP ready: $(Join-Path $env:RUNNER_TEMP 'TygiesOne-Installer.zip')"
+
+      - name: Publish installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TygiesOne-Logistics-Sound-Windows-Installer
+          path: ${{ runner.temp }}/TygiesOne-Installer.zip
+          if-no-files-found: error
+          retention-days: 14

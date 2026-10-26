@@ -58,29 +58,11 @@ export default function LogisticsPage() {
 
                 setUser(loggedInUser);
 
-                // Security contact receives a read-only Security-only workspace.
-                if (
-                    loggedInUser.email?.trim().toLowerCase() ===
-                    "jwerner@tygies.co.za"
-                ) {
-                    setSecurityAccess(true);
-                    return;
-                }
-
-                // NKRN-admins retain their management permissions.
-                if (loggedInUser.roleID === 3) {
-                    setManagementAccess(true);
-                    return;
-                }
-
-                // This endpoint already respects Logistics ModulePermissions.
-                // Keep the existing access-control logic unchanged.
+                // Use the API's current DB authorization. A successful
+                // LogisticsTasks read only proves CanView, not management.
                 const response = await fetch(
-                    `${API_URL}/api/LogisticsTasks?includeArchived=false`,
-                    {
-                        headers: authHeaders(),
-                        cache: "no-store",
-                    }
+                    `${API_URL}/api/LogisticsRequests/access`,
+                    { headers: authHeaders(), cache: "no-store" }
                 );
 
                 if (response.status === 401) {
@@ -90,23 +72,21 @@ export default function LogisticsPage() {
                     return;
                 }
 
-                if (cancelled) {
-                    return;
+                if (!response.ok) {
+                    throw new Error(
+                        `Unable to check Logistics access (${response.status}).`
+                    );
                 }
 
-                if (response.ok) {
-                    setManagementAccess(true);
-                    return;
-                }
+                const access = (await response.json()) as {
+                    canManage: boolean;
+                    canSubmit: boolean;
+                    isSecurityReviewer: boolean;
+                };
+                if (cancelled) return;
 
-                if (response.status === 403) {
-                    setManagementAccess(false);
-                    return;
-                }
-
-                throw new Error(
-                    `Kon nie Logistiek-toegang bepaal nie (${response.status}).`
-                );
+                setSecurityAccess(access.isSecurityReviewer);
+                setManagementAccess(!access.isSecurityReviewer && access.canManage);
             } catch (accessError) {
                 console.error(
                     "Kon nie Logistiek-toegang bepaal nie:",
@@ -202,15 +182,19 @@ export default function LogisticsPage() {
         );
     }
 
-    if (managementAccess && adminRequestMode) {
+    if (adminRequestMode) {
         return (
             <LogisticsTeacherPortal
                 user={user}
+                startWithNewRequest
                 onBackToManagement={() => setAdminRequestMode(false)}
             />
         );
     }
 
+    // Both views provide their own New Request action within the page header.
+    // Avoid a detached outer action strip that produces a large blank area
+    // above the management dashboard (especially in light mode).
     return managementAccess ? (
         <LogisticsManagementDashboard
             onCreateRequest={() => setAdminRequestMode(true)}

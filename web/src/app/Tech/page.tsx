@@ -1,6 +1,7 @@
 "use client";
 
 import { itLabel } from "../it-labels";
+import ITRequestConversation from "../components/ITRequestConversation";
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -44,15 +45,6 @@ interface Category {
     categoryName: string;
 }
 
-interface Comment {
-    commentID: number;
-    requestID: number;
-    userID: number;
-    comment: string;
-    createdDate: string;
-    user?: User;
-}
-
 interface RequestUpdate {
     assignedTo: number | null;
     statusID: number;
@@ -85,8 +77,6 @@ export default function TechPage() {
         useState<RequestModel | null>(null);
     const deepLinkOpened = useRef(false);
 
-    const [comments, setComments] = useState<Comment[]>([]);
-    const [newComment, setNewComment] = useState("");
 
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
@@ -94,7 +84,6 @@ export default function TechPage() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [commentsLoading, setCommentsLoading] = useState(false);
     const [message, setMessage] = useState("");
 
     const [editAssignedTo, setEditAssignedTo] =
@@ -251,6 +240,7 @@ export default function TechPage() {
                     (item) =>
                         item.roleID === 2 ||
                         item.firstName?.trim().toLowerCase() === "jaron" ||
+                        !item.email?.toLowerCase().endsWith("@tygies.co.za") ||
                         (user?.roleID === 3 && item.roleID === 3)
                 )
             );
@@ -296,52 +286,15 @@ export default function TechPage() {
     // SELECT REQUEST
     // =========================================================
 
-    const loadComments = useCallback(
-        async (requestID: number) => {
-            setCommentsLoading(true);
-
-            try {
-                const response = await fetch(
-                    `${API_URL}/api/RequestComments/request/${requestID}`,
-                    {
-                        method: "GET",
-                        headers: getHeaders(),
-                    }
-                );
-
-                if (!response.ok) {
-                    setComments([]);
-                    return;
-                }
-
-                const data = (await response.json()) as Comment[];
-
-                setComments(data);
-            } catch (error) {
-                console.error(
-                    "Failed to load comments:",
-                    error
-                );
-
-                setComments([]);
-            } finally {
-                setCommentsLoading(false);
-            }
-        },
-        [getHeaders]
-    );
-
     const selectRequest = useCallback(
         async (request: RequestModel) => {
             setSelectedRequest(request);
             setEditAssignedTo(request.assignedTo);
             setEditStatusID(request.statusID);
             setEditPriority(request.priority);
-            setNewComment("");
 
-            await loadComments(request.requestID);
         },
-        [loadComments]
+        []
     );
 
     // =========================================================
@@ -438,59 +391,6 @@ export default function TechPage() {
             );
         } finally {
             setSaving(false);
-        }
-    }
-
-    // =========================================================
-    // ADD COMMENT
-    // =========================================================
-
-    async function addComment() {
-        if (!selectedRequest || !user) {
-            return;
-        }
-
-        const trimmedComment = newComment.trim();
-
-        if (!trimmedComment) {
-            return;
-        }
-
-        try {
-            const response = await fetch(
-                `${API_URL}/api/RequestComments`,
-                {
-                    method: "POST",
-                    headers: getHeaders(),
-                    body: JSON.stringify({
-                        requestID:
-                            selectedRequest.requestID,
-                        userID: user.userID,
-                        comment: trimmedComment,
-                    }),
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(
-                    `Comment failed: ${response.status}`
-                );
-            }
-
-            setNewComment("");
-
-            await loadComments(
-                selectedRequest.requestID
-            );
-        } catch (error) {
-            console.error(
-                "Unable to add comment:",
-                error
-            );
-
-            setMessage(
-                "Die kommentaar kon nie bygevoeg word nie."
-            );
         }
     }
 
@@ -1353,96 +1253,8 @@ export default function TechPage() {
                                     </div>
                                 </div>
 
-                                {/* COMMENTS */}
-
-                                <div className="mt-6">
-                                    <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-                                        Interne kommentaar
-                                    </p>
-
-                                    <div className="space-y-3">
-                                        {commentsLoading ? (
-                                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-500">
-                                                Kommentaar laai…
-                                            </div>
-                                        ) : comments.length ===
-                                          0 ? (
-                                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-500">
-                                                Nog geen kommentaar nie.
-                                            </div>
-                                        ) : (
-                                            comments.map(
-                                                (
-                                                    comment
-                                                ) => (
-                                                    <div
-                                                        key={
-                                                            comment.commentID
-                                                        }
-                                                        className="rounded-2xl border border-white/10 bg-black/20 p-4"
-                                                    >
-                                                        <div className="flex items-center justify-between gap-3">
-                                                            <p className="text-sm font-medium text-zinc-200">
-                                                                {comment.user
-                                                                    ? `${comment.user.firstName} ${comment.user.lastName}`
-                                                                    : `Gebruiker #${comment.userID}`}
-                                                            </p>
-
-                                                            <p className="text-xs text-zinc-600">
-                                                                {formatDate(
-                                                                    comment.createdDate
-                                                                )}
-                                                            </p>
-                                                        </div>
-
-                                                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-400">
-                                                            {
-                                                                comment.comment
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                )
-                                            )
-                                        )}
-                                    </div>
-
-                                    {user.roleID !== 1 && (
-                                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                                        <input
-                                            value={
-                                                newComment
-                                            }
-                                            onChange={(e) =>
-                                                setNewComment(
-                                                    e.target.value
-                                                )
-                                            }
-                                            onKeyDown={(e) => {
-                                                if (
-                                                    e.key ===
-                                                    "Enter"
-                                                ) {
-                                                    e.preventDefault();
-
-                                                    void addComment();
-                                                }
-                                            }}
-                                            placeholder="Voeg interne kommentaar by…"
-                                            className={inputClass}
-                                        />
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                void addComment()
-                                            }
-                                            className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
-                                        >
-                                            Voeg kommentaar by
-                                        </button>
-                                    </div>
-                                    )}
-                                </div>
+                                {/* IT CONVERSATION — COMMENTS AND @MENTIONS */}
+                                <ITRequestConversation requestID={selectedRequest.requestID} />
                             </div>
 
                             {/* MANAGEMENT PANEL */}

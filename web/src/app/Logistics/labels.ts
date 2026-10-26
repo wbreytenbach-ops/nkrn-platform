@@ -19,6 +19,7 @@
     Maintenance: "Maintenance",
     General: "General",
     Security: "Security",
+    Sound: "Klank / Sound",
 
     Repair: "Repair",
     Replace: "Replace",

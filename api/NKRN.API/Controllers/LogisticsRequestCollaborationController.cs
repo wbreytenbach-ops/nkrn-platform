@@ -85,7 +85,7 @@ public class LogisticsRequestCollaborationController(ApplicationDbContext db, Lo
         if (!await ManagerAsync()) return Forbid();
         if (string.IsNullOrWhiteSpace(input.Description) || string.IsNullOrWhiteSpace(input.Title))
             return BadRequest(new {message="Title and description are required."});
-        if (!new[]{"Event","Maintenance","General"}.Contains(input.RequestType)) return BadRequest(new {message="Invalid request type."});
+        if (!new[]{"Event","Maintenance","General","Sound","Security"}.Contains(input.RequestType)) return BadRequest(new {message="Invalid request type."});
         if (input.StartTime.HasValue && input.EndTime.HasValue && input.EndTime <= input.StartTime) return BadRequest(new {message="End time must be after start time."});
         if (input.Equipment.Any(i=>i.EquipmentTypeID<=0 || i.Quantity<=0) || input.MaintenanceItems.Any(i=>i.MaintenanceTypeID<=0 || !new[]{"Repair","Replace","Unsure"}.Contains(i.ActionType)))
             return BadRequest(new {message="Invalid equipment or maintenance selection."});

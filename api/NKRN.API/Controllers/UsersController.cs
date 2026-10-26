@@ -71,7 +71,8 @@ namespace NKRN.API.Controllers
                     u.IsActive &&
                     (u.RoleID == 2 || u.RoleID == 3 ||
                      (u.FirstName != null &&
-                      u.FirstName.Trim().ToLower() == "jaron")))
+                      u.FirstName.Trim().ToLower() == "jaron") ||
+                     !u.Email.EndsWith("@tygies.co.za")))
                 .OrderBy(u => u.FirstName)
                 .ThenBy(u => u.LastName)
                 .ToListAsync();
@@ -111,14 +112,12 @@ namespace NKRN.API.Controllers
                 });
             }
 
-            if (!user.Email.EndsWith(
-                "@tygies.co.za",
-                StringComparison.OrdinalIgnoreCase))
+            if (!user.Email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase) &&
+                (user.RoleID != 1 || !System.Net.Mail.MailAddress.TryCreate(user.Email.Trim(), out _)))
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Only @tygies.co.za email addresses are allowed."
+                    message = "External IT contacts are email-only recipients with User role."
                 });
             }
 
@@ -204,14 +203,12 @@ namespace NKRN.API.Controllers
                 });
             }
 
-            if (!user.Email.EndsWith(
-                "@tygies.co.za",
-                StringComparison.OrdinalIgnoreCase))
+            if (!user.Email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase) &&
+                (user.RoleID != 1 || !System.Net.Mail.MailAddress.TryCreate(user.Email.Trim(), out _)))
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Only @tygies.co.za email addresses are allowed."
+                    message = "External IT contacts are email-only recipients with User role."
                 });
             }
 
@@ -229,7 +226,7 @@ namespace NKRN.API.Controllers
 
             existingUser.FirstName = user.FirstName;
             existingUser.LastName = user.LastName;
-            existingUser.Email = user.Email;
+            existingUser.Email = user.Email.Trim().ToLowerInvariant();
             existingUser.RoleID = user.RoleID;
 
             await _context.SaveChangesAsync();

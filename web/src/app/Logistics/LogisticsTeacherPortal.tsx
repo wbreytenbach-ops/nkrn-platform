@@ -114,6 +114,20 @@ interface ReferenceData {
 
 type PortalView = "home" | "requests" | "venues" | "map";
 
+// Dedicated sound requests are sent to the school IT sound support team.
+const SOUND_OPTIONS = [
+    { id: "MicrophoneOnly", af: "Slegs mikrofoon", en: "Microphone only", microphone: true },
+    { id: "MusicOnly", af: "Slegs musiek", en: "Music only", microphone: false },
+    { id: "MicrophoneMusic", af: "Mikrofoon en musiek", en: "Microphone and music", microphone: true },
+    { id: "HDMIOnly", af: "HDMI / klank vanaf skootrekenaar", en: "HDMI / laptop audio", microphone: false },
+    { id: "MicrophoneHDMI", af: "Mikrofoon en HDMI", en: "Microphone and HDMI", microphone: true },
+    { id: "MusicHDMI", af: "Musiek en HDMI", en: "Music and HDMI", microphone: false },
+    { id: "MicrophoneMusicHDMI", af: "Mikrofoon, musiek en HDMI", en: "Microphone, music and HDMI", microphone: true },
+    { id: "Other", af: "Ander klankopstelling", en: "Other sound setup", microphone: false },
+] as const;
+
+type SoundOption = (typeof SOUND_OPTIONS)[number]["id"];
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const glassCard =
@@ -201,9 +215,11 @@ function requestLocation(request: LogisticsRequest) {
 export default function LogisticsTeacherPortal({
     user,
     onBackToManagement,
+    startWithNewRequest = false,
 }: {
     user: NKRNUser;
     onBackToManagement?: () => void;
+    startWithNewRequest?: boolean;
 }) {
     const router = useRouter();
     const { language } = useLanguage();
@@ -224,7 +240,12 @@ export default function LogisticsTeacherPortal({
     });
 
     const [step, setStep] = useState(0);
-    const [requestOpen, setRequestOpen] = useState(false);
+    const [requestOpen, setRequestOpen] = useState(startWithNewRequest);
+    const [canChooseRequester, setCanChooseRequester] = useState(false);
+    const [requesters, setRequesters] = useState<Array<{
+        userID: number; firstName: string; lastName: string; email: string;
+    }>>([]);
+    const [requesterOverride, setRequesterOverride] = useState("");
     const requestModalRef = useRef<HTMLDivElement>(null);
     const [submitting, setSubmitting] = useState(false);
 
@@ -232,6 +253,10 @@ export default function LogisticsTeacherPortal({
     const [activityCategory, setActivityCategory] = useState("Other");
     const [description, setDescription] = useState("");
     const [securityRequired, setSecurityRequired] = useState(false);
+    const [soundRequired, setSoundRequired] = useState(false);
+    const [soundOption, setSoundOption] = useState<SoundOption>("MicrophoneOnly");
+    const [microphoneCount, setMicrophoneCount] = useState(1);
+    const [soundNotes, setSoundNotes] = useState("");
     const [guardCount, setGuardCount] = useState(1);
     const [schoolGuards, setSchoolGuards] = useState<string[]>([]);
     const [parkingRequired, setParkingRequired] = useState(false);
@@ -247,6 +272,31 @@ export default function LogisticsTeacherPortal({
     const [selectedEquipment, setSelectedEquipment] = useState<number[]>([]);
     const [maintenanceTypeID, setMaintenanceTypeID] = useState("");
     const [maintenanceAction, setMaintenanceAction] = useState<"Repair" | "Replace" | "Unsure">("Unsure");
+
+    useEffect(() => {
+        if (!startWithNewRequest) return;
+        let cancelled = false;
+
+        async function loadRequesters() {
+            try {
+                const response = await fetch(
+                    `${API_URL}/api/LogisticsRequests/requesters`,
+                    { headers: authHeaders(), cache: "no-store" }
+                );
+                if (!cancelled && response.ok) {
+                    const users = await response.json() as Array<{
+                        userID: number; firstName: string; lastName: string; email: string;
+                    }>;
+                    setRequesters(users);
+                    setCanChooseRequester(true);
+                }
+            } catch (requesterError) {
+                console.error("Unable to load Logistics requester selection.", requesterError);
+            }
+        }
+        void loadRequesters();
+        return () => { cancelled = true; };
+    }, [startWithNewRequest]);
 
     const [checkingAvailability, setCheckingAvailability] = useState(false);
     const [availabilityMessage, setAvailabilityMessage] = useState("");
@@ -328,14 +378,16 @@ export default function LogisticsTeacherPortal({
     }, [loadPortal]);
 
     useEffect(() => {
-        if (!requestOpen) return;
+        // Managers enter with the form already open. Wait for the portal's
+        // initial data load before scrolling/focusing the rendered form.
+        if (!requestOpen || loading) return;
 
         const requestSection = requestModalRef.current;
         if (!requestSection) return;
 
         requestSection.scrollIntoView({ behavior: "smooth", block: "start" });
         requestSection.focus({ preventScroll: true });
-    }, [requestOpen]);
+    }, [requestOpen, loading]);
 
     const activeRequests = useMemo(
         () =>
@@ -362,6 +414,7 @@ export default function LogisticsTeacherPortal({
     }, [bookings, selectedMapLocationID]);
 
     function resetRequestForm() {
+        setRequesterOverride("");
         setRequestType("Event");
         setActivityCategory("Other");
         setDescription("");
@@ -374,6 +427,10 @@ export default function LogisticsTeacherPortal({
         setCustomLocation("");
         setSelectedEquipment([]);
         setSecurityRequired(false);
+        setSoundRequired(false);
+        setSoundOption("MicrophoneOnly");
+        setMicrophoneCount(1);
+        setSoundNotes("");
         setGuardCount(1);
         setSchoolGuards([]);
         setParkingRequired(false);
@@ -481,6 +538,24 @@ export default function LogisticsTeacherPortal({
                 return;
             }
 
+            if (soundRequired) {
+                const selection = SOUND_OPTIONS.find((option) => option.id === soundOption);
+                if (!selection ||
+                    (selection.microphone &&
+                        (!Number.isInteger(microphoneCount) || microphoneCount < 1 || microphoneCount > 20))) {
+                    setError(language === "af"
+                        ? "Kies 'n geldige klankopstelling en aantal mikrofone."
+                        : "Choose a valid sound setup and microphone quantity.");
+                    return;
+                }
+                if (soundOption === "Other" && !soundNotes.trim()) {
+                    setError(language === "af"
+                        ? "Beskryf asseblief die klankopstelling wat jy benodig."
+                        : "Please describe the sound setup you need.");
+                    return;
+                }
+            }
+
             if (securityRequired && (!Number.isInteger(guardCount) || guardCount < 1 || guardCount > 100)) {
                 setError("Kies asseblief hoeveel sekuriteitswagte buite by Echo 1 benodig word (1–100).");
                 return;
@@ -535,6 +610,24 @@ export default function LogisticsTeacherPortal({
             if (!activityDate || !startTime || !endTime) {
                 setError("Vul die aktiwiteitsdatum, begin- en eindtyd in.");
                 return;
+            }
+
+            if (soundRequired) {
+                const selection = SOUND_OPTIONS.find((option) => option.id === soundOption);
+                if (!selection ||
+                    (selection.microphone &&
+                        (!Number.isInteger(microphoneCount) || microphoneCount < 1 || microphoneCount > 20))) {
+                    setError(language === "af"
+                        ? "Kies 'n geldige klankopstelling en aantal mikrofone."
+                        : "Choose a valid sound setup and microphone quantity.");
+                    return;
+                }
+                if (soundOption === "Other" && !soundNotes.trim()) {
+                    setError(language === "af"
+                        ? "Beskryf asseblief die klankopstelling wat jy benodig."
+                        : "Please describe the sound setup you need.");
+                    return;
+                }
             }
 
             if (securityRequired && (!Number.isInteger(guardCount) || guardCount < 1 || guardCount > 100)) {
@@ -603,17 +696,39 @@ export default function LogisticsTeacherPortal({
                 `Vereistes: ${description.trim() || "Geen verdere vereistes"}`,
             ].join("\n");
 
+            const selectedSoundOption = SOUND_OPTIONS.find(
+                (option) => option.id === soundOption
+            ) ?? SOUND_OPTIONS[0];
+
+            const soundSummary = soundRequired && requestType === "Event"
+                ? [
+                    `Klank benodig / Sound required: Ja / Yes`,
+                    `Klankopstelling / Sound setup: ${selectedSoundOption.af} / ${selectedSoundOption.en}`,
+                    ...(selectedSoundOption.microphone
+                        ? [`Aantal mikrofone / Microphones: ${microphoneCount}`]
+                        : []),
+                    ...(soundNotes.trim()
+                        ? [`Klanknotas / Sound notes: ${soundNotes.trim()}`]
+                        : []),
+                ].join("\n")
+                : "";
+
+            const eventDescription = [
+                description.trim(),
+                requestType === "Event" && securityRequired ? securityDescription : "",
+                soundSummary,
+            ].filter(Boolean).join("\n\n");
+
             const response = await fetch(`${API_URL}/api/LogisticsRequests`, {
                 method: "POST",
                 headers: authHeaders(),
                 body: JSON.stringify({
+                    requestedByUserID: requesterOverride ? Number(requesterOverride) : null,
                     requestType,
                     activityCategory:
                         requestType === "Event" ? activityCategory : null,
                     title: "Logistics-versoek",
-                    description: requestType === "Event" && securityRequired
-                        ? `${description.trim()}\n\n${securityDescription}`
-                        : description.trim() || null,
+                    description: eventDescription || null,
                     activityDate:
                         requestType === "Event" ? activityDate : null,
                     startTime:
@@ -621,7 +736,8 @@ export default function LogisticsTeacherPortal({
                     endTime:
                         requestType === "Event" ? `${endTime}:00` : null,
                     cleanupNextDay:
-                        requestType === "Event" ? cleanupNextDay : null,                    aiSessionID,
+                        requestType === "Event" ? cleanupNextDay : null,
+                    aiSessionID,
 
                     locations,
                     equipment,
@@ -662,6 +778,7 @@ export default function LogisticsTeacherPortal({
                         method: "POST",
                         headers: authHeaders(),
                         body: JSON.stringify({
+                            requestedByUserID: requesterOverride ? Number(requesterOverride) : null,
                             requestType: "Security",
                             activityCategory: null,
                             title: "Sekuriteit vir funksie",
@@ -687,12 +804,56 @@ export default function LogisticsTeacherPortal({
                 }
             }
 
+            let soundWarning = "";
+            let soundRequestID: number | null = null;
+
+            if (requestType === "Event" && soundRequired) {
+                const soundDescription = [
+                    `Klank vir funksie / Sound for function: #${created.requestID}`,
+                    `Funksie / Function: ${description.trim()}`,
+                    `Datum / Date: ${activityDate}`,
+                    `Tyd / Time: ${startTime} - ${endTime}`,
+                    soundSummary,
+                ].join("\n\n");
+
+                try {
+                    const soundResponse = await fetch(`${API_URL}/api/LogisticsRequests`, {
+                        method: "POST",
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                            requestedByUserID: requesterOverride ? Number(requesterOverride) : null,
+                            requestType: "Sound",
+                            activityCategory,
+                            title: "Klank vir funksie / Sound for function",
+                            description: soundDescription,
+                            activityDate,
+                            startTime: `${startTime}:00`,
+                            endTime: `${endTime}:00`,
+                            cleanupNextDay: null,
+                            locations,
+                            equipment: [],
+                            maintenanceItems: [],
+                        }),
+                    });
+                    if (!soundResponse.ok) {
+                        throw new Error(`Sound request HTTP ${soundResponse.status}`);
+                    }
+                    const soundCreated = (await soundResponse.json()) as LogisticsRequest;
+                    soundRequestID = soundCreated.requestID;
+                } catch (soundError) {
+                    console.error("Unable to submit the sound request.", soundError);
+                    soundWarning = language === "af"
+                        ? " Die funksieversoek is gestoor, maar die klankversoek kon nie aangemeld word nie. Kontak asseblief IT."
+                        : " The function request was saved, but the sound request could not be submitted. Please contact IT.";
+                }
+            }
+
             setRequestOpen(false);
             resetRequestForm();
             setSuccess(
                 language === "af"
-                    ? `Versoek #${created.requestID} is aan die Logistics-span gestuur.${securityWarning}`
-                    : `Request #${created.requestID} was sent to the Logistics team.${securityWarning}`
+                    ? `Versoek #${created.requestID} is aan die Logistics-span gestuur.${soundRequestID ? ` Klankversoek #${soundRequestID} is ook aangemeld.` : ""}${securityWarning}${soundWarning}`
+                    : `Request #${created.requestID} was sent to Logistics.${soundRequestID ? ` Sound request #${soundRequestID} was also submitted.` : ""}${securityWarning}${soundWarning}`
             );
 
             await loadPortal();
@@ -1494,6 +1655,32 @@ export default function LogisticsTeacherPortal({
                                         interne status en prioriteit word
                                         outomaties deur die portaal hanteer.
                                     </p>
+
+                                    {canChooseRequester && (
+                                        <div className="mt-5">
+                                            <label htmlFor="logistics-requester" className="mb-2 block text-sm font-semibold text-zinc-200">
+                                                Versoek vir / Request for
+                                            </label>
+                                            <select
+                                                id="logistics-requester"
+                                                className="w-full rounded-xl border border-white/20 bg-zinc-900 p-3 text-sm text-white"
+                                                value={requesterOverride}
+                                                onChange={(event) => setRequesterOverride(event.target.value)}
+                                                disabled={submitting}
+                                            >
+                                                <option value="">Myself / Myself (my account)</option>
+                                                {requesters.filter((option) => option.userID !== user.userID).map((option) => (
+                                                    <option key={option.userID} value={option.userID}>
+                                                        {option.firstName} {option.lastName} — {option.email}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p className="mt-2 text-xs text-zinc-400">
+                                                Staff can see requests submitted on their behalf.
+                                                The system records which manager submitted the request.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {requestType === "Event" && (
@@ -1557,6 +1744,86 @@ export default function LogisticsTeacherPortal({
                                         className={`${inputClass} resize-none`}
                                     />
                                 </div>
+
+                                {requestType === "Event" && (
+                                    <div className="rounded-xl border border-white/10 bg-white/3 p-4">
+                                        <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-zinc-200">
+                                            <input
+                                                type="checkbox"
+                                                checked={soundRequired}
+                                                onChange={(event) => setSoundRequired(event.target.checked)}
+                                                className="h-5 w-5 accent-amber-400"
+                                            />
+                                            {language === "af"
+                                                ? "Klank benodig vir hierdie funksie"
+                                                : "Sound required for this function"}
+                                        </label>
+
+                                        {soundRequired && (
+                                            <div className="mt-4 space-y-4">
+                                                <div>
+                                                    <label htmlFor="function-sound-option" className="mb-2 block text-sm font-medium text-zinc-300">
+                                                        {language === "af" ? "Watter klankopstelling benodig jy?" : "What sound setup do you need?"}
+                                                    </label>
+                                                    <select
+                                                        id="function-sound-option"
+                                                        className={selectClass}
+                                                        value={soundOption}
+                                                        onChange={(event) => setSoundOption(event.target.value as SoundOption)}
+                                                    >
+                                                        {SOUND_OPTIONS.map((option) => (
+                                                            <option key={option.id} value={option.id}>
+                                                                {language === "af" ? option.af : option.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {SOUND_OPTIONS.find((option) => option.id === soundOption)?.microphone && (
+                                                    <div className="max-w-xs">
+                                                        <label htmlFor="function-sound-mics" className="mb-2 block text-sm font-medium text-zinc-300">
+                                                            {language === "af" ? "Hoeveel mikrofone?" : "How many microphones?"}
+                                                        </label>
+                                                        <input
+                                                            id="function-sound-mics"
+                                                            type="number"
+                                                            min={1}
+                                                            max={20}
+                                                            step={1}
+                                                            value={microphoneCount}
+                                                            onChange={(event) => setMicrophoneCount(Number(event.target.value))}
+                                                            className={inputClass}
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                <div>
+                                                    <label htmlFor="function-sound-notes" className="mb-2 block text-sm font-medium text-zinc-300">
+                                                        {language === "af"
+                                                            ? "Bykomende besonderhede (toestel, musiekbron, spesiale behoeftes)"
+                                                            : "Additional details (device, music source, special requirements)"}
+                                                    </label>
+                                                    <textarea
+                                                        id="function-sound-notes"
+                                                        rows={3}
+                                                        maxLength={1500}
+                                                        value={soundNotes}
+                                                        onChange={(event) => setSoundNotes(event.target.value)}
+                                                        className={inputClass}
+                                                        placeholder={language === "af"
+                                                            ? "Byvoorbeeld: eie skootrekenaar met HDMI, musiek op USB..."
+                                                            : "For example: own laptop with HDMI, music on USB..."}
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-zinc-400">
+                                                    {language === "af"
+                                                        ? "Klankversoeke word apart aan it@tygies.co.za en wbreytenbach@tygies.co.za gestuur."
+                                                        : "Sound requests are separately emailed to it@tygies.co.za and wbreytenbach@tygies.co.za."}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {requestType === "Event" && (
                                     <div className="rounded-xl border border-white/10 bg-white/3 p-4">
@@ -2105,6 +2372,22 @@ export default function LogisticsTeacherPortal({
                                         </div>
                                     )}
 
+                                    {requestType === "Event" && soundRequired && (
+                                        <p className="mt-3 text-sm text-zinc-300">
+                                            <span className="text-zinc-500">{language === "af" ? "Klank: " : "Sound: "}</span>
+                                            {(() => {
+                                                const selected = SOUND_OPTIONS.find((option) => option.id === soundOption);
+                                                return selected
+                                                    ? (language === "af" ? selected.af : selected.en)
+                                                    : soundOption;
+                                            })()}
+                                            {SOUND_OPTIONS.find((option) => option.id === soundOption)?.microphone
+                                                ? ` · ${microphoneCount} mic(s)`
+                                                : ""}
+                                            {soundNotes.trim() && <span className="block">{soundNotes.trim()}</span>}
+                                        </p>
+                                    )}
+
                                     {requestType === "Maintenance" && (
                                         <p className="mt-3 text-sm text-zinc-400">
                                             <span className="text-zinc-600">
@@ -2131,12 +2414,25 @@ export default function LogisticsTeacherPortal({
                                     </p>
 
                                     <p className="mt-1 text-sm font-medium text-zinc-200">
-                                        {user.firstName} {user.lastName}
+                                        {requesterOverride
+                                            ? (() => {
+                                                const selected = requesters.find((option) =>
+                                                    String(option.userID) === requesterOverride);
+                                                return selected
+                                                    ? `${selected.firstName} ${selected.lastName} (${selected.email})`
+                                                    : `${user.firstName} ${user.lastName}`;
+                                            })()
+                                            : `${user.firstName} ${user.lastName}`}
                                     </p>
 
-                                    <p className="text-xs text-zinc-600">
-                                        {user.email}
-                                    </p>
+                                    {!requesterOverride && (
+                                        <p className="text-xs text-zinc-600">{user.email}</p>
+                                    )}
+                                    {requesterOverride && (
+                                        <p className="mt-2 text-xs text-zinc-400">
+                                            Submitted by / Ingedien deur: {user.firstName} {user.lastName}
+                                        </p>
+                                    )}
 
                                     <p className="mt-2 text-xs leading-5 text-zinc-600">
                                         Die portaal koppel jou identiteit en die

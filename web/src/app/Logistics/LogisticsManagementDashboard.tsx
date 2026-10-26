@@ -1094,9 +1094,10 @@ export default function LogisticsManagementDashboard({
                                 <button
                                     type="button"
                                     onClick={onCreateRequest}
-                                    className="rounded-xl border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-4 py-2.5 text-sm font-medium text-[#e7b42b] transition hover:border-[#d7a31f]/45 hover:bg-[#d7a31f]/15"
+                                    aria-label="Nuwe logistieke versoek / New Logistics request"
+                                    className="rounded-xl border border-[#d7a31f]/50 bg-[#d7a31f]/15 px-4 py-2.5 text-sm font-bold text-[#e7b42b] transition hover:border-[#d7a31f]/65 hover:bg-[#d7a31f]/25"
                                 >
-                                    + Nuwe Logistics-versoek
+                                    + Nuwe logistieke versoek / New request
                                 </button>
                             )}
                             {user?.roleID === 3 && (

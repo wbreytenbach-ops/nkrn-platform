@@ -1,6 +1,7 @@
 "use client";
 
 import { itLabel, itError } from "../it-labels";
+import ITRequestConversation from "../components/ITRequestConversation";
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -48,15 +49,6 @@ interface RequestItem {
     scheduledStart: string | null;
     scheduledEnd: string | null;
     googleCalendarEventID: string | null;
-}
-
-interface RequestComment {
-    commentID: number;
-    requestID: number;
-    userID: number;
-    commentText: string;
-    createdDate: string | null;
-    user?: User | null;
 }
 
 interface Status {
@@ -214,14 +206,6 @@ function AdminDashboard() {
     const [statuses, setStatuses] =
         useState<Status[]>([]);
 
-    const [comments, setComments] =
-        useState<
-            Record<number, RequestComment[]>
-        >({});
-
-    const [commentText, setCommentText] =
-        useState<Record<number, string>>({});
-
     // ========================================
     // USER MANAGEMENT
     // ========================================
@@ -252,6 +236,7 @@ function AdminDashboard() {
 
     const [newUserRoleID, setNewUserRoleID] =
         useState(1);
+    const [externalITContact, setExternalITContact] = useState(false);
 
     const [creatingUser, setCreatingUser] =
         useState(false);
@@ -273,9 +258,6 @@ function AdminDashboard() {
         useState<number | null>(null);
 
     const [deletingRequestID, setDeletingRequestID] =
-        useState<number | null>(null);
-
-    const [commentSavingID, setCommentSavingID] =
         useState<number | null>(null);
 
     const [showDone, setShowDone] =
@@ -408,7 +390,8 @@ function AdminDashboard() {
                             loadedUsers.filter(
                                 (systemUser) =>
                                     (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
                             )
                         );
 
@@ -531,76 +514,6 @@ function AdminDashboard() {
                     }
                 }
 
-                // ========================================
-                // LOAD COMMENTS
-                // ========================================
-
-                const commentResults =
-                    await Promise.all(
-                        requestData.map(
-                            async (request) => {
-                                try {
-                                    const response =
-                                        await fetch(
-                                            `${API_URL}/api/RequestComments/request/${request.requestID}`,
-                                            {
-                                                method:
-                                                    "GET",
-                                                headers:
-                                                    getAuthHeaders(),
-                                                cache:
-                                                    "no-store",
-                                            }
-                                        );
-
-                                    if (
-                                        !response.ok
-                                    ) {
-                                        return {
-                                            requestID:
-                                                request.requestID,
-                                            comments:
-                                                [],
-                                        };
-                                    }
-
-                                    const data: RequestComment[] =
-                                        await response.json();
-
-                                    return {
-                                        requestID:
-                                            request.requestID,
-                                        comments:
-                                            data,
-                                    };
-                                } catch {
-                                    return {
-                                        requestID:
-                                            request.requestID,
-                                        comments: [],
-                                    };
-                                }
-                            }
-                        )
-                    );
-
-                if (!cancelled) {
-                    const commentMap: Record<
-                        number,
-                        RequestComment[]
-                    > = {};
-
-                    commentResults.forEach(
-                        (result) => {
-                            commentMap[
-                                result.requestID
-                            ] =
-                                result.comments;
-                        }
-                    );
-
-                    setComments(commentMap);
-                }
             } catch (dashboardError) {
                 console.error(
                     "Unable to load admin dashboard:",
@@ -654,15 +567,14 @@ function AdminDashboard() {
             return;
         }
 
-        if (
-            !email.endsWith(
-                "@tygies.co.za"
-            )
-        ) {
-            setError(
-                "Slegs @tygies.co.za-e-posadresse word toegelaat."
-            );
+        if (!email.includes("@") || email.length > 100 ||
+            (!email.endsWith("@tygies.co.za") && !externalITContact)) {
+            setError("Kies die eksterne IT-kontak-opsie vir e-posadresse buite @tygies.co.za.");
+            return;
+        }
 
+        if (externalITContact && newUserRoleID !== 1) {
+            setError("Eksterne IT-kontakte moet Personeellid (Rol 1) wees.");
             return;
         }
 
@@ -694,6 +606,7 @@ function AdminDashboard() {
                         email,
                         roleID:
                             newUserRoleID,
+                        externalITContact,
                     }),
                 }
             );
@@ -769,7 +682,8 @@ function AdminDashboard() {
                         updatedUsers.filter(
                             (systemUser) =>
                                 (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
                         )
                     );
 
@@ -789,6 +703,7 @@ function AdminDashboard() {
             setNewUserLastName("");
             setNewUserEmail("");
             setNewUserRoleID(1);
+            setExternalITContact(false);
             setShowAddUser(false);
 
             setSuccessMessage(
@@ -982,7 +897,8 @@ function AdminDashboard() {
         .filter(
             (systemUser) =>
                 (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
         )
 );
 setAdministrators(
@@ -1060,7 +976,8 @@ setAdministrators(
                         updatedUsers.filter(
                             (systemUser) =>
                                 (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
                         )
                     );
 
@@ -1499,11 +1416,6 @@ setAdministrators(
             setRequests(current => current.filter(
                 item => item.requestID !== request.requestID
             ));
-            setComments(current => {
-                const next = { ...current };
-                delete next[request.requestID];
-                return next;
-            });
             setSuccessMessage(
                 language === "af"
                     ? `IT-versoek #${request.requestID} is verwyder.`
@@ -1517,100 +1429,6 @@ setAdministrators(
             );
         } finally {
             setDeletingRequestID(null);
-        }
-    }
-
-    // ========================================
-    // ADD COMMENT
-    // ========================================
-
-    async function addComment(
-        requestID: number
-    ) {
-        if (!user) {
-            return;
-        }
-
-        const text =
-            commentText[requestID]?.trim() ??
-            "";
-
-        if (!text) {
-            setError(
-                "Tik eers jou kommentaar in."
-            );
-
-            return;
-        }
-
-        try {
-            setCommentSavingID(requestID);
-            setError("");
-            setSuccessMessage("");
-
-            const response = await fetch(
-                `${API_URL}/api/RequestComments`,
-                {
-                    method: "POST",
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({
-                        requestID,
-                        userID: user.userID,
-                        commentText: text,
-                    }),
-                }
-            );
-
-            if (!response.ok) {
-                const responseText =
-                    await response.text();
-
-                console.error(
-                    "Comment API error:",
-                    responseText
-                );
-
-                throw new Error(
-                    "Die kommentaar kon nie bygevoeg word nie."
-                );
-            }
-
-            const newComment: RequestComment =
-                await response.json();
-
-            setComments((currentComments) => ({
-                ...currentComments,
-
-                [requestID]: [
-                    ...(currentComments[
-                        requestID
-                    ] ?? []),
-
-                    newComment,
-                ],
-            }));
-
-            setCommentText((currentText) => ({
-                ...currentText,
-                [requestID]: "",
-            }));
-
-            setSuccessMessage(
-                `Kommentaar is by versoek #${requestID} gevoeg.`
-            );
-        } catch (commentError) {
-            console.error(
-                "Unable to add comment:",
-                commentError
-            );
-
-            setError(
-                commentError instanceof Error
-                    ? commentError.message
-                    : `Kommentaar kon nie by versoek #${requestID} gevoeg word nie.`
-            );
-        } finally {
-            setCommentSavingID(null);
         }
     }
 
@@ -2162,10 +1980,25 @@ setAdministrators(
                                 </h3>
 
                                 <p className="mt-1 text-sm text-zinc-500">
-                                    Create a new active NKRN account using the staff member&apos;s @tygies.co.za email address.
+                                    Add school staff (@tygies.co.za), or select External IT contact to add Jaron&apos;s outside email as an assignment recipient. External contacts receive email but cannot sign in to the portal.
                                 </p>
                             </div>
 
+                            <label className="mb-5 flex cursor-pointer items-start gap-3 rounded-xl border border-amber-400/25 bg-amber-400/5 p-3 text-sm text-zinc-200">
+                                <input type="checkbox" checked={externalITContact}
+                                    onChange={(event) => {
+                                        setExternalITContact(event.target.checked);
+                                        if (event.target.checked) setNewUserRoleID(1);
+                                    }}
+                                    className="mt-1 accent-amber-400"
+                                />
+                                <span>
+                                    <strong>External IT contact / Eksterne IT-kontak (Jaron)</strong>
+                                    <span className="block text-xs text-zinc-400">
+                                        Email notifications and IT assignments only — no portal login.
+                                    </span>
+                                </span>
+                            </label>
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
                                     <label className="mb-2 block text-xs font-medium uppercase tracking-[0.15em] text-zinc-500">
@@ -2235,7 +2068,7 @@ setAdministrators(
                                             )
                                         }
                                         className={inputClass}
-                                        placeholder="name@tygies.co.za"
+                                        placeholder={externalITContact ? "support@external-domain.co.za" : "name@tygies.co.za"}
                                         disabled={
                                             creatingUser
                                         }
@@ -2261,9 +2094,7 @@ setAdministrators(
                                             )
                                         }
                                         className={selectClass}
-                                        disabled={
-                                            creatingUser
-                                        }
+                                        disabled={creatingUser || externalITContact}
                                     >
                                         <option value="1">
                                             Personeellid
@@ -2696,12 +2527,6 @@ setAdministrators(
 
                         {visibleRequests.map(
                             (request) => {
-                                const requestComments =
-                                    comments[
-                                        request
-                                            .requestID
-                                    ] ?? [];
-
                                 const assignedUser =
                                     users.find(
                                         (
@@ -3255,131 +3080,8 @@ setAdministrators(
                                                 </div>
                                             </div>
 
-                                            {/* ========================================
-                                                COMMENTS
-                                            ======================================== */}
+                                            <ITRequestConversation requestID={request.requestID} compact />
 
-                                            <div className="mt-7 border-t border-white/10 pt-7">
-                                                <div className="mb-5">
-                                                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-600">
-                                                        Kommunikasie
-                                                    </p>
-
-                                                    <h4 className="mt-1 text-lg font-semibold">
-                                                        Kommentaar en vordering
-                                                    </h4>
-
-                                                    <p className="mt-1 text-sm text-zinc-500">
-                                                        {
-                                                            requestComments.length
-                                                        }{" "}
-                                                        comment
-                                                        {requestComments.length ===
-                                                        1
-                                                            ? ""
-                                                            : "s"}
-                                                    </p>
-                                                </div>
-
-                                                {requestComments.length ===
-                                                0 ? (
-                                                    <div className="mb-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-zinc-600">
-                                                        Daar is nog geen kommentaar op hierdie versoek nie.
-                                                    </div>
-                                                ) : (
-                                                    <div className="mb-5 space-y-3">
-                                                        {requestComments.map(
-                                                            (
-                                                                comment
-                                                            ) => (
-                                                                <div
-                                                                    key={
-                                                                        comment.commentID
-                                                                    }
-                                                                    className="rounded-2xl border border-white/10 bg-black/20 p-4"
-                                                                >
-                                                                    <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                                                                        <p className="text-sm font-medium text-zinc-200">
-                                                                            {comment.user
-                                                                                ? `${comment.user.firstName} ${comment.user.lastName}`
-                                                                                : `Gebruiker #${comment.userID}`}
-                                                                        </p>
-
-                                                                        <p className="text-xs text-zinc-600">
-                                                                            {formatDateTime(
-                                                                                comment.createdDate
-                                                                            )}
-                                                                        </p>
-                                                                    </div>
-
-                                                                    <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-400">
-                                                                        {
-                                                                            comment.commentText
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                <div>
-                                                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                                        Voeg ’n vorderingsnota by
-                                                    </label>
-
-                                                    <textarea
-                                                        value={
-                                                            commentText[
-                                                                request
-                                                                    .requestID
-                                                            ] ??
-                                                            ""
-                                                        }
-                                                        onChange={(
-                                                            event
-                                                        ) =>
-                                                            setCommentText(
-                                                                (
-                                                                    current
-                                                                ) => ({
-                                                                    ...current,
-                                                                    [request.requestID]:
-                                                                        event
-                                                                            .target
-                                                                            .value,
-                                                                })
-                                                            )
-                                                        }
-                                                        placeholder="Voeg ’n vorderingsnota by…"
-                                                        rows={
-                                                            3
-                                                        }
-                                                        className={`${inputClass} resize-none`}
-                                                    />
-
-                                                    <div className="mt-3 flex justify-end">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                addComment(
-                                                                    request.requestID
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                commentSavingID ===
-                                                                request.requestID
-                                                            }
-                                                            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                                        >
-                                                            {commentSavingID ===
-                                                            request.requestID
-                                                                ? "Besig om by te voeg…"
-                                                                : "Voeg kommentaar by"}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </article>
                                 );

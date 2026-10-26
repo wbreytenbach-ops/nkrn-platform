@@ -487,7 +487,7 @@ export default function LogisticsRequestInbox({
                             </span>
 
                             <input aria-label="Soek versoeke" placeholder="Soek naam, versoek of lokaal…" className={inputClass} value={search} onChange={e => setSearch(e.target.value)} />
-                            <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
+                            <select aria-label="Soort versoek" className={selectClass} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Alle soorte</option>{["Event", "Maintenance", "General", "Security", "Sound"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
                             <select aria-label="Prioriteit" className={selectClass} value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="">Alle prioriteite</option>{["Low", "Medium", "High", "Critical"].map(value => <option key={value} value={value}>{displayLabel(value)}</option>)}</select>
                             <select
                                 aria-label="Versoekstatus"

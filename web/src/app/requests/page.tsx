@@ -1,6 +1,7 @@
 "use client";
 
 import { itLabel } from "../it-labels";
+import ITRequestConversation from "../components/ITRequestConversation";
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -106,6 +107,19 @@ export default function RequestsPage() {
             currentUser.roleID === 3
         );
     }
+
+    // Deep links from @mentions open the matching request in My Requests.
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            const id = new URLSearchParams(window.location.search).get("requestId");
+            if (id && /^\d+$/.test(id)) {
+                setRequestSearch(id);
+                setRequestStatus("all");
+                setShowAllRequests(true);
+            }
+        }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     // ========================================
     // LOGIN CHECK
@@ -1033,6 +1047,9 @@ export default function RequestsPage() {
                                                 </span>
                                             </span>
                                         </div>
+                                        {typeof request.requestID === "number" && (
+                                            <ITRequestConversation requestID={request.requestID} compact />
+                                        )}
                                     </div>
                                 )
                             )}

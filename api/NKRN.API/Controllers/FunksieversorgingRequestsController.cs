@@ -24,9 +24,16 @@ public class FunksieversorgingRequestsController : ControllerBase
     private readonly IWebHostEnvironment _environment;
     private static readonly string[] DefaultNotificationEmails =
     {
-        "svanwyk@tygies.co.za",
-        "kultuur@tygies.co.za"
+        "svanwyk@tygies.co.za"
     };
+
+    // Never send Funksieversorging notifications to this retired recipient,
+    // even if an older production configuration still contains the address.
+    private static readonly HashSet<string> ExcludedNotificationEmails =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "kultuur@tygies.co.za"
+        };
     private readonly NkrnAiService _aiService;
     private readonly ILogger<FunksieversorgingRequestsController> _logger;
 
@@ -211,7 +218,7 @@ public class FunksieversorgingRequestsController : ControllerBase
 
         if (!AllowedVenues.Contains(venue))
         {
-            return BadRequest("Kies asseblief â€™n geldige lokaal.");
+            return BadRequest("Kies asseblief 'n geldige lokaal.");
         }
 
         if (venue.Equals("Ander", StringComparison.OrdinalIgnoreCase) &&
@@ -222,7 +229,7 @@ public class FunksieversorgingRequestsController : ControllerBase
 
         if (request.Attendance <= 0 || request.Attendance > 5000)
         {
-            return BadRequest("Vul asseblief â€™n geldige aantal persone in.");
+            return BadRequest("Vul asseblief 'n geldige aantal persone in.");
         }
 
         if (!request.ReturnAcknowledged)
@@ -696,7 +703,9 @@ public class FunksieversorgingRequestsController : ControllerBase
             recipients.Add(address);
         }
 
-        return recipients.ToList();
+        return recipients
+            .Where(address => !ExcludedNotificationEmails.Contains(address))
+            .ToList();
     }
 
     private HashSet<string> GetNotificationRecipients(
@@ -707,7 +716,8 @@ public class FunksieversorgingRequestsController : ControllerBase
                 GetNotificationEmails(),
                 StringComparer.OrdinalIgnoreCase);
 
-        if (!string.IsNullOrWhiteSpace(requesterEmail))
+        if (!string.IsNullOrWhiteSpace(requesterEmail) &&
+            !ExcludedNotificationEmails.Contains(requesterEmail.Trim()))
         {
             recipients.Add(requesterEmail.Trim());
         }
@@ -945,7 +955,7 @@ public class FunksieversorgingRequestsController : ControllerBase
         }
 
         var subject =
-            $"Funksieversorging: Versoek #{requestID} ontvang â€“ {functionName}";
+            FunksieversorgingEmailSubjects.Received(requestID, functionName);
 
         var printUrl = CreatePrintUrl(requestID);
 
@@ -1048,7 +1058,7 @@ public class FunksieversorgingRequestsController : ControllerBase
             };
 
         var subject =
-            $"Funksieversorging: Versoek #{requestID} â€“ {statusLabel}";
+            FunksieversorgingEmailSubjects.StatusChanged(requestID, statusLabel);
 
         var printUrl = CreatePrintUrl(requestID);
         var body = $"""

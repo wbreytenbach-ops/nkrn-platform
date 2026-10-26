@@ -28,6 +28,42 @@ namespace NKRN.API.Services
             return position < 0 ? body + button : body.Insert(position, button);
         }
 
+        /// <summary>
+        /// Build a standards-compliant UTF-8 MIME message. MimeKit encodes
+        /// non-ASCII subject characters using RFC 2047 on serialization.
+        /// Kept separate from SMTP transport for regression testing.
+        /// </summary>
+        public static MimeMessage CreateMimeMessage(
+            string senderName,
+            string senderEmail,
+            IEnumerable<string> recipientEmails,
+            string subject,
+            string body)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(senderName, senderEmail));
+
+            foreach (var address in recipientEmails
+                .Select(a => a.Trim())
+                .Where(a => a.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                message.To.Add(MailboxAddress.Parse(address));
+            }
+
+            if (message.To.Count == 0)
+                throw new InvalidOperationException("At least one email recipient is required.");
+
+            message.Subject = subject;
+
+            var html = new TextPart("html");
+            html.SetText("utf-8", AddPortalButton(body));
+            html.ContentTransferEncoding = ContentEncoding.QuotedPrintable;
+            message.Body = html;
+
+            return message;
+        }
+
         public virtual Task SendEmailAsync(string recipientEmail, string subject, string body) =>
             SendEmailToManyAsync(new[] { recipientEmail }, subject, body);
 
@@ -92,28 +128,15 @@ namespace NKRN.API.Services
             }
 
             // ========================================
-            // BUILD EMAIL MESSAGE
+            // BUILD EMAIL MESSAGE (UTF-8)
             // ========================================
 
-            var message = new MimeMessage();
-
-            message.From.Add(
-                new MailboxAddress(
-                    _settings.SenderName,
-                    _settings.SenderEmail
-                )
-            );
-
-            foreach (var address in recipientEmails.Select(a => a.Trim()).Where(a => a.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase))
-                message.To.Add(MailboxAddress.Parse(address));
-            if (message.To.Count == 0) throw new InvalidOperationException("At least one email recipient is required.");
-
-            message.Subject = subject;
-
-            message.Body = new TextPart("html")
-            {
-                Text = AddPortalButton(body)
-            };
+            var message = CreateMimeMessage(
+                _settings.SenderName,
+                _settings.SenderEmail,
+                recipientEmails,
+                subject,
+                body);
 
             // ========================================
             // SEND EMAIL

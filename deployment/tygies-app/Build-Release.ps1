@@ -3,7 +3,9 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot = 'C:\Users\WilcoB\Documents\Visual Studio Projects\NKRN',
-    [string]$OutputRoot = (Join-Path $env:USERPROFILE 'NKRN-Releases')
+    [string]$OutputRoot = (Join-Path $env:USERPROFILE 'NKRN-Releases'),
+    [switch]$AllowDetachedHead,
+    [string]$SourceBranch = 'logistics-release-candidate-20261009'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -82,8 +84,8 @@ if ($LASTEXITCODE -ne 0 -or $head -notmatch ('^[a-f0-9]{40}' + '$')) {
     throw 'Cannot read a valid full Git commit SHA.'
 }
 $branch = (& git.exe -C $ProjectRoot branch --show-current).Trim()
-if ($LASTEXITCODE -ne 0 -or $branch -ne 'logistics-release-candidate-20261009') {
-    throw ("Build only from logistics-release-candidate-20261009; current branch is '" + $branch + "'.")
+if ($LASTEXITCODE -ne 0 -or ($branch -ne $SourceBranch -and -not ($AllowDetachedHead -and [string]::IsNullOrWhiteSpace($branch)))) {
+    throw ("Unexpected source checkout: '" + $branch + "'. Expected '" + $SourceBranch + "' or an explicitly allowed detached worktree.")
 }
 $trackedChanges = & git.exe -C $ProjectRoot status --porcelain --untracked-files=no
 if ($LASTEXITCODE -ne 0 -or $trackedChanges) {
@@ -197,7 +199,7 @@ try {
     $manifest = [ordered]@{
         release = $releaseId
         commit = $commit
-        branch = $branch
+        branch = $SourceBranch
         publicApiUrl = $apiUrl
         createdUtc = [DateTime]::UtcNow.ToString('o')
         buildPlatform = 'Windows'
