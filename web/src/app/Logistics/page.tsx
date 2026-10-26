@@ -192,33 +192,14 @@ export default function LogisticsPage() {
         );
     }
 
-    // Keep the primary action visible even while the manager dashboard is
-    // loading or one of its independent data requests fails.
-    const newRequestAction = (
-        <div className="nkrn-control bg-zinc-950 px-5 pt-5 text-white sm:px-8">
-            <div className="mx-auto flex max-w-7xl justify-end">
-                <button
-                    type="button"
-                    onClick={() => setAdminRequestMode(true)}
-                    className="rounded-xl border border-[#d7a31f]/60 bg-[#d7a31f]/20 px-5 py-3 text-sm font-bold text-[#ffe19b] shadow-sm hover:bg-[#d7a31f]/30"
-                >
-                    + Nuwe logistieke versoek / New Logistics request
-                </button>
-            </div>
-        </div>
-    );
-
+    // Both views provide their own New Request action within the page header.
+    // Avoid a detached outer action strip that produces a large blank area
+    // above the management dashboard (especially in light mode).
     return managementAccess ? (
-        <>
-            {newRequestAction}
-            <LogisticsManagementDashboard
-                onCreateRequest={() => setAdminRequestMode(true)}
-            />
-        </>
+        <LogisticsManagementDashboard
+            onCreateRequest={() => setAdminRequestMode(true)}
+        />
     ) : (
-        <>
-            {newRequestAction}
-            <LogisticsTeacherPortal user={user} />
-        </>
+        <LogisticsTeacherPortal user={user} />
     );
 }
