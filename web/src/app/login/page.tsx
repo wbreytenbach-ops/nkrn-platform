@@ -81,8 +81,8 @@ export default function LoginPage() {
                     token: string;
                     user: LoggedInUser;
                 };
-                if (!data.token || !data.user || !cancelled) {
-                    if (!data.token || !data.user) throw new Error("Invalid sign-in response.");
+                if (!data.token || !data.user) {
+                    throw new Error("Invalid sign-in response.");
                 }
                 if (cancelled) return;
 
