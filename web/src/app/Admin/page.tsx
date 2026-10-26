@@ -1,6 +1,7 @@
 "use client";
 
 import { itLabel, itError } from "../it-labels";
+import ITRequestConversation from "../components/ITRequestConversation";
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -252,6 +253,7 @@ function AdminDashboard() {
 
     const [newUserRoleID, setNewUserRoleID] =
         useState(1);
+    const [externalITContact, setExternalITContact] = useState(false);
 
     const [creatingUser, setCreatingUser] =
         useState(false);
@@ -408,7 +410,8 @@ function AdminDashboard() {
                             loadedUsers.filter(
                                 (systemUser) =>
                                     (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
                             )
                         );
 
@@ -654,15 +657,14 @@ function AdminDashboard() {
             return;
         }
 
-        if (
-            !email.endsWith(
-                "@tygies.co.za"
-            )
-        ) {
-            setError(
-                "Slegs @tygies.co.za-e-posadresse word toegelaat."
-            );
+        if (!email.includes("@") || email.length > 100 ||
+            (!email.endsWith("@tygies.co.za") && !externalITContact)) {
+            setError("Kies die eksterne IT-kontak-opsie vir e-posadresse buite @tygies.co.za.");
+            return;
+        }
 
+        if (externalITContact && newUserRoleID !== 1) {
+            setError("Eksterne IT-kontakte moet Personeellid (Rol 1) wees.");
             return;
         }
 
@@ -694,6 +696,7 @@ function AdminDashboard() {
                         email,
                         roleID:
                             newUserRoleID,
+                        externalITContact,
                     }),
                 }
             );
@@ -769,7 +772,8 @@ function AdminDashboard() {
                         updatedUsers.filter(
                             (systemUser) =>
                                 (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
                         )
                     );
 
@@ -789,6 +793,7 @@ function AdminDashboard() {
             setNewUserLastName("");
             setNewUserEmail("");
             setNewUserRoleID(1);
+            setExternalITContact(false);
             setShowAddUser(false);
 
             setSuccessMessage(
@@ -982,7 +987,8 @@ function AdminDashboard() {
         .filter(
             (systemUser) =>
                 (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
         )
 );
 setAdministrators(
@@ -1060,7 +1066,8 @@ setAdministrators(
                         updatedUsers.filter(
                             (systemUser) =>
                                 (systemUser.roleID === 2 ||
-                                 systemUser.firstName?.trim().toLowerCase() === "jaron")
+                                 systemUser.firstName?.trim().toLowerCase() === "jaron" ||
+                                 !systemUser.email?.toLowerCase().endsWith("@tygies.co.za"))
                         )
                     );
 
@@ -2162,10 +2169,25 @@ setAdministrators(
                                 </h3>
 
                                 <p className="mt-1 text-sm text-zinc-500">
-                                    Create a new active NKRN account using the staff member&apos;s @tygies.co.za email address.
+                                    Add school staff (@tygies.co.za), or select External IT contact to add Jaron&apos;s outside email as an assignment recipient. External contacts receive email but cannot sign in to the portal.
                                 </p>
                             </div>
 
+                            <label className="mb-5 flex cursor-pointer items-start gap-3 rounded-xl border border-amber-400/25 bg-amber-400/5 p-3 text-sm text-zinc-200">
+                                <input type="checkbox" checked={externalITContact}
+                                    onChange={(event) => {
+                                        setExternalITContact(event.target.checked);
+                                        if (event.target.checked) setNewUserRoleID(1);
+                                    }}
+                                    className="mt-1 accent-amber-400"
+                                />
+                                <span>
+                                    <strong>External IT contact / Eksterne IT-kontak (Jaron)</strong>
+                                    <span className="block text-xs text-zinc-400">
+                                        Email notifications and IT assignments only — no portal login.
+                                    </span>
+                                </span>
+                            </label>
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
                                     <label className="mb-2 block text-xs font-medium uppercase tracking-[0.15em] text-zinc-500">
@@ -2235,7 +2257,7 @@ setAdministrators(
                                             )
                                         }
                                         className={inputClass}
-                                        placeholder="name@tygies.co.za"
+                                        placeholder={externalITContact ? "support@external-domain.co.za" : "name@tygies.co.za"}
                                         disabled={
                                             creatingUser
                                         }
@@ -2261,9 +2283,7 @@ setAdministrators(
                                             )
                                         }
                                         className={selectClass}
-                                        disabled={
-                                            creatingUser
-                                        }
+                                        disabled={creatingUser || externalITContact}
                                     >
                                         <option value="1">
                                             Personeellid
@@ -3254,6 +3274,8 @@ setAdministrators(
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <ITRequestConversation requestID={request.requestID} compact />
 
                                             {/* ========================================
                                                 COMMENTS
