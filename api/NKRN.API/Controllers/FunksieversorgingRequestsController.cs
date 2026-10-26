@@ -218,7 +218,7 @@ public class FunksieversorgingRequestsController : ControllerBase
 
         if (!AllowedVenues.Contains(venue))
         {
-            return BadRequest("Kies asseblief â€™n geldige lokaal.");
+            return BadRequest("Kies asseblief 'n geldige lokaal.");
         }
 
         if (venue.Equals("Ander", StringComparison.OrdinalIgnoreCase) &&
@@ -229,7 +229,7 @@ public class FunksieversorgingRequestsController : ControllerBase
 
         if (request.Attendance <= 0 || request.Attendance > 5000)
         {
-            return BadRequest("Vul asseblief â€™n geldige aantal persone in.");
+            return BadRequest("Vul asseblief 'n geldige aantal persone in.");
         }
 
         if (!request.ReturnAcknowledged)
@@ -955,7 +955,7 @@ public class FunksieversorgingRequestsController : ControllerBase
         }
 
         var subject =
-            $"Funksieversorging: Versoek #{requestID} ontvang â€“ {functionName}";
+            $"Funksieversorging: Versoek #{requestID} ontvang \u2013 {functionName}";
 
         var printUrl = CreatePrintUrl(requestID);
 
@@ -1058,7 +1058,7 @@ public class FunksieversorgingRequestsController : ControllerBase
             };
 
         var subject =
-            $"Funksieversorging: Versoek #{requestID} â€“ {statusLabel}";
+            $"Funksieversorging: Versoek #{requestID} \u2013 {statusLabel}";
 
         var printUrl = CreatePrintUrl(requestID);
         var body = $"""
