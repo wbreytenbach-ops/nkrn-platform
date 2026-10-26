@@ -1047,7 +1047,9 @@ export default function RequestsPage() {
                                                 </span>
                                             </span>
                                         </div>
-                                        <ITRequestConversation requestID={request.requestID} compact />
+                                        {typeof request.requestID === "number" && (
+                                            <ITRequestConversation requestID={request.requestID} compact />
+                                        )}
                                     </div>
                                 )
                             )}
