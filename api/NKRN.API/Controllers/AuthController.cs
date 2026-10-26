@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Net;
+using NKRN.API.Services;
 using NKRN.API.Data;
 using NKRN.API.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -16,13 +18,19 @@ namespace NKRN.API.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly EmailService _email;
+        private readonly EmailLoginChallengeStore _challenges;
 
         public AuthController(
             ApplicationDbContext context,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            EmailService email,
+            EmailLoginChallengeStore challenges)
         {
             _context = context;
             _configuration = configuration;
+            _email = email;
+            _challenges = challenges;
         }
 
         // ============================================================
@@ -32,125 +40,110 @@ namespace NKRN.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            if (loginRequest == null ||
-                string.IsNullOrWhiteSpace(loginRequest.Email))
-            {
-                return BadRequest(new
-                {
-                    message = "Email address is required."
-                });
-            }
+            if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email))
+                return BadRequest(new { message = "Email address is required." });
 
-            string email = loginRequest.Email.Trim().ToLower();
+            var email = loginRequest.Email.Trim().ToLowerInvariant();
+            if (!email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(new { message = "Only @tygies.co.za email addresses are allowed." });
 
-            if (!email.EndsWith("@tygies.co.za"))
-            {
-                return Unauthorized(new
-                {
-                    message = "Only @tygies.co.za email addresses are allowed."
-                });
-            }
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u =>
+                u.Email != null && u.Email.ToLower() == email && u.IsActive);
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u =>
-                    u.Email != null &&
-                    u.Email.ToLower() == email);
-
+            // Do not disclose whether an account exists to unauthenticated visitors.
             if (user == null)
-            {
-                return Unauthorized(new
+                return Ok(new
                 {
-                    message = "No Tygerpoort IT Desk account was found for this email address."
+                    requiresVerification = true,
+                    challengeId = Guid.NewGuid().ToString("D"),
+                    message = "If your account is active, a verification code has been emailed."
+                });
+
+            if (!_challenges.TryCreate(email, out var challengeId, out var code))
+                return StatusCode(429, new
+                {
+                    message = "Too many sign-in codes requested. Please try again in 10 minutes."
+                });
+
+            try
+            {
+                var safeEmail = WebUtility.HtmlEncode(email);
+                await _email.SendEmailAsync(
+                    email,
+                    "Tygies One - your sign-in code / Aanmeldkode",
+                    $"""
+                    <html><body style="font-family:Arial,sans-serif;color:#222">
+                    <h2>Tygies One</h2>
+                    <p>Your verification code / Jou verifikasiekode:</p>
+                    <p style="font-size:28px;font-weight:bold;letter-spacing:5px">{code}</p>
+                    <p>This code expires in 5 minutes. Never share it.</p>
+                    <p>Hierdie kode verval oor 5 minute. Moenie dit deel nie.</p>
+                    <p>Account: {safeEmail}</p>
+                    <p>If you did not request this code, ignore this email.</p>
+                    </body></html>
+                    """);
+            }
+            catch
+            {
+                _challenges.Revoke(challengeId);
+                // Do not disclose SMTP credentials or internal failure details.
+                return StatusCode(503, new
+                {
+                    message = "Sign-in email is unavailable. Contact IT support."
                 });
             }
 
-            if (!user.IsActive)
+            return Ok(new
             {
-                return Unauthorized(new
-                {
-                    message =
-                        "This account has been deactivated. Please contact an administrator."
-                });
-            }
+                requiresVerification = true,
+                challengeId = challengeId.ToString("D"),
+                message = "Enter the 6-digit code sent to your Tygerpoort email."
+            });
+        }
 
-            // ========================================================
-            // NORMALISE POSSIBLY NULL DATABASE VALUES
-            // ========================================================
+        [HttpPost("verify")]
+        public async Task<IActionResult> Verify([FromBody] VerifyLoginCodeRequest input)
+        {
+            if (input == null ||
+                string.IsNullOrWhiteSpace(input.Email) ||
+                string.IsNullOrWhiteSpace(input.Code) ||
+                input.Code.Length != 6 ||
+                !Guid.TryParse(input.ChallengeId, out var challengeId))
+                return BadRequest(new { message = "A valid email and 6-digit code are required." });
 
-            string userEmail = user.Email ?? string.Empty;
-            string firstName = user.FirstName ?? string.Empty;
-            string lastName = user.LastName ?? string.Empty;
+            var email = input.Email.Trim().ToLowerInvariant();
+            if (!email.EndsWith("@tygies.co.za", StringComparison.OrdinalIgnoreCase) ||
+                !_challenges.TryVerify(challengeId, email, input.Code))
+                return Unauthorized(new { message = "Code invalid or expired. Request a new code." });
 
-            int userID = user.UserID;
-            int roleID = user.RoleID ?? 1;
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u =>
+                u.Email != null && u.Email.ToLower() == email && u.IsActive);
+            if (user == null) return Unauthorized();
 
-            // ========================================================
-            // CREATE JWT
-            // ========================================================
+            var configuredJwtKey = _configuration["Jwt:Key"] ?? string.Empty;
+            var configuredIssuer = _configuration["Jwt:Issuer"] ?? string.Empty;
+            var configuredAudience = _configuration["Jwt:Audience"] ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(configuredJwtKey) ||
+                string.IsNullOrWhiteSpace(configuredIssuer) ||
+                string.IsNullOrWhiteSpace(configuredAudience))
+                return StatusCode(500, new { message = "Authentication has not been configured." });
 
-            string configuredJwtKey =
-                _configuration["Jwt:Key"] ?? string.Empty;
-
-            string configuredIssuer =
-                _configuration["Jwt:Issuer"] ?? string.Empty;
-
-            string configuredAudience =
-                _configuration["Jwt:Audience"] ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(configuredJwtKey))
-            {
-                return StatusCode(500, new
-                {
-                    message = "JWT key has not been configured."
-                });
-            }
-
-            if (string.IsNullOrWhiteSpace(configuredIssuer))
-            {
-                return StatusCode(500, new
-                {
-                    message = "JWT issuer has not been configured."
-                });
-            }
-
-            if (string.IsNullOrWhiteSpace(configuredAudience))
-            {
-                return StatusCode(500, new
-                {
-                    message = "JWT audience has not been configured."
-                });
-            }
-
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(configuredJwtKey));
-
-            var credentials = new SigningCredentials(
-                key,
-                SecurityAlgorithms.HmacSha256);
-
+            var userEmail = user.Email ?? string.Empty;
+            var firstName = user.FirstName ?? string.Empty;
+            var lastName = user.LastName ?? string.Empty;
+            var roleID = user.RoleID ?? 1;
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuredJwtKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var claims = new List<Claim>
             {
-                new Claim(
-                    ClaimTypes.NameIdentifier,
-                    userID.ToString()),
-
-                new Claim(
-                    ClaimTypes.Email,
-                    userEmail),
-
-                new Claim(
-                    ClaimTypes.GivenName,
-                    firstName),
-
-                new Claim(
-                    ClaimTypes.Surname,
-                    lastName),
-
-                new Claim(
-                    ClaimTypes.Role,
-                    roleID.ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
+                new Claim(ClaimTypes.Email, userEmail),
+                new Claim(ClaimTypes.GivenName, firstName),
+                new Claim(ClaimTypes.Surname, lastName),
+                new Claim(ClaimTypes.Role, roleID.ToString()),
+                // Old tokens without verified identity become invalid.
+                new Claim("nkrn_auth", "email_otp")
             };
-
             var token = new JwtSecurityToken(
                 issuer: configuredIssuer,
                 audience: configuredAudience,
@@ -158,25 +151,16 @@ namespace NKRN.API.Controllers
                 expires: DateTime.UtcNow.AddHours(8),
                 signingCredentials: credentials);
 
-            string tokenString =
-                new JwtSecurityTokenHandler()
-                    .WriteToken(token);
-
-            // ========================================================
-            // RETURN USER + TOKEN
-            // ========================================================
-
             return Ok(new
             {
-                token = tokenString,
-
+                token = new JwtSecurityTokenHandler().WriteToken(token),
                 user = new
                 {
-                    userID = userID,
-                    firstName = firstName,
-                    lastName = lastName,
+                    userID = user.UserID,
+                    firstName,
+                    lastName,
                     email = userEmail,
-                    roleID = roleID
+                    roleID
                 }
             });
         }
@@ -350,6 +334,13 @@ namespace NKRN.API.Controllers
     public class LoginRequest
     {
         public string Email { get; set; } = string.Empty;
+    }
+
+    public class VerifyLoginCodeRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string ChallengeId { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
     }
 
     // ================================================================
