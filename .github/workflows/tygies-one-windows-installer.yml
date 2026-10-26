@@ -1,0 +1,69 @@
+name: Tygies One Windows Installer
+
+on:
+  push:
+    branches:
+      - fix/tygies-one-logistics-access-20261026
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-release:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout exact branch revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build and validate API tests
+        shell: pwsh
+        run: |
+          dotnet test .\tests\NKRN.Requests.Tests\NKRN.Requests.Tests.csproj --configuration Release
+          if ($LASTEXITCODE -ne 0) { throw 'API tests failed.' }
+
+      - name: Build verified Windows API + frontend
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\deployment\tygies-app\Build-Release.ps1 -ProjectRoot $env:GITHUB_WORKSPACE -OutputRoot (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -AllowDetachedHead -SourceBranch 'fix/tygies-one-logistics-access-20261026'
+          if ($LASTEXITCODE -ne 0) { throw 'Windows release build failed.' }
+
+      - name: Assemble one installer ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $releases = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'NKRN-Releases') -Filter 'NKRN-*.zip' -File -Recurse
+          if (@($releases).Count -ne 1) { throw "Expected one release ZIP, got $(@($releases).Count)" }
+          $staging = Join-Path $env:RUNNER_TEMP 'TygiesOne-Installer'
+          New-Item -ItemType Directory -Path $staging -Force | Out-Null
+          Copy-Item $releases[0].FullName -Destination $staging
+          Copy-Item .\deployment\tygies-app\Install-Production.ps1 (Join-Path $staging 'Install-TygiesOne.ps1')
+          Copy-Item .\deployment\tygies-app\Deploy-Release.ps1 $staging
+          Copy-Item .\deployment\tygies-app\Deploy-FrontendRelease.ps1 $staging
+          $sum = (Get-FileHash $releases[0].FullName -Algorithm SHA256).Hash
+          Set-Content -Path (Join-Path $staging 'SHA256.txt') -Value $sum
+          Compress-Archive -Path (Join-Path $staging '*') -DestinationPath (Join-Path $env:RUNNER_TEMP 'TygiesOne-Installer.zip')
+          Write-Output "One installer ZIP ready: $(Join-Path $env:RUNNER_TEMP 'TygiesOne-Installer.zip')"
+
+      - name: Publish installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TygiesOne-GoogleSSO-Windows-Installer
+          path: ${{ runner.temp }}/TygiesOne-Installer.zip
+          if-no-files-found: error
+          retention-days: 14
