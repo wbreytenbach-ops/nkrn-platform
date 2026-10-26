@@ -110,12 +110,15 @@ export default function RequestsPage() {
 
     // Deep links from @mentions open the matching request in My Requests.
     useEffect(() => {
-        const id = new URLSearchParams(window.location.search).get("requestId");
-        if (id && /^\\d+$/.test(id)) {
-            setRequestSearch(id);
-            setRequestStatus("all");
-            setShowAllRequests(true);
-        }
+        const timer = window.setTimeout(() => {
+            const id = new URLSearchParams(window.location.search).get("requestId");
+            if (id && /^\d+$/.test(id)) {
+                setRequestSearch(id);
+                setRequestStatus("all");
+                setShowAllRequests(true);
+            }
+        }, 0);
+        return () => window.clearTimeout(timer);
     }, []);
 
     // ========================================
