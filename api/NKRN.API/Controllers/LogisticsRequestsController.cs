@@ -348,6 +348,13 @@ namespace NKRN.API.Controllers
                 });
             }
 
+            // Specialist requirements belong to an Event, never a second ticket.
+            if ((request.SoundRequired || request.SecurityRequired) &&
+                !string.Equals(request.RequestType, "Event", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Sound and security options require an Event request." });
+            }
+
             if (request.StartTime.HasValue &&
                 request.EndTime.HasValue &&
                 request.EndTime.Value <= request.StartTime.Value)
@@ -739,6 +746,16 @@ namespace NKRN.API.Controllers
                 }
 
                 await _notifications.NotifyAsync(created, created: true);
+
+                // The same persisted Event request ID is routed to specialist teams.
+                // No second LogisticsRequests POST or database ticket is created.
+                if (request.SoundRequired || request.SecurityRequired)
+                {
+                    await _notifications.NotifyEventRequirementsAsync(
+                        created,
+                        soundRequired: request.SoundRequired,
+                        securityRequired: request.SecurityRequired);
+                }
 
                 return CreatedAtAction(
                     nameof(GetRequest),
