@@ -108,6 +108,61 @@ public class LogisticsRequestNotificationService(
         }
     }
 
+    /// <summary>
+    /// Routes sound/security requirements for one Event to specialist inboxes.
+    /// Uses the parent Event's RequestID throughout; never creates another ticket.
+    /// Failure to deliver an email does not undo a saved request.
+    /// </summary>
+    public async Task NotifyEventRequirementsAsync(
+        LogisticsRequestResponse request,
+        bool soundRequired,
+        bool securityRequired)
+    {
+        if (environment.IsDevelopment() &&
+            !configuration.GetValue<bool>("Logistics:SendRequestEmailInDevelopment"))
+            return;
+
+        if (!string.Equals(request.RequestType, "Event", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (soundRequired)
+        {
+            const string heading = "Klankvereistes / Sound requirements";
+            var body = BuildEmailBody(request, heading, created: true);
+            foreach (var recipient in SoundRecipients.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    await email.SendEmailAsync(recipient,
+                        $"{heading} - Logistieke versoek #{request.RequestID}", body);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex,
+                        "Event {RequestID}: sound notification failed for {Recipient}",
+                        request.RequestID, recipient);
+                }
+            }
+        }
+
+        if (securityRequired)
+        {
+            const string heading = "Sekuriteitsvereistes / Security requirements";
+            try
+            {
+                await email.SendEmailAsync("jwerner@tygies.co.za",
+                    $"{heading} - Logistieke versoek #{request.RequestID}",
+                    BuildEmailBody(request, heading, created: true));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Event {RequestID}: security notification failed",
+                    request.RequestID);
+            }
+        }
+    }
+
     public async Task<List<int>> SynchronizeTaskAsync(int taskID, string status)
     {
         var requestStatus =

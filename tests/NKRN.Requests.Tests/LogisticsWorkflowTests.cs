@@ -195,6 +195,60 @@ public class LogisticsWorkflowTests
     }
 
     [Fact]
+    public async Task One_Event_routes_sound_and_security_email_with_the_same_request_id()
+    {
+        using var app = new TestApp();
+        using var scope = app.Server.Services.CreateScope();
+        var service = Service(
+            scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
+            app.Email);
+
+        var request = new LogisticsRequestResponse
+        {
+            RequestID = 84,
+            RequestType = "Event",
+            RequestedByName = "Nathan",
+            RequestedByEmail = "nathan@tygies.co.za",
+            Description = "Funksie. Klank benodig: mikrofoon + HDMI. Aantal wagte: 2.",
+            Status = "Logged",
+            Priority = "Medium"
+        };
+
+        await service.NotifyAsync(request, created: true);
+        await service.NotifyEventRequirementsAsync(request,
+            soundRequired: true, securityRequired: true);
+
+        Assert.Equal(7, app.Email.Messages.Count);
+        Assert.Single(app.Email.Messages, m => m.To == "nathan@tygies.co.za");
+        Assert.Single(app.Email.Messages, m => m.To == "it@tygies.co.za");
+        Assert.Single(app.Email.Messages, m => m.To == "wbreytenbach@tygies.co.za");
+        Assert.Single(app.Email.Messages, m => m.To == "jwerner@tygies.co.za");
+        Assert.Single(app.Email.Messages, m => m.To == "logistiek@tygies.co.za");
+        Assert.Single(app.Email.Messages, m => m.To == "terreinbestuur@tygies.co.za");
+        Assert.Single(app.Email.Messages, m => m.To == "msmit@tygies.co.za");
+        Assert.All(app.Email.Messages,
+            m => Assert.Contains("#84", m.Subject));
+        Assert.DoesNotContain(app.Email.Messages,
+            m => m.Subject.Contains("#86", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Event_without_special_requirements_emails_no_extra_support_team()
+    {
+        using var app = new TestApp();
+        using var scope = app.Server.Services.CreateScope();
+        await Service(
+            scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
+            app.Email)
+            .NotifyEventRequirementsAsync(new LogisticsRequestResponse
+            {
+                RequestID = 89,
+                RequestType = "Event"
+            }, soundRequired: false, securityRequired: false);
+        Assert.Empty(app.Email.Messages);
+    }
+
+    [Fact]
     public async Task Security_request_notification_includes_security_contact()
     {
         using var app=new TestApp();

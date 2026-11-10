@@ -1095,7 +1095,7 @@ export default function LogisticsManagementDashboard({
                                     type="button"
                                     onClick={onCreateRequest}
                                     aria-label="Nuwe logistieke versoek / New Logistics request"
-                                    className="rounded-xl border border-[#d7a31f]/50 bg-[#d7a31f]/15 px-4 py-2.5 text-sm font-bold text-[#e7b42b] transition hover:border-[#d7a31f]/65 hover:bg-[#d7a31f]/25"
+                                    className="logistics-create-button rounded-xl border px-4 py-2.5 text-sm font-bold transition"
                                 >
                                     + Nuwe logistieke versoek / New request
                                 </button>
@@ -1142,7 +1142,7 @@ export default function LogisticsManagementDashboard({
                 )}
 
                 {successMessage && (
-                    <div className="mb-6 rounded-2xl border border-green-400/10 bg-green-500/7 p-4 text-sm text-green-300 backdrop-blur-xl">
+                    <div role="status" aria-live="polite" className="logistics-success-banner mb-6 rounded-2xl p-4 text-sm">
                         {successMessage}
                     </div>
                 )}
