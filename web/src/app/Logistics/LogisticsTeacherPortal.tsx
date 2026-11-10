@@ -389,13 +389,44 @@ export default function LogisticsTeacherPortal({
         requestSection.focus({ preventScroll: true });
     }, [requestOpen, loading]);
 
+    // Old deployments saved sound separately as "Sound" ticket #86 with a
+    // reference to its parent Event #84. Group those older rows for staff
+    // without deleting any history or losing standalone sound records.
+    const linkedSoundParent = (request: LogisticsRequest): number | null => {
+        if (request.requestType !== "Sound") return null;
+        const match = request.description?.match(
+            /(?:Klank vir funksie|Sound for function):\s*#(\d+)/i
+        );
+        return match ? Number(match[1]) : null;
+    };
+
+    const linkedSoundRequests = useMemo(() => {
+        const knownParents = new Set(requests.map((request) => request.requestID));
+        const grouped = new Map<number, LogisticsRequest[]>();
+        for (const request of requests) {
+            const parentID = linkedSoundParent(request);
+            if (parentID === null || !knownParents.has(parentID)) continue;
+            const current = grouped.get(parentID) ?? [];
+            current.push(request);
+            grouped.set(parentID, current);
+        }
+        return grouped;
+    }, [requests]);
+
+    const visibleHistory = useMemo(() => requests.filter((request) => {
+        const parentID = linkedSoundParent(request);
+        return parentID === null || !linkedSoundRequests.has(parentID) ||
+            // Only group the Sound child under a distinct parent row.
+            !requests.some((parent) => parent.requestID === parentID && parent.requestID !== request.requestID);
+    }), [requests, linkedSoundRequests]);
+
     const activeRequests = useMemo(
         () =>
-            requests.filter((request) => {
+            visibleHistory.filter((request) => {
                 const stage = requestStage(request.status);
                 return !["Done", "Declined", "Cancelled"].includes(stage);
             }),
-        [requests]
+        [visibleHistory]
     );
 
     const selectedMapLocation =
@@ -1165,7 +1196,7 @@ export default function LogisticsTeacherPortal({
                         </div>
 
                         <div className="divide-y divide-white/7">
-                            {requests.map((request) => (
+                            {visibleHistory.map((request) => (
                                 <article key={request.requestID} className="p-5 sm:p-6">
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                         <div>
@@ -1198,6 +1229,17 @@ export default function LogisticsTeacherPortal({
                                                 <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
                                                     {request.description}
                                                 </p>
+                                            )}
+
+                                            {(linkedSoundRequests.get(request.requestID)?.length ?? 0) > 0 && (
+                                                <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+                                                    <p className="font-semibold">Klank / Sound — bestaande gekoppelde rekords</p>
+                                                    {linkedSoundRequests.get(request.requestID)?.map((sound) => (
+                                                        <p key={sound.requestID} className="mt-1 text-xs">
+                                                            Ou klankrekord #{sound.requestID} · {displayLabel(sound.status)}
+                                                        </p>
+                                                    ))}
+                                                </div>
                                             )}
 
                                             {request.managerNotes && (
@@ -1242,7 +1284,7 @@ export default function LogisticsTeacherPortal({
                                 </article>
                             ))}
 
-                            {requests.length === 0 && (
+                            {visibleHistory.length === 0 && (
                                 <p className="p-6 text-sm text-zinc-500">
                                     Nog geen Logistics-versoeke ingedien nie.
                                 </p>
