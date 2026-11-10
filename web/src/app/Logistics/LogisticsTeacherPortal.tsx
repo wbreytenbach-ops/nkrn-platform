@@ -737,6 +737,10 @@ export default function LogisticsTeacherPortal({
                         requestType === "Event" ? `${endTime}:00` : null,
                     cleanupNextDay:
                         requestType === "Event" ? cleanupNextDay : null,
+                    // One event, one request number. The API routes sound and
+                    // security emails without creating separate tickets.
+                    soundRequired: requestType === "Event" && soundRequired,
+                    securityRequired: requestType === "Event" && securityRequired,
                     aiSessionID,
 
                     locations,
@@ -770,90 +774,13 @@ export default function LogisticsTeacherPortal({
             }
 
             const created = (await response.json()) as LogisticsRequest;
-            let securityWarning = "";
-
-            if (requestType === "Event" && securityRequired) {
-                try {
-                    const securityResponse = await fetch(`${API_URL}/api/LogisticsRequests`, {
-                        method: "POST",
-                        headers: authHeaders(),
-                        body: JSON.stringify({
-                            requestedByUserID: requesterOverride ? Number(requesterOverride) : null,
-                            requestType: "Security",
-                            activityCategory: null,
-                            title: "Sekuriteit vir funksie",
-                            description: securityDescription,
-                            activityDate,
-                            startTime: `${startTime}:00`,
-                            endTime: `${endTime}:00`,
-                            cleanupNextDay: null,
-                            locations,
-                            equipment: [],
-                            maintenanceItems: [],
-                        }),
-                    });
-                    if (!securityResponse.ok) {
-                        securityWarning = language === "af"
-                            ? " Die funksieversoek is gestuur, maar die sekuriteitsversoek kon nie gestuur word nie."
-                            : " The function request was sent, but the security request could not be sent.";
-                    }
-                } catch {
-                    securityWarning = language === "af"
-                        ? " Die funksieversoek is gestuur, maar die sekuriteitsversoek kon nie gestuur word nie."
-                        : " The function request was sent, but the security request could not be sent.";
-                }
-            }
-
-            let soundWarning = "";
-            let soundRequestID: number | null = null;
-
-            if (requestType === "Event" && soundRequired) {
-                const soundDescription = [
-                    `Klank vir funksie / Sound for function: #${created.requestID}`,
-                    `Funksie / Function: ${description.trim()}`,
-                    `Datum / Date: ${activityDate}`,
-                    `Tyd / Time: ${startTime} - ${endTime}`,
-                    soundSummary,
-                ].join("\n\n");
-
-                try {
-                    const soundResponse = await fetch(`${API_URL}/api/LogisticsRequests`, {
-                        method: "POST",
-                        headers: authHeaders(),
-                        body: JSON.stringify({
-                            requestedByUserID: requesterOverride ? Number(requesterOverride) : null,
-                            requestType: "Sound",
-                            activityCategory,
-                            title: "Klank vir funksie / Sound for function",
-                            description: soundDescription,
-                            activityDate,
-                            startTime: `${startTime}:00`,
-                            endTime: `${endTime}:00`,
-                            cleanupNextDay: null,
-                            locations,
-                            equipment: [],
-                            maintenanceItems: [],
-                        }),
-                    });
-                    if (!soundResponse.ok) {
-                        throw new Error(`Sound request HTTP ${soundResponse.status}`);
-                    }
-                    const soundCreated = (await soundResponse.json()) as LogisticsRequest;
-                    soundRequestID = soundCreated.requestID;
-                } catch (soundError) {
-                    console.error("Unable to submit the sound request.", soundError);
-                    soundWarning = language === "af"
-                        ? " Die funksieversoek is gestoor, maar die klankversoek kon nie aangemeld word nie. Kontak asseblief IT."
-                        : " The function request was saved, but the sound request could not be submitted. Please contact IT.";
-                }
-            }
 
             setRequestOpen(false);
             resetRequestForm();
             setSuccess(
                 language === "af"
-                    ? `Versoek #${created.requestID} is aan die Logistics-span gestuur.${soundRequestID ? ` Klankversoek #${soundRequestID} is ook aangemeld.` : ""}${securityWarning}${soundWarning}`
-                    : `Request #${created.requestID} was sent to Logistics.${soundRequestID ? ` Sound request #${soundRequestID} was also submitted.` : ""}${securityWarning}${soundWarning}`
+                    ? `Versoek #${created.requestID} is suksesvol gestoor. Alle klank- en sekuriteitsvereistes is deel van dieselfde versoek en na die toepaslike spanne gestuur.`
+                    : `Request #${created.requestID} was saved. All sound and security requirements belong to this request and were routed to the appropriate teams.`
             );
 
             await loadPortal();
