@@ -47,13 +47,13 @@ finally { $archive.Dispose() }
 
 if ($manifest.publicApiUrl -ne 'https://portal.tygies.co.za' -or
     $manifest.commit -notmatch '^[a-f0-9]{40}$' -or
-    $manifest.branch -ne 'fix/it-chat-mentions-jaron-20261026') {
+    $manifest.branch -ne 'fix/logistics-single-request-ui-20261110') {
     throw 'The release ZIP is not the expected Tygies One production build.'
 }
 
 Write-Host ''
 Write-Host '===============================================' -ForegroundColor Cyan
-Write-Host ' TYGIES ONE - IT CHAT & LOGISTICS RELEASE' -ForegroundColor Cyan
+Write-Host ' TYGIES ONE - SINGLE-REQUEST / LOGISTICS RELEASE' -ForegroundColor Cyan
 Write-Host '===============================================' -ForegroundColor Cyan
 Write-Host "Commit: $($manifest.commit)"
 Write-Host "Target: $Server / portal.tygies.co.za"
