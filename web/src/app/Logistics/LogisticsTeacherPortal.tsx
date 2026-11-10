@@ -959,7 +959,7 @@ export default function LogisticsTeacherPortal({
                 )}
 
                 {success && (
-                    <div className="mb-5 rounded-2xl border border-green-400/15 bg-green-500/8 px-5 py-4 text-sm text-green-200">
+                    <div role="status" aria-live="polite" className="logistics-success-banner mb-5 rounded-2xl px-5 py-4 text-sm">
                         {success}
                     </div>
                 )}
@@ -1158,7 +1158,7 @@ export default function LogisticsTeacherPortal({
                             <button
                                 type="button"
                                 onClick={() => openRequestForm()}
-                                className="rounded-xl border border-[#d7a31f]/30 bg-[#d7a31f]/10 px-4 py-2.5 text-sm font-medium text-[#e7b42b]"
+                                className="logistics-create-button rounded-xl border px-4 py-2.5 text-sm font-bold"
                             >
                                 + Nuwe versoek
                             </button>
