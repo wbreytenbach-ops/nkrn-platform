@@ -31,6 +31,11 @@ namespace NKRN.API.Models
 
         public bool? CleanupNextDay { get; set; }
 
+        // Event options are part of ONE request, not separate Sound/Security tickets.
+        // Used only to route specialist email notifications for the same RequestID.
+        public bool SoundRequired { get; set; }
+        public bool SecurityRequired { get; set; }
+
         public Guid? AiSessionID { get; set; }
 
         public List<CreateLogisticsRequestLocationRequest> Locations { get; set; } = new();
