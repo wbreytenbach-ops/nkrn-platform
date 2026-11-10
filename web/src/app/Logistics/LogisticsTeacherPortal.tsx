@@ -248,6 +248,7 @@ export default function LogisticsTeacherPortal({
     const [requesterOverride, setRequesterOverride] = useState("");
     const requestModalRef = useRef<HTMLDivElement>(null);
     const [submitting, setSubmitting] = useState(false);
+    const submittingRef = useRef(false);
 
     const [requestType, setRequestType] = useState<"Event" | "Maintenance" | "General" | "Security">("Event");
     const [activityCategory, setActivityCategory] = useState("Other");
@@ -684,6 +685,10 @@ export default function LogisticsTeacherPortal({
             return;
         }
 
+        // A double click must not submit the same event twice before React rerenders.
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+
         try {
             setSubmitting(true);
             setError("");
@@ -824,6 +829,7 @@ export default function LogisticsTeacherPortal({
                     : "Die Logistics-versoek kon nie ingedien word nie."
             );
         } finally {
+            submittingRef.current = false;
             setSubmitting(false);
         }
     }
